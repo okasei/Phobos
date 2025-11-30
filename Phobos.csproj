@@ -6,10 +6,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Class\Database\PCSqliteDatabase.cs.bak" />
+    <None Remove="Shared\Phobos.Shared.deps.json" />
+    <None Remove="Shared\Phobos.Shared.pdb" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +23,13 @@
 
   <ItemGroup>
     <Folder Include="Assets\Themes\" />
+    <Folder Include="Shared\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Phobos.Shared">
+      <HintPath>Shared\Phobos.Shared.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

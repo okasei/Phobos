@@ -5,8 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Phobos.Class.Plugin;
 using Phobos.Manager.Plugin;
+using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 
 namespace Phobos.Class.Plugin.BuiltIn

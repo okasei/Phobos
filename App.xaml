@@ -4,6 +4,14 @@
              xmlns:local="clr-namespace:Phobos"
              Startup="Application_Startup">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <!-- 默认字体 -->
+            <FontFamily x:Key="DefaultFont">Segoe UI, Microsoft YaHei UI</FontFamily>
+
+            <!-- 全局样式 -->
+            <Style TargetType="Window">
+                <Setter Property="FontFamily" Value="{StaticResource DefaultFont}"/>
+            </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -1,4 +1,11 @@
-﻿using System;
+﻿using Phobos.Class.Database;
+using Phobos.Class.Plugin.BuiltIn;
+using Phobos.Interface.Plugin;
+using Phobos.Manager.System;
+using Phobos.Shared.Class;
+using Phobos.Shared.Interface;
+using Phobos.Utils.General;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,12 +13,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
-using Phobos.Class.Database;
-using Phobos.Class.Plugin;
-using Phobos.Interface.Plugin;
-using Phobos.Shared.Class;
-using Phobos.Shared.Interface;
-using Phobos.Utils.General;
 
 namespace Phobos.Manager.Plugin
 {
@@ -130,7 +131,8 @@ namespace Phobos.Manager.Plugin
                 WriteSysConfig = HandleWriteSysConfig,
                 BootWithPhobos = HandleBootWithPhobos,
                 RemoveBootWithPhobos = HandleRemoveBootWithPhobos,
-                GetBootItems = HandleGetBootItems
+                GetBootItems = HandleGetBootItems,
+                Log = HandleLog
             };
         }
 
@@ -226,7 +228,7 @@ namespace Phobos.Manager.Plugin
                                 { "@description", TextEscaper.Escape(metadata.GetLocalizedDescription("en-US")) },
                                 { "@version", metadata.Version },
                                 { "@secret", metadata.Secret },
-                                { "@directory", pluginDir }
+                                { "@directory", $"\\Plugins\\{metadata.PackageName}" }
                             });
                     }
                     else
@@ -348,7 +350,7 @@ namespace Phobos.Manager.Plugin
 
                 if (directory == "builtin")
                 {
-                    return new RequestResult { Success = true, Message = "Built-in plugin" };
+                    return new RequestResult { Success = true, Message = "Built-in Plugin" };
                 }
 
                 var dllFiles = Directory.GetFiles(directory, "*.dll");
@@ -451,6 +453,43 @@ namespace Phobos.Manager.Plugin
                 }
 
                 var result = await context.Instance.OnLaunch(args);
+                if (result.Success)
+                {
+                    context.State = PluginState.Running;
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+            }
+        }
+
+        /// <summary>
+        /// 调用插件的 Run 方法
+        /// </summary>
+        /// <param name="packageName">插件包名</param>
+        /// <param name="args">参数（第一个通常是命令名）</param>
+        public async Task<RequestResult> Run(string packageName, params object[] args)
+        {
+            try
+            {
+                if (!_loadedPlugins.TryGetValue(packageName, out var context))
+                {
+                    var loadResult = await Load(packageName);
+                    if (!loadResult.Success)
+                        return loadResult;
+
+                    context = _loadedPlugins[packageName];
+                }
+
+                if (context.Instance == null)
+                {
+                    return new RequestResult { Success = false, Message = "Plugin instance not found" };
+                }
+
+                var result = await context.Instance.Run(args);
                 if (result.Success)
                 {
                     context.State = PluginState.Running;
@@ -1162,6 +1201,29 @@ namespace Phobos.Manager.Plugin
             catch { }
 
             return result;
+        }
+
+        private async Task<RequestResult> HandleLog(PluginCallerContext context, LogLevel level, string arg3, Exception? exception, object[]? arg5)
+        {
+            switch (level)
+            {
+                case LogLevel.Error:
+                    PCLoggerPlugin.Error(context.PackageName, arg3);
+                    break;
+                case LogLevel.Critical:
+                    PCLoggerPlugin.Critical(context.PackageName, arg3);
+                    break;
+                case LogLevel.Warning:
+                    PCLoggerPlugin.Warning(context.PackageName, arg3);
+                    break;
+                case LogLevel.Debug:
+                    PCLoggerPlugin.Debug(context.PackageName, arg3);
+                    break;
+                default:
+                    PCLoggerPlugin.Info(context.PackageName, arg3);
+                    break;
+            }
+            return new RequestResult { Success = true, Message = $"Logged" };
         }
 
         #endregion

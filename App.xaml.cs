@@ -3,12 +3,12 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using Phobos.Class.Database;
-using Phobos.Class.Plugin;
 using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Manager.Plugin;
 using Phobos.Manager.System;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
+using Phobos.Components.Plugin;
 
 namespace Phobos
 {
@@ -60,6 +60,11 @@ namespace Phobos
 
                 PCLoggerPlugin.Info("Phobos", "Welcome to Phobos!");
 
+                //var a = await PMPlugin.Instance.Install("C:\\Aurev\\Dev\\Phobos.Calculator\\bin\\x64\\Release\\net10.0-windows\\Phobos.Calculator.dll");
+                //MessageBox.Show(a.Message);
+                PMPlugin.Instance.Run("com.phobos.calculator", "show");
+                //PMPlugin.Instance.Launch("com.phobos.plugin.manager", "");
+                //new POPluginInstaller().Show();
             }
             catch (Exception ex)
             {
@@ -350,10 +355,6 @@ namespace Phobos
 
             // 启动插件管理器
             var pluginManager = PMPlugin.Instance;
-            if(pluginManager is IPhobosPlugin ipp)
-            {
-                await ipp.OnLaunch();
-            }
             await pluginManager.Launch(startupPlugin);
 
             // 获取插件实例并创建窗口

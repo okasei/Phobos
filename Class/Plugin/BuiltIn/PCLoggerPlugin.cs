@@ -6,34 +6,6 @@ using Phobos.Shared.Interface;
 namespace Phobos.Class.Plugin.BuiltIn
 {
     /// <summary>
-    /// 日志级别
-    /// </summary>
-    public enum LogLevel
-    {
-        Debug,
-        Info,
-        Warning,
-        Error,
-        Critical
-    }
-
-    /// <summary>
-    /// 日志条目
-    /// </summary>
-    public class LogEntry
-    {
-        public DateTime Timestamp { get; set; } = DateTime.Now;
-        public LogLevel Level { get; set; } = LogLevel.Info;
-        public string Source { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
-
-        public override string ToString()
-        {
-            return $"[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{Level}] [{Source}] {Message}";
-        }
-    }
-
-    /// <summary>
     /// Logger 插件
     /// </summary>
     public class PCLoggerPlugin : PCPluginBase
