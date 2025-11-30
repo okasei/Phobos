@@ -1,0 +1,167 @@
+{
+  "$schema": "https://phobos.lavirix.com/schemas/theme.json",
+  "metadata": {
+    "id": "com.phobos.theme.light",
+    "name": "Light Theme",
+    "version": "1.0.0",
+    "author": "Phobos Team",
+    "description": "Default light theme for Phobos",
+    "localizedNames": {
+      "en-US": "Light Theme",
+      "zh-CN": "浅色主题",
+      "zh-TW": "淺色主題",
+      "ja-JP": "ライトテーマ"
+    }
+  },
+  "colors": {
+    "primary": "#0078D4",
+    "primaryHover": "#106EBE",
+    "primaryPressed": "#005A9E",
+    "secondary": "#6C757D",
+    "success": "#107C10",
+    "warning": "#FF8C00",
+    "danger": "#D13438",
+    "info": "#0078D4",
+
+    "background": "#FFFFFF",
+    "backgroundAlt": "#F3F3F3",
+    "backgroundHover": "#E8E8E8",
+    "surface": "#FAFAFA",
+    "surfaceHover": "#F0F0F0",
+
+    "text": "#1A1A1A",
+    "textSecondary": "#666666",
+    "textDisabled": "#A0A0A0",
+    "textInverse": "#FFFFFF",
+
+    "border": "#D1D1D1",
+    "borderLight": "#E0E0E0",
+    "borderFocus": "#0078D4",
+
+    "scrollbar": "#C0C0C0",
+    "scrollbarHover": "#A0A0A0",
+
+    "shadow": "#00000020"
+  },
+  "fonts": {
+    "family": "Segoe UI, Microsoft YaHei, sans-serif",
+    "familyMono": "Consolas, Microsoft YaHei Mono, monospace",
+    "sizeSmall": 11,
+    "sizeNormal": 13,
+    "sizeMedium": 15,
+    "sizeLarge": 18,
+    "sizeTitle": 24,
+    "weightNormal": 400,
+    "weightMedium": 500,
+    "weightBold": 700
+  },
+  "dimensions": {
+    "borderRadius": 4,
+    "borderRadiusLarge": 8,
+    "borderWidth": 1,
+    "spacing": 8,
+    "spacingSmall": 4,
+    "spacingLarge": 16,
+
+    "buttonHeight": 32,
+    "buttonHeightSmall": 24,
+    "buttonHeightLarge": 40,
+    "buttonPadding": "8,16",
+
+    "inputHeight": 32,
+    "inputPadding": "6,10",
+
+    "titleBarHeight": 32,
+    "windowMinWidth": 400,
+    "windowMinHeight": 300
+  },
+  "controls": {
+    "button": {
+      "background": "${colors.primary}",
+      "backgroundHover": "${colors.primaryHover}",
+      "backgroundPressed": "${colors.primaryPressed}",
+      "backgroundDisabled": "${colors.backgroundAlt}",
+      "foreground": "${colors.textInverse}",
+      "foregroundDisabled": "${colors.textDisabled}",
+      "borderColor": "transparent",
+      "borderRadius": "${dimensions.borderRadius}",
+      "fontSize": "${fonts.sizeNormal}",
+      "fontWeight": "${fonts.weightMedium}"
+    },
+    "buttonSecondary": {
+      "background": "transparent",
+      "backgroundHover": "${colors.backgroundHover}",
+      "backgroundPressed": "${colors.backgroundAlt}",
+      "foreground": "${colors.text}",
+      "borderColor": "${colors.border}"
+    },
+    "textBox": {
+      "background": "${colors.background}",
+      "backgroundFocused": "${colors.background}",
+      "foreground": "${colors.text}",
+      "foregroundPlaceholder": "${colors.textDisabled}",
+      "borderColor": "${colors.border}",
+      "borderColorFocused": "${colors.borderFocus}",
+      "borderRadius": "${dimensions.borderRadius}",
+      "fontSize": "${fonts.sizeNormal}"
+    },
+    "label": {
+      "foreground": "${colors.text}",
+      "foregroundSecondary": "${colors.textSecondary}",
+      "fontSize": "${fonts.sizeNormal}"
+    },
+    "listBox": {
+      "background": "${colors.background}",
+      "foreground": "${colors.text}",
+      "itemBackground": "transparent",
+      "itemBackgroundHover": "${colors.backgroundHover}",
+      "itemBackgroundSelected": "${colors.primary}",
+      "itemForegroundSelected": "${colors.textInverse}",
+      "borderColor": "${colors.border}"
+    },
+    "scrollBar": {
+      "background": "transparent",
+      "thumbBackground": "${colors.scrollbar}",
+      "thumbBackgroundHover": "${colors.scrollbarHover}",
+      "width": 10,
+      "thumbRadius": 5
+    },
+    "window": {
+      "background": "${colors.background}",
+      "titleBarBackground": "${colors.backgroundAlt}",
+      "titleBarForeground": "${colors.text}",
+      "borderColor": "${colors.border}",
+      "shadowColor": "${colors.shadow}",
+      "shadowBlurRadius": 20
+    },
+    "titleBarButton": {
+      "background": "transparent",
+      "backgroundHover": "${colors.backgroundHover}",
+      "foreground": "${colors.textSecondary}",
+      "foregroundHover": "${colors.text}",
+      "closeBackgroundHover": "#E81123",
+      "closeForegroundHover": "#FFFFFF"
+    }
+  },
+  "animations": {
+    "defaultDuration": 200,
+    "fastDuration": 100,
+    "slowDuration": 400,
+    "easing": "CubicEaseOut",
+    "enableAnimations": true,
+    "windowOpenAnimation": {
+      "type": "FadeIn,ScaleIn",
+      "duration": 250,
+      "easing": "CubicEaseOut"
+    },
+    "windowCloseAnimation": {
+      "type": "FadeOut,ScaleOut",
+      "duration": 200,
+      "easing": "CubicEaseIn"
+    },
+    "buttonHoverAnimation": {
+      "type": "ColorTransition",
+      "duration": 150
+    }
+  }
+}
