@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.IO;
+using Phobos.Class.Plugin.BuiltIn;
 using Microsoft.Data.Sqlite;
 using Phobos.Interface.Database;
 using Phobos.Utils.System;
+using System.Data;
 
 namespace Phobos.Class.Database
 {
@@ -72,7 +69,7 @@ namespace Phobos.Class.Database
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Database connection failed: {ex.Message}");
+                PCLoggerPlugin.Error("Phobos.Database.Connect", $"Database connection failed: {ex.Message}");
                 return false;
             }
         }
@@ -97,7 +94,13 @@ namespace Phobos.Class.Database
                     Secret TEXT NOT NULL DEFAULT '',
                     Language TEXT NOT NULL DEFAULT 'en-US',
                     InstallTime TEXT NOT NULL DEFAULT (datetime('now')),
-                    Directory TEXT NOT NULL DEFAULT ''
+                    Directory TEXT NOT NULL DEFAULT '',
+                    Icon TEXT NOT NULL DEFAULT '',
+                    IsSystemPlugin INTEGER NOT NULL DEFAULT 0,
+                    SettingUri TEXT NOT NULL DEFAULT '',
+                    UninstallInfo TEXT NOT NULL DEFAULT '',
+                    IsEnabled INTEGER NOT NULL DEFAULT 1,
+                    UpdateTime TEXT NOT NULL DEFAULT (datetime('now'))
                 );
 
                 CREATE TABLE IF NOT EXISTS Phobos_Appdata (
@@ -146,6 +149,8 @@ namespace Phobos.Class.Database
                 CREATE INDEX IF NOT EXISTS idx_protocol_protocol ON Phobos_Protocol(Protocol);
                 CREATE INDEX IF NOT EXISTS idx_boot_package ON Phobos_Boot(PackageName);
                 CREATE INDEX IF NOT EXISTS idx_boot_priority ON Phobos_Boot(Priority);
+                CREATE INDEX IF NOT EXISTS idx_plugin_system ON Phobos_Plugin(IsSystemPlugin);
+                CREATE INDEX IF NOT EXISTS idx_plugin_enabled ON Phobos_Plugin(IsEnabled);
             ";
 
             await ExecuteNonQuery(createTablesSql);

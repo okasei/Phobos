@@ -59,7 +59,7 @@ namespace Phobos.Interface.Plugin
         /// <summary>
         /// 卸载插件
         /// </summary>
-        Task<RequestResult> Uninstall(string packageName);
+        Task<RequestResult> Uninstall(string packageName, bool force = false);
 
         /// <summary>
         /// 加载插件

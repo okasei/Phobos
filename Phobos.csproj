@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="Assets\Themes\" />
+    <Folder Include="Assets\Plugin\" />
     <Folder Include="Shared\" />
   </ItemGroup>
 

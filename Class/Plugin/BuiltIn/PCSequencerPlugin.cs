@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Phobos.Class.Plugin;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 
@@ -52,6 +53,25 @@ namespace Phobos.Class.Plugin.BuiltIn
             Version = "1.0.0",
             Secret = "phobos_sequencer_secret_djf901las0pd",
             DatabaseKey = "seq",
+            Icon = "Assets/sequencer-icon.png",
+            IsSystemPlugin = true,
+            SettingUri = "seq://settings",
+            UninstallInfo = new PluginUninstallInfo
+            {
+                AllowUninstall = false,
+                Title = "Cannot Uninstall System Plugin",
+                Message = "Sequencer is a core component of Phobos and cannot be uninstalled.",
+                LocalizedTitles = new Dictionary<string, string>
+                {
+                    { "en-US", "Cannot Uninstall System Plugin" },
+                    { "zh-CN", "无法卸载系统插件" }
+                },
+                LocalizedMessages = new Dictionary<string, string>
+                {
+                    { "en-US", "Sequencer is a core component of Phobos and cannot be uninstalled." },
+                    { "zh-CN", "序列执行器是 Phobos 的核心组件，无法卸载。" }
+                }
+            },
             LocalizedNames = new Dictionary<string, string>
             {
                 { "en-US", "Sequencer" },

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://phobos.lavirix.com/schema/plugin.json",
+  "name": "Example Plugin",
+  "packageName": "com.example.plugin",
+  "manufacturer": "Example Corp",
+  "version": "1.0.0",
+  "secret": "",
+  "databaseKey": "example",
+  "description": "An example plugin for Phobos",
+
+  "icon": "Assets/icon.png",
+  "isSystemPlugin": false,
+  "settingUri": "example://settings",
+
+  "localizedNames": {
+    "en-US": "Example Plugin",
+    "zh-CN": "示例插件",
+    "zh-TW": "範例插件",
+    "ja-JP": "サンプルプラグイン"
+  },
+
+  "localizedDescriptions": {
+    "en-US": "An example plugin for Phobos",
+    "zh-CN": "Phobos 示例插件",
+    "zh-TW": "Phobos 範例插件",
+    "ja-JP": "Phobosのサンプルプラグイン"
+  },
+
+  "dependencies": [
+    {
+      "packageName": "com.phobos.core",
+      "minVersion": "1.0.0",
+      "isOptional": false
+    }
+  ],
+
+  "fileList": [
+    {
+      "relativePath": "ExamplePlugin.dll",
+      "fileType": "MainAssembly",
+      "isMainAssembly": true,
+      "isRequired": true
+    },
+    {
+      "relativePath": "Assets/icon.png",
+      "fileType": "Resource",
+      "isMainAssembly": false,
+      "isRequired": false
+    }
+  ],
+
+  "uninstallInfo": null,
+
+  "homepageUrl": "https://example.com/plugin",
+  "minPhobosVersion": "1.0.0"
+}

@@ -1,14 +1,15 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using System.Windows;
-using Phobos.Class.Database;
+﻿using Phobos.Class.Database;
 using Phobos.Class.Plugin.BuiltIn;
+using Phobos.Components.Plugin;
 using Phobos.Manager.Plugin;
 using Phobos.Manager.System;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
-using Phobos.Components.Plugin;
+using Phobos.Shared.Manager;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace Phobos
 {
@@ -21,6 +22,7 @@ namespace Phobos
         private string _appDataPath = string.Empty;
         private string _pluginsPath = string.Empty;
         private string _databasePath = string.Empty;
+        private readonly PluginResourceManager _resourceManager = new();
 
         /// <summary>
         /// 应用程序启动入口
@@ -64,17 +66,31 @@ namespace Phobos
                 //MessageBox.Show(a.Message);
                 await PMTheme.Instance.Initialize();
                 //await PMTheme.Instance.LoadThemeFromFile("C:\\Users\\Aurev\\AppData\\Roaming\\Phobos\\Themes\\com.phobos.theme.light-orange.json");
-                await PMTheme.Instance.LoadTheme("com.phobos.theme.dark-orange");
+                await PMTheme.Instance.LoadTheme("com.phobos.theme.light-blue");
+                await InitializeThemeManager();
                 // PMTheme.Instance.LoadTheme("dark");
                 await PMPlugin.Instance.Run("com.phobos.calculator", "show");
                 //PMPlugin.Instance.Launch("com.phobos.plugin.manager", "");
-                //new PCOPluginInstaller().Show();
+                //var p = new PCOPluginInstaller();
+                //_resourceManager.ApplyToWindow(p);
+                //p.InitializeComponent();
+                //p.Show();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to start Phobos: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to start Phobos: {ex.Message}", "Error - Phobos", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
             }
+        }
+
+        private async Task<RequestResult> InitializeThemeManager()
+        {
+            var styles = PMTheme.Instance.CurrentTheme?.GetGlobalStyles();
+            if (styles != null)
+            {
+                _resourceManager.SetHostTheme(styles);
+            }
+            return new RequestResult { Success = true };
         }
 
         /// <summary>

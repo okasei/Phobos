@@ -1,0 +1,68 @@
+{
+  "$schema": "https://phobos.lavirix.com/schema/plugin.sys.json",
+  "name": "System Logger",
+  "packageName": "com.phobos.logger",
+  "manufacturer": "Phobos Team",
+  "version": "1.0.0",
+  "secret": "",
+  "databaseKey": "logger",
+  "description": "System logging plugin for Phobos",
+
+  "icon": "Assets/logger-icon.png",
+  "isSystemPlugin": true,
+  "settingUri": "logger://settings",
+
+  "localizedNames": {
+    "en-US": "System Logger",
+    "zh-CN": "系统日志",
+    "zh-TW": "系統日誌",
+    "ja-JP": "システムログ"
+  },
+
+  "localizedDescriptions": {
+    "en-US": "System logging plugin for Phobos",
+    "zh-CN": "Phobos 系统日志插件",
+    "zh-TW": "Phobos 系統日誌插件",
+    "ja-JP": "Phobosのシステムログプラグイン"
+  },
+
+  "dependencies": [],
+
+  "fileList": [
+    {
+      "relativePath": "Phobos.Logger.dll",
+      "fileType": "MainAssembly",
+      "isMainAssembly": true,
+      "isRequired": true
+    },
+    {
+      "relativePath": "Assets/logger-icon.png",
+      "fileType": "Resource",
+      "isMainAssembly": false,
+      "isRequired": false
+    }
+  ],
+
+  "uninstallInfo": {
+    "allowUninstall": false,
+    "title": "Cannot Uninstall System Plugin",
+    "message": "System Logger is a core component of Phobos and cannot be uninstalled.",
+    "localizedTitles": {
+      "en-US": "Cannot Uninstall System Plugin",
+      "zh-CN": "无法卸载系统插件",
+      "zh-TW": "無法卸載系統插件",
+      "ja-JP": "システムプラグインをアンインストールできません"
+    },
+    "localizedMessages": {
+      "en-US": "System Logger is a core component of Phobos and cannot be uninstalled.",
+      "zh-CN": "系统日志是 Phobos 的核心组件，无法卸载。",
+      "zh-TW": "系統日誌是 Phobos 的核心組件，無法卸載。",
+      "ja-JP": "システムログはPhobosのコアコンポーネントであり、アンインストールできません。"
+    },
+    "preUninstallCommand": null,
+    "postUninstallCommand": null
+  },
+
+  "homepageUrl": "https://phobos.example.com/plugins/logger",
+  "minPhobosVersion": "1.0.0"
+}

@@ -95,7 +95,7 @@ namespace Phobos.Manager.Plugin
             if (_database == null)
                 return;
 
-            var plugins = await _database.ExecuteQuery("SELECT * FROM Phobos_Plugin");
+            var plugins = await _database.ExecuteQuery("SELECT * FROM Phobos_Plugin WHERE IsEnabled = 1");
             foreach (var plugin in plugins)
             {
                 var packageName = plugin["PackageName"]?.ToString() ?? string.Empty;
@@ -223,12 +223,18 @@ namespace Phobos.Manager.Plugin
 
                 if (_database != null)
                 {
+                    var uninstallInfoJson = metadata.UninstallInfo != null
+                        ? Newtonsoft.Json.JsonConvert.SerializeObject(metadata.UninstallInfo)
+                        : string.Empty;
+
                     if (existing?.Count > 0)
                     {
                         await _database.ExecuteNonQuery(
                             @"UPDATE Phobos_Plugin SET 
                                 Name = @name, Manufacturer = @manufacturer, Description = @description,
-                                Version = @version, Secret = @secret, Directory = @directory
+                                Version = @version, Secret = @secret, Directory = @directory,
+                                Icon = @icon, IsSystemPlugin = @isSystemPlugin, SettingUri = @settingUri,
+                                UninstallInfo = @uninstallInfo, UpdateTime = datetime('now')
                               WHERE PackageName = @packageName COLLATE NOCASE",
                             new Dictionary<string, object>
                             {
@@ -238,14 +244,20 @@ namespace Phobos.Manager.Plugin
                                 { "@description", TextEscaper.Escape(metadata.GetLocalizedDescription("en-US")) },
                                 { "@version", metadata.Version },
                                 { "@secret", metadata.Secret },
-                                { "@directory", $"\\Plugins\\{metadata.PackageName}" }
+                                { "@directory", pluginDir },
+                                { "@icon", metadata.Icon ?? string.Empty },
+                                { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
+                                { "@settingUri", metadata.SettingUri ?? string.Empty },
+                                { "@uninstallInfo", uninstallInfoJson }
                             });
                     }
                     else
                     {
                         await _database.ExecuteNonQuery(
-                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory)
-                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, @directory)",
+                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory,
+                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime)
+                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, @directory,
+                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'))",
                             new Dictionary<string, object>
                             {
                                 { "@packageName", metadata.PackageName },
@@ -254,7 +266,11 @@ namespace Phobos.Manager.Plugin
                                 { "@description", TextEscaper.Escape(metadata.GetLocalizedDescription("en-US")) },
                                 { "@version", metadata.Version },
                                 { "@secret", metadata.Secret },
-                                { "@directory", pluginDir }
+                                { "@directory", pluginDir },
+                                { "@icon", metadata.Icon ?? string.Empty },
+                                { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
+                                { "@settingUri", metadata.SettingUri ?? string.Empty },
+                                { "@uninstallInfo", uninstallInfoJson }
                             });
                     }
                 }
@@ -277,10 +293,46 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        public async Task<RequestResult> Uninstall(string packageName)
+        public async Task<RequestResult> Uninstall(string packageName, bool force = false)
         {
             try
             {
+                // 获取插件信息
+                var pluginInfo = await _database?.ExecuteQuery(
+                    "SELECT * FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@packageName", packageName } });
+
+                if (pluginInfo == null || pluginInfo.Count == 0)
+                {
+                    return new RequestResult { Success = false, Message = "Plugin not found" };
+                }
+
+                var isSystemPlugin = Convert.ToInt32(pluginInfo[0]["IsSystemPlugin"] ?? 0) == 1;
+                var uninstallInfoJson = pluginInfo[0]["UninstallInfo"]?.ToString() ?? string.Empty;
+
+                // 检查是否为系统插件
+                if (isSystemPlugin && !force)
+                {
+                    PluginUninstallInfo? uninstallInfo = null;
+                    if (!string.IsNullOrEmpty(uninstallInfoJson))
+                    {
+                        try
+                        {
+                            uninstallInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<PluginUninstallInfo>(uninstallInfoJson);
+                        }
+                        catch { }
+                    }
+
+                    if (uninstallInfo != null && !uninstallInfo.AllowUninstall)
+                    {
+                        return new RequestResult
+                        {
+                            Success = false,
+                            Message = uninstallInfo.GetLocalizedMessage(PCSysConfig.Instance.langCode)
+                        };
+                    }
+                }
+
                 var plugin = GetPlugin(packageName);
                 if (plugin != null)
                 {
@@ -307,21 +359,15 @@ namespace Phobos.Manager.Plugin
                         "DELETE FROM Phobos_Boot WHERE PackageName = @packageName COLLATE NOCASE",
                         new Dictionary<string, object> { { "@packageName", packageName } });
 
-                    var pluginInfo = await _database.ExecuteQuery(
-                        "SELECT Directory FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
-                        new Dictionary<string, object> { { "@packageName", packageName } });
+                    var directory = pluginInfo[0]["Directory"]?.ToString();
 
                     await _database.ExecuteNonQuery(
                         "DELETE FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
                         new Dictionary<string, object> { { "@packageName", packageName } });
 
-                    if (pluginInfo?.Count > 0)
+                    if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
                     {
-                        var directory = pluginInfo[0]["Directory"]?.ToString();
-                        if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
-                        {
-                            Directory.Delete(directory, true);
-                        }
+                        Directory.Delete(directory, true);
                     }
                 }
 
@@ -354,6 +400,13 @@ namespace Phobos.Manager.Plugin
                 if (pluginInfo == null || pluginInfo.Count == 0)
                 {
                     return new RequestResult { Success = false, Message = "Plugin not found in database" };
+                }
+
+                // 检查是否启用
+                var isEnabled = Convert.ToInt32(pluginInfo[0]["IsEnabled"] ?? 1) == 1;
+                if (!isEnabled)
+                {
+                    return new RequestResult { Success = false, Message = "Plugin is disabled" };
                 }
 
                 var directory = pluginInfo[0]["Directory"]?.ToString() ?? string.Empty;
@@ -563,6 +616,144 @@ namespace Phobos.Manager.Plugin
             }
         }
 
+        /// <summary>
+        /// 启用/禁用插件
+        /// </summary>
+        public async Task<RequestResult> SetPluginEnabled(string packageName, bool enabled)
+        {
+            if (_database == null)
+                return new RequestResult { Success = false, Message = "Database not initialized" };
+
+            try
+            {
+                await _database.ExecuteNonQuery(
+                    "UPDATE Phobos_Plugin SET IsEnabled = @enabled, UpdateTime = datetime('now') WHERE PackageName = @packageName COLLATE NOCASE",
+                    new Dictionary<string, object>
+                    {
+                        { "@packageName", packageName },
+                        { "@enabled", enabled ? 1 : 0 }
+                    });
+
+                if (!enabled && _loadedPlugins.ContainsKey(packageName))
+                {
+                    await Unload(packageName);
+                }
+                else if (enabled && !_loadedPlugins.ContainsKey(packageName))
+                {
+                    await Load(packageName);
+                }
+
+                return new RequestResult { Success = true, Message = enabled ? "Plugin enabled" : "Plugin disabled" };
+            }
+            catch (Exception ex)
+            {
+                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+            }
+        }
+
+        /// <summary>
+        /// 检查插件是否为系统插件
+        /// </summary>
+        public async Task<bool> IsSystemPlugin(string packageName)
+        {
+            if (_database == null) return false;
+
+            try
+            {
+                var result = await _database.ExecuteQuery(
+                    "SELECT IsSystemPlugin FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@packageName", packageName } });
+
+                if (result?.Count > 0)
+                {
+                    return Convert.ToInt32(result[0]["IsSystemPlugin"] ?? 0) == 1;
+                }
+            }
+            catch { }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 获取插件的设置 URI
+        /// </summary>
+        public async Task<string?> GetSettingUri(string packageName)
+        {
+            if (_database == null) return null;
+
+            try
+            {
+                var result = await _database.ExecuteQuery(
+                    "SELECT SettingUri FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@packageName", packageName } });
+
+                if (result?.Count > 0)
+                {
+                    var uri = result[0]["SettingUri"]?.ToString();
+                    return string.IsNullOrEmpty(uri) ? null : uri;
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取插件图标路径
+        /// </summary>
+        public async Task<string?> GetPluginIcon(string packageName)
+        {
+            if (_database == null) return null;
+
+            try
+            {
+                var result = await _database.ExecuteQuery(
+                    "SELECT Icon, Directory FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@packageName", packageName } });
+
+                if (result?.Count > 0)
+                {
+                    var icon = result[0]["Icon"]?.ToString();
+                    var directory = result[0]["Directory"]?.ToString();
+
+                    if (!string.IsNullOrEmpty(icon) && !string.IsNullOrEmpty(directory))
+                    {
+                        return Path.Combine(directory, icon);
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取插件卸载信息
+        /// </summary>
+        public async Task<PluginUninstallInfo?> GetUninstallInfo(string packageName)
+        {
+            if (_database == null) return null;
+
+            try
+            {
+                var result = await _database.ExecuteQuery(
+                    "SELECT UninstallInfo FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@packageName", packageName } });
+
+                if (result?.Count > 0)
+                {
+                    var json = result[0]["UninstallInfo"]?.ToString();
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        return Newtonsoft.Json.JsonConvert.DeserializeObject<PluginUninstallInfo>(json);
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
         public IPhobosPlugin? GetPlugin(string packageName)
         {
             if (_loadedPlugins.TryGetValue(packageName, out var context))
@@ -587,17 +778,50 @@ namespace Phobos.Manager.Plugin
             var plugins = await _database.ExecuteQuery("SELECT * FROM Phobos_Plugin");
             foreach (var plugin in plugins)
             {
+                var uninstallInfoJson = plugin["UninstallInfo"]?.ToString();
+                PluginUninstallInfo? uninstallInfo = null;
+                if (!string.IsNullOrEmpty(uninstallInfoJson))
+                {
+                    try
+                    {
+                        uninstallInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<PluginUninstallInfo>(uninstallInfoJson);
+                    }
+                    catch { }
+                }
+
                 result.Add(new PluginMetadata
                 {
                     PackageName = plugin["PackageName"]?.ToString() ?? string.Empty,
                     Name = TextEscaper.Unescape(plugin["Name"]?.ToString() ?? string.Empty),
                     Manufacturer = TextEscaper.Unescape(plugin["Manufacturer"]?.ToString() ?? string.Empty),
                     Version = plugin["Version"]?.ToString() ?? "1.0.0",
-                    Secret = plugin["Secret"]?.ToString() ?? string.Empty
+                    Secret = plugin["Secret"]?.ToString() ?? string.Empty,
+                    Icon = plugin["Icon"]?.ToString(),
+                    IsSystemPlugin = Convert.ToInt32(plugin["IsSystemPlugin"] ?? 0) == 1,
+                    SettingUri = plugin["SettingUri"]?.ToString(),
+                    UninstallInfo = uninstallInfo
                 });
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 获取所有用户插件（非系统插件）
+        /// </summary>
+        public async Task<List<PluginMetadata>> GetUserPlugins()
+        {
+            var all = await GetInstalledPlugins();
+            return all.Where(p => !p.IsSystemPlugin).ToList();
+        }
+
+        /// <summary>
+        /// 获取所有系统插件
+        /// </summary>
+        public async Task<List<PluginMetadata>> GetSystemPlugins()
+        {
+            var all = await GetInstalledPlugins();
+            return all.Where(p => p.IsSystemPlugin).ToList();
         }
 
         public async Task<RequestResult> CheckDependencies(PluginMetadata metadata)
