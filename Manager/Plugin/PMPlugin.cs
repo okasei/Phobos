@@ -1,4 +1,5 @@
-﻿using Phobos.Class.Database;
+﻿using Phobos.Class.Config;
+using Phobos.Class.Database;
 using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Interface.Plugin;
 using Phobos.Manager.System;
@@ -132,7 +133,16 @@ namespace Phobos.Manager.Plugin
                 BootWithPhobos = HandleBootWithPhobos,
                 RemoveBootWithPhobos = HandleRemoveBootWithPhobos,
                 GetBootItems = HandleGetBootItems,
-                Log = HandleLog
+                Log = HandleLog,
+                GetMergedDictionaries = (ctx) =>
+                {
+                    var currentTheme = PMTheme.Instance.CurrentTheme;
+                    if (currentTheme != null)
+                    {
+                        return currentTheme.GetGlobalStyles();
+                    }
+                    return App.Current?.Resources; // 回退
+                },
             };
         }
 
@@ -973,7 +983,7 @@ namespace Phobos.Manager.Plugin
 
             try
             {
-                var targetPackage = packageName ?? caller.PackageName;
+                var targetPackage = packageName ?? caller.DatabaseKey ?? caller.PackageName;
                 var uKey = $"{targetPackage}_{key}";
                 var result = await _database.ExecuteQuery(
                     "SELECT Content FROM Phobos_Appdata WHERE UKey = @uKey COLLATE NOCASE",
@@ -1004,8 +1014,9 @@ namespace Phobos.Manager.Plugin
 
             try
             {
+                var databaseKey = caller.DatabaseKey ?? caller.PackageName;
                 var targetPackage = packageName ?? caller.PackageName;
-                var uKey = $"{targetPackage}_{key}";
+                var uKey = $"{databaseKey}_{key}";
 
                 if (!string.Equals(targetPackage, caller.PackageName, StringComparison.OrdinalIgnoreCase))
                 {
@@ -1205,22 +1216,28 @@ namespace Phobos.Manager.Plugin
 
         private async Task<RequestResult> HandleLog(PluginCallerContext context, LogLevel level, string arg3, Exception? exception, object[]? arg5)
         {
+            var appName = "";
+            if (!context.Name.TryGetValue(PCSysConfig.Instance.langCode, out appName))
+            {
+                if (!context.Name.TryGetValue("en-US", out appName))
+                    appName = context.PackageName;
+            }
             switch (level)
             {
                 case LogLevel.Error:
-                    PCLoggerPlugin.Error(context.PackageName, arg3);
+                    PCLoggerPlugin.Error(appName, arg3);
                     break;
                 case LogLevel.Critical:
-                    PCLoggerPlugin.Critical(context.PackageName, arg3);
+                    PCLoggerPlugin.Critical(appName, arg3);
                     break;
                 case LogLevel.Warning:
-                    PCLoggerPlugin.Warning(context.PackageName, arg3);
+                    PCLoggerPlugin.Warning(appName, arg3);
                     break;
                 case LogLevel.Debug:
-                    PCLoggerPlugin.Debug(context.PackageName, arg3);
+                    PCLoggerPlugin.Debug(appName, arg3);
                     break;
                 default:
-                    PCLoggerPlugin.Info(context.PackageName, arg3);
+                    PCLoggerPlugin.Info(appName, arg3);
                     break;
             }
             return new RequestResult { Success = true, Message = $"Logged" };

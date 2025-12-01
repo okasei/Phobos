@@ -62,9 +62,13 @@ namespace Phobos
 
                 //var a = await PMPlugin.Instance.Install("C:\\Aurev\\Dev\\Phobos.Calculator\\bin\\x64\\Release\\net10.0-windows\\Phobos.Calculator.dll");
                 //MessageBox.Show(a.Message);
-                PMPlugin.Instance.Run("com.phobos.calculator", "show");
+                await PMTheme.Instance.Initialize();
+                //await PMTheme.Instance.LoadThemeFromFile("C:\\Users\\Aurev\\AppData\\Roaming\\Phobos\\Themes\\com.phobos.theme.light-orange.json");
+                await PMTheme.Instance.LoadTheme("com.phobos.theme.dark-orange");
+                // PMTheme.Instance.LoadTheme("dark");
+                await PMPlugin.Instance.Run("com.phobos.calculator", "show");
                 //PMPlugin.Instance.Launch("com.phobos.plugin.manager", "");
-                //new POPluginInstaller().Show();
+                //new PCOPluginInstaller().Show();
             }
             catch (Exception ex)
             {
@@ -82,7 +86,16 @@ namespace Phobos
             PCLoggerPlugin.Info("Phobos", "Boot items executed");
         }
 
-
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+                typeof(FrameworkElement),
+                new FrameworkPropertyMetadata(
+                    System.Windows.Markup.XmlLanguage.GetLanguage(System.Globalization.CultureInfo.CurrentCulture.IetfLanguageTag)
+                )
+            );
+        }
 
         private void InitializePaths()
         {

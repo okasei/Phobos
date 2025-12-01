@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Phobos.Class.Plugin.BuiltIn;
+using Phobos.Shared.Interface;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using Phobos.Shared.Interface;
 
 namespace Phobos.Class.Theme
 {
@@ -24,14 +23,13 @@ namespace Phobos.Class.Theme
         public string Version => _config.Metadata.Version;
         public string Author => _config.Metadata.Author;
 
-        // 兼容属性
+        // 兼容属性 (使用新的5级前景/背景色)
         public string ThemeName => _config.Metadata.Name;
         public Color PrimaryColor => GetColor(_config.Colors.Primary);
-        public Color SecondaryColor => GetColor(_config.Colors.Secondary);
-        public Color BackgroundColor => GetColor(_config.Colors.Background);
-        public Color SurfaceColor => GetColor(_config.Colors.Surface);
-        public Color TextColor => GetColor(_config.Colors.Text);
-        public Color TextSecondaryColor => GetColor(_config.Colors.TextSecondary);
+        public Color BackgroundColor => GetColor(_config.Colors.Background1);
+        public Color SurfaceColor => GetColor(_config.Colors.Background3);
+        public Color TextColor => GetColor(_config.Colors.Foreground1);
+        public Color TextSecondaryColor => GetColor(_config.Colors.Foreground3);
         public Color BorderColor => GetColor(_config.Colors.Border);
         public Color AccentColor => GetColor(_config.Colors.Primary);
         public Color ErrorColor => GetColor(_config.Colors.Danger);
@@ -58,23 +56,131 @@ namespace Phobos.Class.Theme
 
             _resourceDictionary = new ResourceDictionary();
 
-            // 添加颜色资源
-            _resourceDictionary["PrimaryColor"] = PrimaryColor;
-            _resourceDictionary["SecondaryColor"] = SecondaryColor;
-            _resourceDictionary["BackgroundColor"] = BackgroundColor;
-            _resourceDictionary["SurfaceColor"] = SurfaceColor;
-            _resourceDictionary["TextColor"] = TextColor;
-            _resourceDictionary["BorderColor"] = BorderColor;
+            // ============ 前景色 (5级) ============
+            _resourceDictionary["Foreground1Color"] = GetColor(_config.Colors.Foreground1);
+            _resourceDictionary["Foreground2Color"] = GetColor(_config.Colors.Foreground2);
+            _resourceDictionary["Foreground3Color"] = GetColor(_config.Colors.Foreground3);
+            _resourceDictionary["Foreground4Color"] = GetColor(_config.Colors.Foreground4);
+            _resourceDictionary["Foreground5Color"] = GetColor(_config.Colors.Foreground5);
+
+            _resourceDictionary["Foreground1Brush"] = GetBrush(_config.Colors.Foreground1);
+            _resourceDictionary["Foreground2Brush"] = GetBrush(_config.Colors.Foreground2);
+            _resourceDictionary["Foreground3Brush"] = GetBrush(_config.Colors.Foreground3);
+            _resourceDictionary["Foreground4Brush"] = GetBrush(_config.Colors.Foreground4);
+            _resourceDictionary["Foreground5Brush"] = GetBrush(_config.Colors.Foreground5);
+
+            // ============ 背景色 (5级) ============
+            _resourceDictionary["Background1Color"] = GetColor(_config.Colors.Background1);
+            _resourceDictionary["Background2Color"] = GetColor(_config.Colors.Background2);
+            _resourceDictionary["Background3Color"] = GetColor(_config.Colors.Background3);
+            _resourceDictionary["Background4Color"] = GetColor(_config.Colors.Background4);
+            _resourceDictionary["Background5Color"] = GetColor(_config.Colors.Background5);
+
+            _resourceDictionary["Background1Brush"] = GetBrush(_config.Colors.Background1);
+            _resourceDictionary["Background2Brush"] = GetBrush(_config.Colors.Background2);
+            _resourceDictionary["Background3Brush"] = GetBrush(_config.Colors.Background3);
+            _resourceDictionary["Background4Brush"] = GetBrush(_config.Colors.Background4);
+            _resourceDictionary["Background5Brush"] = GetBrush(_config.Colors.Background5);
+
+            // ============ 主题色 ============
+            _resourceDictionary["PrimaryColor"] = GetColor(_config.Colors.Primary);
+            _resourceDictionary["PrimaryHoverColor"] = GetColor(_config.Colors.PrimaryHover);
+            _resourceDictionary["PrimaryPressedColor"] = GetColor(_config.Colors.PrimaryPressed);
+            _resourceDictionary["PrimaryDisabledColor"] = GetColor(_config.Colors.PrimaryDisabled);
 
             _resourceDictionary["PrimaryBrush"] = GetBrush(_config.Colors.Primary);
-            _resourceDictionary["SecondaryBrush"] = GetBrush(_config.Colors.Secondary);
-            _resourceDictionary["BackgroundBrush"] = GetBrush(_config.Colors.Background);
-            _resourceDictionary["SurfaceBrush"] = GetBrush(_config.Colors.Surface);
-            _resourceDictionary["TextBrush"] = GetBrush(_config.Colors.Text);
-            _resourceDictionary["TextSecondaryBrush"] = GetBrush(_config.Colors.TextSecondary);
-            _resourceDictionary["BorderBrush"] = GetBrush(_config.Colors.Border);
+            _resourceDictionary["PrimaryHoverBrush"] = GetBrush(_config.Colors.PrimaryHover);
+            _resourceDictionary["PrimaryPressedBrush"] = GetBrush(_config.Colors.PrimaryPressed);
+            _resourceDictionary["PrimaryDisabledBrush"] = GetBrush(_config.Colors.PrimaryDisabled);
 
-            // 添加样式
+            // ============ 状态色 ============
+            _resourceDictionary["SuccessColor"] = GetColor(_config.Colors.Success);
+            _resourceDictionary["WarningColor"] = GetColor(_config.Colors.Warning);
+            _resourceDictionary["DangerColor"] = GetColor(_config.Colors.Danger);
+            _resourceDictionary["InfoColor"] = GetColor(_config.Colors.Info);
+
+            _resourceDictionary["SuccessBrush"] = GetBrush(_config.Colors.Success);
+            _resourceDictionary["WarningBrush"] = GetBrush(_config.Colors.Warning);
+            _resourceDictionary["DangerBrush"] = GetBrush(_config.Colors.Danger);
+            _resourceDictionary["InfoBrush"] = GetBrush(_config.Colors.Info);
+
+            // ============ 备选色 (6个) ============
+            _resourceDictionary["Accent1Color"] = GetColor(_config.Colors.Accent1);
+            _resourceDictionary["Accent2Color"] = GetColor(_config.Colors.Accent2);
+            _resourceDictionary["Accent3Color"] = GetColor(_config.Colors.Accent3);
+            _resourceDictionary["Accent4Color"] = GetColor(_config.Colors.Accent4);
+            _resourceDictionary["Accent5Color"] = GetColor(_config.Colors.Accent5);
+            _resourceDictionary["Accent6Color"] = GetColor(_config.Colors.Accent6);
+
+            _resourceDictionary["Accent1Brush"] = GetBrush(_config.Colors.Accent1);
+            _resourceDictionary["Accent2Brush"] = GetBrush(_config.Colors.Accent2);
+            _resourceDictionary["Accent3Brush"] = GetBrush(_config.Colors.Accent3);
+            _resourceDictionary["Accent4Brush"] = GetBrush(_config.Colors.Accent4);
+            _resourceDictionary["Accent5Brush"] = GetBrush(_config.Colors.Accent5);
+            _resourceDictionary["Accent6Brush"] = GetBrush(_config.Colors.Accent6);
+
+            // ============ 边框色 ============
+            _resourceDictionary["BorderColor"] = GetColor(_config.Colors.Border);
+            _resourceDictionary["BorderLightColor"] = GetColor(_config.Colors.BorderLight);
+            _resourceDictionary["BorderFocusColor"] = GetColor(_config.Colors.BorderFocus);
+
+            _resourceDictionary["BorderBrush"] = GetBrush(_config.Colors.Border);
+            _resourceDictionary["BorderLightBrush"] = GetBrush(_config.Colors.BorderLight);
+            _resourceDictionary["BorderFocusBrush"] = GetBrush(_config.Colors.BorderFocus);
+
+            // ============ 其他颜色 ============
+            _resourceDictionary["ScrollbarBrush"] = GetBrush(_config.Colors.Scrollbar);
+            _resourceDictionary["ScrollbarHoverBrush"] = GetBrush(_config.Colors.ScrollbarHover);
+            _resourceDictionary["ShadowBrush"] = GetBrush(_config.Colors.Shadow);
+            _resourceDictionary["OverlayBrush"] = GetBrush(_config.Colors.Overlay);
+
+            // ============ 字体族 (3套) ============
+            _resourceDictionary["FontPrimary"] = PCThemeLoader.ParseFontFamily(_config.Fonts.Primary);
+            _resourceDictionary["FontSecondary"] = PCThemeLoader.ParseFontFamily(_config.Fonts.Secondary);
+            _resourceDictionary["FontMono"] = PCThemeLoader.ParseFontFamily(_config.Fonts.Mono);
+
+            // ============ 字号 ============
+            _resourceDictionary["FontSizeXs"] = _config.Fonts.SizeXs;
+            _resourceDictionary["FontSizeSm"] = _config.Fonts.SizeSm;
+            _resourceDictionary["FontSizeMd"] = _config.Fonts.SizeMd;
+            _resourceDictionary["FontSizeLg"] = _config.Fonts.SizeLg;
+            _resourceDictionary["FontSizeXl"] = _config.Fonts.SizeXl;
+            _resourceDictionary["FontSize2xl"] = _config.Fonts.Size2xl;
+            _resourceDictionary["FontSize3xl"] = _config.Fonts.Size3xl;
+
+            // ============ 字重 ============
+            _resourceDictionary["FontWeightLight"] = FontWeightFromInt(_config.Fonts.WeightLight);
+            _resourceDictionary["FontWeightNormal"] = FontWeightFromInt(_config.Fonts.WeightNormal);
+            _resourceDictionary["FontWeightMedium"] = FontWeightFromInt(_config.Fonts.WeightMedium);
+            _resourceDictionary["FontWeightSemibold"] = FontWeightFromInt(_config.Fonts.WeightSemibold);
+            _resourceDictionary["FontWeightBold"] = FontWeightFromInt(_config.Fonts.WeightBold);
+
+            // ============ 行高 ============
+            _resourceDictionary["LineHeightTight"] = _config.Fonts.LineHeightTight;
+            _resourceDictionary["LineHeightNormal"] = _config.Fonts.LineHeightNormal;
+            _resourceDictionary["LineHeightRelaxed"] = _config.Fonts.LineHeightRelaxed;
+
+            // ============ 尺寸资源 ============
+            _resourceDictionary["BorderRadius"] = new CornerRadius(_config.Dimensions.BorderRadius);
+            _resourceDictionary["BorderRadiusLarge"] = new CornerRadius(_config.Dimensions.BorderRadiusLarge);
+            _resourceDictionary["BorderWidth"] = _config.Dimensions.BorderWidth;
+            _resourceDictionary["BorderThickness"] = new Thickness(_config.Dimensions.BorderWidth);
+
+            _resourceDictionary["Spacing"] = _config.Dimensions.Spacing;
+            _resourceDictionary["SpacingSmall"] = _config.Dimensions.SpacingSmall;
+            _resourceDictionary["SpacingLarge"] = _config.Dimensions.SpacingLarge;
+
+            _resourceDictionary["ButtonHeight"] = _config.Dimensions.ButtonHeight;
+            _resourceDictionary["ButtonHeightSmall"] = _config.Dimensions.ButtonHeightSmall;
+            _resourceDictionary["ButtonHeightLarge"] = _config.Dimensions.ButtonHeightLarge;
+            _resourceDictionary["ButtonPadding"] = PCThemeLoader.ParseThickness(_config.Dimensions.ButtonPadding);
+
+            _resourceDictionary["InputHeight"] = _config.Dimensions.InputHeight;
+            _resourceDictionary["InputPadding"] = PCThemeLoader.ParseThickness(_config.Dimensions.InputPadding);
+
+            _resourceDictionary["TitleBarHeight"] = _config.Dimensions.TitleBarHeight;
+
+            // ============ 控件样式 ============
             foreach (var kvp in _controlStyles)
             {
                 var key = kvp.Key.Name + "Style";
@@ -82,6 +188,23 @@ namespace Phobos.Class.Theme
             }
 
             return _resourceDictionary;
+        }
+
+        private FontWeight FontWeightFromInt(int weight)
+        {
+            return weight switch
+            {
+                100 => FontWeights.Thin,
+                200 => FontWeights.ExtraLight,
+                300 => FontWeights.Light,
+                400 => FontWeights.Normal,
+                500 => FontWeights.Medium,
+                600 => FontWeights.SemiBold,
+                700 => FontWeights.Bold,
+                800 => FontWeights.ExtraBold,
+                900 => FontWeights.Black,
+                _ => FontWeights.Normal
+            };
         }
 
         public Style? GetControlStyle(Type controlType)
@@ -148,6 +271,60 @@ namespace Phobos.Class.Theme
             }
         }
 
+        void DiagnoseFontSizeSetters(ResourceDictionary resources)
+        {
+            var s = "";
+            foreach (var a in resources.Keys)
+            {
+                s += $"{a}: {resources[a]}{Environment.NewLine}";
+            }
+            foreach (var key in resources.Keys)
+            {
+                var value = resources[key];
+                // 只检查 Style 类型的资源（还有控件模板/其它样式可能也包含 Setter）
+                if (value is Style style)
+                {
+                    foreach (Setter setter in style.Setters.OfType<Setter>())
+                    {
+                        // 检查是否是 TextElement.FontSize 或 FrameworkElement.FontSize（有时 TextBlock 用的是 FrameworkElement.FontSize）
+                        if (Equals(setter.Property, new TextBlock().FontSize) || Equals(setter.Property, Control.FontSizeProperty))
+                        {
+                            // 打印信息帮助定位
+                            s += $"Resource key: {key}  Style.TargetType: {style.TargetType?.FullName ?? "null"}{Environment.NewLine}";
+                            s += $"  Setter.Property: {setter.Property}{Environment.NewLine}";
+                            s += $"  Setter.Value type: {setter.Value?.GetType().FullName ?? "null"}  value: {setter.Value ?? "null"}{Environment.NewLine}";
+
+                            // 如果 value 是 DynamicResource/StaticResource 标记扩展，需要额外解析，尝试处理常见情况：
+                            if (setter.Value is StaticResourceExtension sExt)
+                            {
+                                s += $"    StaticResource key: {sExt.ResourceKey}{Environment.NewLine}";
+                            }
+                            else if (setter.Value is DynamicResourceExtension dExt)
+                            {
+                                s += $"    DynamicResource key: {dExt.ResourceKey}{Environment.NewLine}";
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 额外：检查是否存在名为 "FontSize" 的资源并输出其值
+            if (resources.Contains("FontSize"))
+            {
+                s += $"Resource 'FontSize' exists with value: {resources["FontSize"]} ({resources["FontSize"]?.GetType()}){Environment.NewLine}";
+            }
+            // 以及一些常见命名
+            string[] commonKeys = { "FontSizeSm", "FontSizeMd", "FontSizeLg", "FontSizeXl", "FontSize2xl", "FontSize3xl" };
+            foreach (var k in commonKeys)
+            {
+                if (resources.Contains(k))
+                {
+                    s += $"Resource '{k}' = {resources[k]} ({resources[k]?.GetType()}){Environment.NewLine}";
+                }
+            }
+            PCLoggerPlugin.Debug("Phobos.Theme.JsonDeserializer", s);
+        }
+
         public void Unload()
         {
             if (Application.Current != null && _resourceDictionary != null)
@@ -182,10 +359,33 @@ namespace Phobos.Class.Theme
             return PCThemeLoader.ResolveVariable(value, _config);
         }
 
-        private double ResolveDouble(string value)
+        private double ResolveDouble(string value, double defaultValue = 14)
         {
+            if (string.IsNullOrEmpty(value))
+                return defaultValue;
+
             var resolved = ResolveValue(value);
-            return double.TryParse(resolved, out var result) ? result : 0;
+
+            if (double.TryParse(resolved, out var result))
+                return result;
+
+            // 解析失败，输出调试信息
+            PCLoggerPlugin.Warning("Phobos.Theme.ValueParser", $"Failed to resolve double: '{value}' -> '{resolved}', using default: {defaultValue}");
+            return defaultValue;
+        }
+
+        private int ResolveInt(string value, int defaultValue = 400)
+        {
+            if (string.IsNullOrEmpty(value))
+                return defaultValue;
+
+            var resolved = ResolveValue(value);
+
+            if (int.TryParse(resolved, out var result))
+                return result;
+
+            PCLoggerPlugin.Warning("Phobos.Theme.ValueParser", $"[Theme] Failed to resolve int: '{value}' -> '{resolved}', using default: {defaultValue}");
+            return defaultValue;
         }
 
         #endregion
@@ -213,8 +413,8 @@ namespace Phobos.Class.Theme
             style.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush(btn.Foreground)));
             style.Setters.Add(new Setter(Control.BorderBrushProperty, GetBrush(btn.BorderColor)));
             style.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(_config.Dimensions.BorderWidth)));
-            style.Setters.Add(new Setter(Control.FontSizeProperty, ResolveDouble(btn.FontSize)));
-            style.Setters.Add(new Setter(Control.FontWeightProperty, PCThemeLoader.ParseFontWeight(ResolveValue(btn.FontWeight))));
+            style.Setters.Add(new Setter(Control.FontSizeProperty, ResolveDouble(btn.FontSize, _config.Fonts.SizeMd)));
+            style.Setters.Add(new Setter(Control.FontWeightProperty, FontWeightFromInt(ResolveInt(btn.FontWeight, _config.Fonts.WeightMedium))));
             style.Setters.Add(new Setter(Control.PaddingProperty, PCThemeLoader.ParseThickness(_config.Dimensions.ButtonPadding)));
             style.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, _config.Dimensions.ButtonHeight));
             style.Setters.Add(new Setter(Control.CursorProperty, Cursors.Hand));
@@ -235,7 +435,7 @@ namespace Phobos.Class.Theme
             border.SetValue(Border.BackgroundProperty, GetBrush(btn.Background));
             border.SetValue(Border.BorderBrushProperty, GetBrush(btn.BorderColor));
             border.SetValue(Border.BorderThicknessProperty, new Thickness(_config.Dimensions.BorderWidth));
-            border.SetValue(Border.CornerRadiusProperty, new CornerRadius(ResolveDouble(btn.BorderRadius)));
+            border.SetValue(Border.CornerRadiusProperty, new CornerRadius(ResolveDouble(btn.BorderRadius, _config.Dimensions.BorderRadius)));
             border.SetValue(Border.PaddingProperty, PCThemeLoader.ParseThickness(_config.Dimensions.ButtonPadding));
 
             var contentPresenter = new FrameworkElementFactory(typeof(ContentPresenter));
@@ -273,8 +473,8 @@ namespace Phobos.Class.Theme
             style.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(_config.Dimensions.BorderWidth)));
             style.Setters.Add(new Setter(Control.PaddingProperty, PCThemeLoader.ParseThickness(_config.Dimensions.InputPadding)));
             style.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, _config.Dimensions.InputHeight));
-            style.Setters.Add(new Setter(Control.FontSizeProperty, ResolveDouble(tb.FontSize)));
-            style.Setters.Add(new Setter(TextBox.CaretBrushProperty, GetBrush(_config.Colors.Text)));
+            style.Setters.Add(new Setter(Control.FontSizeProperty, ResolveDouble(tb.FontSize, _config.Fonts.SizeMd)));
+            style.Setters.Add(new Setter(TextBox.CaretBrushProperty, GetBrush(_config.Colors.Foreground1)));
             style.Setters.Add(new Setter(TextBox.SelectionBrushProperty, GetBrush(_config.Colors.Primary)));
             style.Setters.Add(new Setter(Control.VerticalContentAlignmentProperty, VerticalAlignment.Center));
 
@@ -293,8 +493,8 @@ namespace Phobos.Class.Theme
             var lbl = _config.Controls.Label;
 
             style.Setters.Add(new Setter(TextBlock.ForegroundProperty, GetBrush(lbl.Foreground)));
-            style.Setters.Add(new Setter(TextBlock.FontSizeProperty, ResolveDouble(lbl.FontSize)));
-            style.Setters.Add(new Setter(TextBlock.FontFamilyProperty, PCThemeLoader.ParseFontFamily(_config.Fonts.Family)));
+            style.Setters.Add(new Setter(TextBlock.FontSizeProperty, ResolveDouble(lbl.FontSize, _config.Fonts.SizeMd)));
+            style.Setters.Add(new Setter(TextBlock.FontFamilyProperty, PCThemeLoader.ParseFontFamily(_config.Fonts.Primary)));
 
             return style;
         }
@@ -344,14 +544,14 @@ namespace Phobos.Class.Theme
         private Style CreateGridStyle()
         {
             var style = new Style(typeof(Grid));
-            style.Setters.Add(new Setter(Panel.BackgroundProperty, GetBrush(_config.Colors.Background)));
+            style.Setters.Add(new Setter(Panel.BackgroundProperty, GetBrush(_config.Colors.Background1)));
             return style;
         }
 
         private Style CreateBorderStyle()
         {
             var style = new Style(typeof(Border));
-            style.Setters.Add(new Setter(Border.BackgroundProperty, GetBrush(_config.Colors.Surface)));
+            style.Setters.Add(new Setter(Border.BackgroundProperty, GetBrush(_config.Colors.Background2)));
             style.Setters.Add(new Setter(Border.BorderBrushProperty, GetBrush(_config.Colors.Border)));
             style.Setters.Add(new Setter(Border.BorderThicknessProperty, new Thickness(_config.Dimensions.BorderWidth)));
             style.Setters.Add(new Setter(Border.CornerRadiusProperty, new CornerRadius(_config.Dimensions.BorderRadius)));

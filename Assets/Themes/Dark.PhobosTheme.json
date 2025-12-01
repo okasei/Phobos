@@ -8,9 +8,9 @@
     "description": "Default dark theme for Phobos",
     "localizedNames": {
       "en-US": "Dark Theme",
-      "zh-CN": "ÉîÉ«Ö÷Ìâ",
-      "zh-TW": "ÉîÉ«Ö÷î}",
-      "ja-JP": "¥À©`¥¯¥Æ©`¥Þ"
+      "zh-CN": "æ·±è‰²ä¸»é¢˜",
+      "zh-TW": "æ·±è‰²ä¸»é¡Œ",
+      "ja-JP": "ãƒ€ãƒ¼ã‚¯ãƒ†ãƒ¼ãƒž"
     }
   },
   "colors": {

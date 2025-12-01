@@ -1,6 +1,7 @@
 ﻿using Phobos.Manager.Plugin;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace Phobos.Class.Config
@@ -25,6 +26,6 @@ namespace Phobos.Class.Config
             }
         }
 
-        public string langCode { get; set; } = "en-US";
+        public string langCode { get; set; } = CultureInfo.CurrentCulture.IetfLanguageTag;
     }
 }

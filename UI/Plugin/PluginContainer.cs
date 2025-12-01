@@ -8,6 +8,22 @@ using Phobos.Shared.Interface;
 
 namespace Phobos.UI.Plugin
 {
+    /*
+     * 
+    // 使用示例
+    <local:PluginContainer x:Name="PluginHost" />
+
+    // 加载插件 UI
+    await PluginHost.LoadPlugin("com.phobos.calculator");
+    // 或
+    await PluginHost.LoadPlugin(pluginInstance);
+
+    // 卸载当前插件
+    await PluginHost.UnloadCurrentPlugin();
+
+    // 清空容器
+    await PluginHost.Clear();
+     */
     /// <summary>
     /// 插件容器控件 - 用于承载插件的 UI
     /// </summary>
