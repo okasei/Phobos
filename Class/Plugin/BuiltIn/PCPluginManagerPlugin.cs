@@ -43,7 +43,9 @@ namespace Phobos.Class.Plugin.BuiltIn
                 { "zh-TW", "管理已安裝的插件" },
                 { "ja-JP", "インストールされたプラグインを管理" },
                 { "ko-KR", "설치된 플러그인 관리" }
-            }
+            },
+            Entry = "Phobos.Plugin.Manager()",
+            IsSystemPlugin = true
         };
 
         public override FrameworkElement? ContentArea => _contentGrid;

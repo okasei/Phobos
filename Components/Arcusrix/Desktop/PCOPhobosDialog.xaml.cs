@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
-namespace Phobos.Components.Arcusrix
+namespace Phobos.Components.Arcusrix.Desktop
 {
     /// <summary>
     /// PhobosDialog.xaml 的交互逻辑
@@ -459,9 +459,10 @@ namespace Phobos.Components.Arcusrix
         /// <summary>
         /// 显示确认对话框
         /// </summary>
-        public static bool Confirm(string message, string? title = null, Window? owner = null)
+        public static bool Confirm(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.Confirm(message, title);
+            config.IsModal = isModal;
             if (owner != null)
             {
                 config.OwnerWindow = owner;
@@ -475,9 +476,10 @@ namespace Phobos.Components.Arcusrix
         /// <summary>
         /// 显示信息对话框
         /// </summary>
-        public static void Info(string message, string? title = null, Window? owner = null)
+        public static void Info(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.Info(message, title);
+            config.IsModal = isModal;
             if (owner != null)
             {
                 config.OwnerWindow = owner;
@@ -490,9 +492,10 @@ namespace Phobos.Components.Arcusrix
         /// <summary>
         /// 显示警告对话框
         /// </summary>
-        public static void Warning(string message, string? title = null, Window? owner = null)
+        public static void Warning(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.Warning(message, title);
+            config.IsModal = isModal;
             if (owner != null)
             {
                 config.OwnerWindow = owner;
@@ -505,9 +508,10 @@ namespace Phobos.Components.Arcusrix
         /// <summary>
         /// 显示错误对话框
         /// </summary>
-        public static void Error(string message, string? title = null, Window? owner = null)
+        public static void Error(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.Error(message, title);
+            config.IsModal = isModal;
             if (owner != null)
             {
                 config.OwnerWindow = owner;
@@ -520,9 +524,10 @@ namespace Phobos.Components.Arcusrix
         /// <summary>
         /// 显示是/否对话框
         /// </summary>
-        public static bool? YesNo(string message, string? title = null, Window? owner = null)
+        public static bool? YesNo(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.YesNo(message, title);
+            config.IsModal = isModal;
             if (owner != null)
             {
                 config.OwnerWindow = owner;
@@ -541,9 +546,10 @@ namespace Phobos.Components.Arcusrix
         /// <summary>
         /// 显示是/否/取消对话框
         /// </summary>
-        public static bool? YesNoCancel(string message, string? title = null, Window? owner = null)
+        public static bool? YesNoCancel(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.YesNoCancel(message, title);
+            config.IsModal = isModal;
             if (owner != null)
             {
                 config.OwnerWindow = owner;

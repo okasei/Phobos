@@ -98,6 +98,13 @@ namespace Phobos.Class.Database
         public DateTime UpdateTime { get; set; } = DateTime.Now;
 
         /// <summary>
+        /// 启动入口命令
+        /// 例如: "calculator://open" 或 "notepad://new"
+        /// 为空表示插件不在桌面显示（后台服务类插件）
+        /// </summary>
+        public string Entry { get; set; } = string.Empty;
+
+        /// <summary>
         /// 获取图标完整路径
         /// </summary>
         public string? GetIconFullPath()
@@ -111,6 +118,11 @@ namespace Phobos.Class.Database
         /// 是否有设置页面
         /// </summary>
         public bool HasSettings => !string.IsNullOrEmpty(SettingUri);
+
+        /// <summary>
+        /// 是否有启动入口（是否应该在桌面显示）
+        /// </summary>
+        public bool HasEntry => !string.IsNullOrEmpty(Entry);
 
         /// <summary>
         /// 获取解析后的卸载信息

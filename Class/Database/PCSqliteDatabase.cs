@@ -100,7 +100,8 @@ namespace Phobos.Class.Database
                     SettingUri TEXT NOT NULL DEFAULT '',
                     UninstallInfo TEXT NOT NULL DEFAULT '',
                     IsEnabled INTEGER NOT NULL DEFAULT 1,
-                    UpdateTime TEXT NOT NULL DEFAULT (datetime('now'))
+                    UpdateTime TEXT NOT NULL DEFAULT (datetime('now')),
+                    Entry TEXT NOT NULL DEFAULT ''
                 );
 
                 CREATE TABLE IF NOT EXISTS Phobos_Appdata (

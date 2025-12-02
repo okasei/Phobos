@@ -3,6 +3,7 @@ using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Components.Plugin;
 using Phobos.Manager.Plugin;
 using Phobos.Manager.Arcusrix;
+using Phobos.Components.Arcusrix.Desktop;
 using Phobos.Service.Arcusrix;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
@@ -65,7 +66,7 @@ namespace Phobos
 
                 PCLoggerPlugin.Info("Phobos", "Welcome to Phobos!");
 
-                //var a = await PMPlugin.Instance.Install("C:\\Aurev\\Dev\\Phobos.Calculator\\bin\\x64\\Release\\net10.0-windows\\Phobos.Calculator.dll");
+                var a = await PMPlugin.Instance.Install("C:\\Aurev\\Dev\\Phobos.Calculator\\bin\\x64\\Release\\net10.0-windows\\Phobos.Calculator.dll");
                 //MessageBox.Show(a.Message);
                 await PMTheme.Instance.Initialize();
                 //await PMTheme.Instance.LoadThemeFromFile("C:\\Users\\Aurev\\AppData\\Roaming\\Phobos\\Themes\\com.phobos.theme.light-orange.json");
@@ -79,19 +80,15 @@ namespace Phobos
                 //p.InitializeComponent();
                 //p.Show();
                 LocalizationManager.Instance.CurrentLanguage = CultureInfo.CurrentCulture.IetfLanguageTag;
-                if (PSDialogService.ConfirmWithImage("Are you enjoying Phobos?", new BitmapImage(new Uri(@"C:\Aurev\Pictures\微信图片_20251003223857_8_8.png")), "Phobos", null))
-                {
-                    MessageBox.Show("Yes! Me too!", "Phobos", MessageBoxButton.OK, MessageBoxImage.Information);
-                    await Task.Delay(1500).ContinueWith((e) =>
-                    {
-                        PSDialogService.ShowFourButton("Phobos started successfully!", "Phobos", "Yes", "No", "Hello", "Arcusrix", null);
-                    });
-                    
-                }
-                else
-                {
-                    PCLoggerPlugin.Info("Phobos", "User is not enjoying Phobos.");
-                }
+                new PCOPhobosDesktop().Show();
+                // 在主窗口加载完成后显示对话框
+                //PCLoggerPlugin.Info("Phobos", "准备显示第一个对话框");
+                //var result1 = PSDialogService.ShowFourButton("Phobos started successfully!", "Phobos", "Yes", "No", "Hello", "Arcusrix", true, MainWindow);
+                //PCLoggerPlugin.Info("Phobos", $"第一个对话框已关闭，返回值：{result1}");
+
+                //PCLoggerPlugin.Info("Phobos", "准备显示第二个对话框");
+                //var result2 = PSDialogService.ConfirmWithImage("Are you enjoying Phobos?", new BitmapImage(new Uri(@"C:\Aurev\Pictures\微信图片_20251003223857_8_8.png")), "Phobos", true, MainWindow);
+                //PCLoggerPlugin.Info("Phobos", $"第二个对话框已关闭，返回值：{result2}");
             }
             catch (Exception ex)
             {
@@ -216,6 +213,9 @@ namespace Phobos
                 { "en-US", "Plugin loading failed" },
                 { "zh-CN", "插件加载失败" }
             }));
+
+            // 注册桌面本地化资源
+            DesktopLocalization.RegisterAll();
 
             // 从数据库读取语言设置
             Task.Run(async () =>
@@ -343,9 +343,9 @@ namespace Phobos
                         // 注册到数据库
                         await _database.ExecuteNonQuery(
                             @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory,
-                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime)
+                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime, Entry)
                               VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, 'builtin',
-                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'))",
+                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'), @entry)",
                             new System.Collections.Generic.Dictionary<string, object>
                             {
                                 { "@packageName", plugin.Metadata.PackageName },
@@ -357,17 +357,18 @@ namespace Phobos
                                 { "@icon", plugin.Metadata.Icon ?? string.Empty },
                                 { "@isSystemPlugin", plugin.Metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", plugin.Metadata.SettingUri ?? string.Empty },
-                                { "@uninstallInfo", uninstallInfoJson }
+                                { "@uninstallInfo", uninstallInfoJson },
+                                { "@entry", plugin.Metadata.Entry ?? string.Empty }
                             });
                     }
                     else
                     {
                         // 更新现有记录
                         await _database.ExecuteNonQuery(
-                            @"UPDATE Phobos_Plugin SET 
+                            @"UPDATE Phobos_Plugin SET
                                 Name = @name, Manufacturer = @manufacturer, Description = @description,
                                 Version = @version, Icon = @icon, IsSystemPlugin = @isSystemPlugin,
-                                SettingUri = @settingUri, UninstallInfo = @uninstallInfo, UpdateTime = datetime('now')
+                                SettingUri = @settingUri, UninstallInfo = @uninstallInfo, Entry = @entry, UpdateTime = datetime('now')
                               WHERE PackageName = @packageName",
                             new System.Collections.Generic.Dictionary<string, object>
                             {
@@ -379,7 +380,8 @@ namespace Phobos
                                 { "@icon", plugin.Metadata.Icon ?? string.Empty },
                                 { "@isSystemPlugin", plugin.Metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", plugin.Metadata.SettingUri ?? string.Empty },
-                                { "@uninstallInfo", uninstallInfoJson }
+                                { "@uninstallInfo", uninstallInfoJson },
+                                { "@entry", plugin.Metadata.Entry ?? string.Empty }
                             });
                         // 调用 OnInstall (首次)
                         await plugin.OnInstall();

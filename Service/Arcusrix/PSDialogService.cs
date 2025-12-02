@@ -23,59 +23,59 @@ namespace Phobos.Service.Arcusrix
         /// <param name="title">标题（可选）</param>
         /// <param name="owner">父窗口（可选）</param>
         /// <returns>用户是否确认</returns>
-        public static bool Confirm(string message, string? title = null, Window? owner = null)
+        public static bool Confirm(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            return PCDialogPlugin.Confirm(message, title, owner);
+            return PCDialogPlugin.Confirm(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示确认对话框（带调用者图标）
         /// </summary>
-        public static bool Confirm(string message, string? title, ImageSource? callerIcon, Window? owner = null)
+        public static bool Confirm(string message, string? title, bool isModal = true, ImageSource? callerIcon = null, Window? owner = null)
         {
-            return PCDialogPlugin.Confirm(message, title, callerIcon, owner);
+            return PCDialogPlugin.Confirm(message, title, callerIcon, isModal, owner);
         }
 
         /// <summary>
         /// 显示信息对话框
         /// </summary>
-        public static void Info(string message, string? title = null, Window? owner = null)
+        public static void Info(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            PCDialogPlugin.Info(message, title, owner);
+            PCDialogPlugin.Info(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示警告对话框
         /// </summary>
-        public static void Warning(string message, string? title = null, Window? owner = null)
+        public static void Warning(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            PCDialogPlugin.Warning(message, title, owner);
+            PCDialogPlugin.Warning(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示错误对话框
         /// </summary>
-        public static void Error(string message, string? title = null, Window? owner = null)
+        public static void Error(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            PCDialogPlugin.Error(message, title, owner);
+            PCDialogPlugin.Error(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示是/否对话框
         /// </summary>
         /// <returns>true=是，false=否，null=取消/关闭</returns>
-        public static bool? YesNo(string message, string? title = null, Window? owner = null)
+        public static bool? YesNo(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            return PCDialogPlugin.YesNo(message, title, owner);
+            return PCDialogPlugin.YesNo(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示是/否/取消对话框
         /// </summary>
         /// <returns>true=是，false=否，null=取消</returns>
-        public static bool? YesNoCancel(string message, string? title = null, Window? owner = null)
+        public static bool? YesNoCancel(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            return PCDialogPlugin.YesNoCancel(message, title, owner);
+            return PCDialogPlugin.YesNoCancel(message, title, isModal, owner);
         }
 
         #endregion
@@ -113,7 +113,7 @@ namespace Phobos.Service.Arcusrix
         /// <summary>
         /// 显示带图片的信息对话框
         /// </summary>
-        public static void InfoWithImage(string message, ImageSource image, string? title = null, Window? owner = null)
+        public static void InfoWithImage(string message, ImageSource image, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = new DialogConfig
             {
@@ -122,6 +122,7 @@ namespace Phobos.Service.Arcusrix
                 ContentText = message,
                 ContentImage = image,
                 ShowCancelButton = false,
+                IsModal = isModal,
                 Buttons = new List<DialogButton>
                 {
                     new DialogButton
@@ -145,12 +146,12 @@ namespace Phobos.Service.Arcusrix
         /// <summary>
         /// 显示带图片的确认对话框
         /// </summary>
-        public static bool ConfirmWithImage(string message, ImageSource image, string? title = null, Window? owner = null)
+        public static bool ConfirmWithImage(string message, ImageSource image, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.Confirm(message, title);
             config.ContentMode = DialogContentMode.ImageWithText;
             config.ContentImage = image;
-
+            config.IsModal = isModal;
             if (owner != null)
             {
                 config.OwnerWindow = owner;
@@ -179,6 +180,7 @@ namespace Phobos.Service.Arcusrix
             string? title,
             List<DialogButton> buttons,
             bool showCancel = true,
+            bool isModal = true,
             Window? owner = null)
         {
             var config = new DialogConfig
@@ -188,7 +190,8 @@ namespace Phobos.Service.Arcusrix
                 ContentText = message,
                 Buttons = buttons,
                 VisibleButtonCount = buttons.Count,
-                ShowCancelButton = showCancel
+                ShowCancelButton = showCancel,
+                IsModal = isModal
             };
 
             if (owner != null)
@@ -209,6 +212,7 @@ namespace Phobos.Service.Arcusrix
             string button1Text,
             string button2Text,
             string button3Text,
+            bool isModal = true,
             Window? owner = null)
         {
             var buttons = new List<DialogButton>
@@ -218,7 +222,7 @@ namespace Phobos.Service.Arcusrix
                 new DialogButton { Text = button3Text, Tag = "button3", ButtonType = DialogButtonType.Secondary }
             };
 
-            var result = ShowWithButtons(message, title, buttons, false, owner);
+            var result = ShowWithButtons(message, title, buttons, false, isModal, owner);
             return result.ButtonTag;
         }
 
@@ -232,6 +236,7 @@ namespace Phobos.Service.Arcusrix
             string button2Text,
             string button3Text,
             string button4Text,
+            bool isModal = true,
             Window? owner = null)
         {
             var buttons = new List<DialogButton>
@@ -242,7 +247,7 @@ namespace Phobos.Service.Arcusrix
                 new DialogButton { Text = button4Text, Tag = "button4", ButtonType = DialogButtonType.Secondary }
             };
 
-            var result = ShowWithButtons(message, title, buttons, false, owner);
+            var result = ShowWithButtons(message, title, buttons, false, isModal, owner);
             return result.ButtonTag;
         }
 
@@ -259,7 +264,7 @@ namespace Phobos.Service.Arcusrix
 
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                var result = Confirm(message, title, owner);
+                var result = Confirm(message, title, false, owner);
                 tcs.SetResult(result);
             });
 
@@ -275,7 +280,7 @@ namespace Phobos.Service.Arcusrix
 
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                var result = YesNo(message, title, owner);
+                var result = YesNo(message, title, false, owner);
                 tcs.SetResult(result);
             });
 
@@ -310,6 +315,7 @@ namespace Phobos.Service.Arcusrix
             string? title = null,
             List<DialogButton>? buttons = null,
             bool showCancel = true,
+            bool isModal = true,
             Window? owner = null)
         {
             var config = new DialogConfig
@@ -317,6 +323,7 @@ namespace Phobos.Service.Arcusrix
                 Title = title,
                 ContentMode = DialogContentMode.Custom,
                 CustomContent = content,
+                IsModal = isModal,
                 Buttons = buttons ?? new List<DialogButton>
                 {
                     new DialogButton { Text = "OK", Tag = "ok", ButtonType = DialogButtonType.Primary }
@@ -345,6 +352,7 @@ namespace Phobos.Service.Arcusrix
             string message,
             FrameworkElement buttonArea,
             string? title = null,
+            bool isModal = true,
             Window? owner = null)
         {
             var config = new DialogConfig
@@ -352,7 +360,8 @@ namespace Phobos.Service.Arcusrix
                 Title = title,
                 ContentMode = DialogContentMode.CenteredText,
                 ContentText = message,
-                CustomButtonArea = buttonArea
+                CustomButtonArea = buttonArea,
+                IsModal = isModal
             };
 
             if (owner != null)

@@ -1,5 +1,5 @@
 ﻿using Phobos.Class.Plugin;
-using Phobos.Components.Arcusrix;
+using Phobos.Components.Arcusrix.Desktop;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 using System;
@@ -168,8 +168,9 @@ namespace Phobos.Class.Plugin.BuiltIn
             var message = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
+            var isModal = args.Length > 4 ? args[4] as bool? ?? false : false;
 
-            var confirmed = PCOPhobosDialog.Confirm(message, title, owner);
+            var confirmed = PCOPhobosDialog.Confirm(message, title, isModal, owner);
 
             return Task.FromResult(new RequestResult
             {
@@ -185,7 +186,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            PCOPhobosDialog.Info(message, title, owner);
+            PCOPhobosDialog.Info(message, title, true, owner);
 
             return Task.FromResult(new RequestResult
             {
@@ -200,7 +201,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            PCOPhobosDialog.Warning(message, title, owner);
+            PCOPhobosDialog.Warning(message, title, true, owner);
 
             return Task.FromResult(new RequestResult
             {
@@ -215,7 +216,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            PCOPhobosDialog.Error(message, title, owner);
+            PCOPhobosDialog.Error(message, title, true, owner);
 
             return Task.FromResult(new RequestResult
             {
@@ -230,7 +231,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            var result = PCOPhobosDialog.YesNo(message, title, owner);
+            var result = PCOPhobosDialog.YesNo(message, title, true, owner);
 
             return Task.FromResult(new RequestResult
             {
@@ -251,7 +252,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            var result = PCOPhobosDialog.YesNoCancel(message, title, owner);
+            var result = PCOPhobosDialog.YesNoCancel(message, title, true, owner);
 
             return Task.FromResult(new RequestResult
             {
@@ -313,18 +314,19 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// <summary>
         /// 显示确认对话框
         /// </summary>
-        public static bool Confirm(string message, string? title = null, Window? owner = null)
+        public static bool Confirm(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            return PCOPhobosDialog.Confirm(message, title, owner);
+            return PCOPhobosDialog.Confirm(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示确认对话框（带图标）
         /// </summary>
-        public static bool Confirm(string message, string? title, ImageSource? callerIcon, Window? owner = null)
+        public static bool Confirm(string message, string? title, ImageSource? callerIcon, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.Confirm(message, title);
             config.CallerIcon = callerIcon;
+            config.IsModal = isModal;
             if (owner != null)
             {
                 config.OwnerWindow = owner;
@@ -337,41 +339,41 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// <summary>
         /// 显示信息对话框
         /// </summary>
-        public static void Info(string message, string? title = null, Window? owner = null)
+        public static void Info(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            PCOPhobosDialog.Info(message, title, owner);
+            PCOPhobosDialog.Info(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示警告对话框
         /// </summary>
-        public static void Warning(string message, string? title = null, Window? owner = null)
+        public static void Warning(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            PCOPhobosDialog.Warning(message, title, owner);
+            PCOPhobosDialog.Warning(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示错误对话框
         /// </summary>
-        public static void Error(string message, string? title = null, Window? owner = null)
+        public static void Error(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            PCOPhobosDialog.Error(message, title, owner);
+            PCOPhobosDialog.Error(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示是/否对话框
         /// </summary>
-        public static bool? YesNo(string message, string? title = null, Window? owner = null)
+        public static bool? YesNo(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            return PCOPhobosDialog.YesNo(message, title, owner);
+            return PCOPhobosDialog.YesNo(message, title, isModal, owner);
         }
 
         /// <summary>
         /// 显示是/否/取消对话框
         /// </summary>
-        public static bool? YesNoCancel(string message, string? title = null, Window? owner = null)
+        public static bool? YesNoCancel(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            return PCOPhobosDialog.YesNoCancel(message, title, owner);
+            return PCOPhobosDialog.YesNoCancel(message, title, isModal, owner);
         }
 
         /// <summary>

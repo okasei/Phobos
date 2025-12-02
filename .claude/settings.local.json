@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dir \"c:\\Aurev\\Dev\\Phobos\\Components\\Arcusrix\")",
+      "Bash(mkdir:*)",
+      "Bash(dir:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

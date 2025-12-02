@@ -1,0 +1,35 @@
+<UserControl x:Class="Phobos.Components.Arcusrix.Desktop.PCODesktopMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="200" d:DesignWidth="200"
+             Visibility="Collapsed">
+
+    <Border x:Name="MenuBorder"
+            Background="{DynamicResource Background2Brush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="4"
+            MinWidth="180"
+            RenderTransformOrigin="0,0">
+
+        <Border.Effect>
+            <DropShadowEffect Color="Black"
+                              BlurRadius="16"
+                              ShadowDepth="2"
+                              Opacity="0.25"/>
+        </Border.Effect>
+
+        <Border.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform x:Name="MenuScale" ScaleX="1" ScaleY="1"/>
+                <TranslateTransform x:Name="MenuTranslate" Y="0"/>
+            </TransformGroup>
+        </Border.RenderTransform>
+
+        <StackPanel x:Name="MenuItemsPanel"/>
+    </Border>
+</UserControl>

@@ -33,7 +33,8 @@ namespace Phobos.Class.Plugin.BuiltIn
                 { "zh-TW", "系統和插件日誌記錄" },
                 { "ja-JP", "システムとプラグインのログ記録" },
                 { "ko-KR", "시스템 및 플러그인 로깅" }
-            }
+            },
+            IsSystemPlugin = true
         };
 
         public override FrameworkElement? ContentArea => null;

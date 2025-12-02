@@ -230,11 +230,11 @@ namespace Phobos.Manager.Plugin
                     if (existing?.Count > 0)
                     {
                         await _database.ExecuteNonQuery(
-                            @"UPDATE Phobos_Plugin SET 
+                            @"UPDATE Phobos_Plugin SET
                                 Name = @name, Manufacturer = @manufacturer, Description = @description,
                                 Version = @version, Secret = @secret, Directory = @directory,
                                 Icon = @icon, IsSystemPlugin = @isSystemPlugin, SettingUri = @settingUri,
-                                UninstallInfo = @uninstallInfo, UpdateTime = datetime('now')
+                                UninstallInfo = @uninstallInfo, Entry = @entry, UpdateTime = datetime('now')
                               WHERE PackageName = @packageName COLLATE NOCASE",
                             new Dictionary<string, object>
                             {
@@ -248,16 +248,17 @@ namespace Phobos.Manager.Plugin
                                 { "@icon", metadata.Icon ?? string.Empty },
                                 { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", metadata.SettingUri ?? string.Empty },
-                                { "@uninstallInfo", uninstallInfoJson }
+                                { "@uninstallInfo", uninstallInfoJson },
+                                { "@entry", metadata.Entry ?? string.Empty }
                             });
                     }
                     else
                     {
                         await _database.ExecuteNonQuery(
                             @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory,
-                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime)
+                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime, Entry)
                               VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, @directory,
-                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'))",
+                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'), @entry)",
                             new Dictionary<string, object>
                             {
                                 { "@packageName", metadata.PackageName },
@@ -270,7 +271,8 @@ namespace Phobos.Manager.Plugin
                                 { "@icon", metadata.Icon ?? string.Empty },
                                 { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", metadata.SettingUri ?? string.Empty },
-                                { "@uninstallInfo", uninstallInfoJson }
+                                { "@uninstallInfo", uninstallInfoJson },
+                                { "@entry", metadata.Entry ?? string.Empty }
                             });
                     }
                 }
