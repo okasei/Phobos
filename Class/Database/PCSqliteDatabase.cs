@@ -2,7 +2,7 @@
 using Phobos.Class.Plugin.BuiltIn;
 using Microsoft.Data.Sqlite;
 using Phobos.Interface.Database;
-using Phobos.Utils.System;
+using Phobos.Utils.Arcusrix;
 using System.Data;
 
 namespace Phobos.Class.Database

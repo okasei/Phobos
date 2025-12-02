@@ -7,7 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Phobos.Shared.Interface;
 
-namespace Phobos.Class.System
+namespace Phobos.Class.Arcusrix
 {
     /// <summary>
     /// Light 主题

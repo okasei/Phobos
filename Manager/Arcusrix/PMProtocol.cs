@@ -6,7 +6,7 @@ using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 using Phobos.Utils.General;
 
-namespace Phobos.Manager.System
+namespace Phobos.Manager.Arcusrix
 {
     /// <summary>
     /// 协议管理器 - 管理链接关联

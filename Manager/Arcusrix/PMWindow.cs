@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Phobos.Class.System;
-using Phobos.Interface.System;
+using Phobos.Class.Arcusrix;
+using Phobos.Interface.Arcusrix;
 using Phobos.Shared.Interface;
 
-namespace Phobos.Manager.System
+namespace Phobos.Manager.Arcusrix
 {
     /// <summary>
     /// 窗口管理器实现

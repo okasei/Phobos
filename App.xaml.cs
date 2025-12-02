@@ -2,14 +2,17 @@
 using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Components.Plugin;
 using Phobos.Manager.Plugin;
-using Phobos.Manager.System;
+using Phobos.Manager.Arcusrix;
+using Phobos.Service.Arcusrix;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 using Phobos.Shared.Manager;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace Phobos
 {
@@ -66,15 +69,29 @@ namespace Phobos
                 //MessageBox.Show(a.Message);
                 await PMTheme.Instance.Initialize();
                 //await PMTheme.Instance.LoadThemeFromFile("C:\\Users\\Aurev\\AppData\\Roaming\\Phobos\\Themes\\com.phobos.theme.light-orange.json");
-                await PMTheme.Instance.LoadTheme("com.phobos.theme.light-blue");
+                await PMTheme.Instance.LoadTheme("com.phobos.theme.dark-orange");
                 await InitializeThemeManager();
                 // PMTheme.Instance.LoadTheme("dark");
-                await PMPlugin.Instance.Run("com.phobos.calculator", "show");
+                //await PMPlugin.Instance.Run("com.phobos.calculator", "show");
                 //PMPlugin.Instance.Launch("com.phobos.plugin.manager", "");
                 //var p = new PCOPluginInstaller();
                 //_resourceManager.ApplyToWindow(p);
                 //p.InitializeComponent();
                 //p.Show();
+                LocalizationManager.Instance.CurrentLanguage = CultureInfo.CurrentCulture.IetfLanguageTag;
+                if (PSDialogService.ConfirmWithImage("Are you enjoying Phobos?", new BitmapImage(new Uri(@"C:\Aurev\Pictures\微信图片_20251003223857_8_8.png")), "Phobos", null))
+                {
+                    MessageBox.Show("Yes! Me too!", "Phobos", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await Task.Delay(1500).ContinueWith((e) =>
+                    {
+                        PSDialogService.ShowFourButton("Phobos started successfully!", "Phobos", "Yes", "No", "Hello", "Arcusrix", null);
+                    });
+                    
+                }
+                else
+                {
+                    PCLoggerPlugin.Info("Phobos", "User is not enjoying Phobos.");
+                }
             }
             catch (Exception ex)
             {
@@ -253,7 +270,8 @@ namespace Phobos
             {
                 new PCPluginManagerPlugin(),
                 new PCLoggerPlugin(),
-                new PCSequencerPlugin()
+                new PCSequencerPlugin(),
+                new PCDialogPlugin()
             };
             // 创建处理器
 
@@ -319,13 +337,15 @@ namespace Phobos
                         {
                             { "@packageName", plugin.Metadata.PackageName }
                         });
-
+                    var uninstallInfoJson = plugin.Metadata.UninstallInfo != null ? Newtonsoft.Json.JsonConvert.SerializeObject(plugin.Metadata.UninstallInfo) : string.Empty;
                     if (existing?.Count == 0)
                     {
                         // 注册到数据库
                         await _database.ExecuteNonQuery(
-                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory)
-                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, 'builtin')",
+                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory,
+                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime)
+                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, 'builtin',
+                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'))",
                             new System.Collections.Generic.Dictionary<string, object>
                             {
                                 { "@packageName", plugin.Metadata.PackageName },
@@ -333,10 +353,34 @@ namespace Phobos
                                 { "@manufacturer", plugin.Metadata.Manufacturer },
                                 { "@description", plugin.Metadata.GetLocalizedDescription("en-US") },
                                 { "@version", plugin.Metadata.Version },
-                                { "@secret", plugin.Metadata.Secret }
+                                { "@secret", plugin.Metadata.Secret },
+                                { "@icon", plugin.Metadata.Icon ?? string.Empty },
+                                { "@isSystemPlugin", plugin.Metadata.IsSystemPlugin ? 1 : 0 },
+                                { "@settingUri", plugin.Metadata.SettingUri ?? string.Empty },
+                                { "@uninstallInfo", uninstallInfoJson }
                             });
-
-
+                    }
+                    else
+                    {
+                        // 更新现有记录
+                        await _database.ExecuteNonQuery(
+                            @"UPDATE Phobos_Plugin SET 
+                                Name = @name, Manufacturer = @manufacturer, Description = @description,
+                                Version = @version, Icon = @icon, IsSystemPlugin = @isSystemPlugin,
+                                SettingUri = @settingUri, UninstallInfo = @uninstallInfo, UpdateTime = datetime('now')
+                              WHERE PackageName = @packageName",
+                            new System.Collections.Generic.Dictionary<string, object>
+                            {
+                                { "@packageName", plugin.Metadata.PackageName },
+                                { "@name", plugin.Metadata.Name },
+                                { "@manufacturer", plugin.Metadata.Manufacturer },
+                                { "@description", plugin.Metadata.GetLocalizedDescription("en-US") },
+                                { "@version", plugin.Metadata.Version },
+                                { "@icon", plugin.Metadata.Icon ?? string.Empty },
+                                { "@isSystemPlugin", plugin.Metadata.IsSystemPlugin ? 1 : 0 },
+                                { "@settingUri", plugin.Metadata.SettingUri ?? string.Empty },
+                                { "@uninstallInfo", uninstallInfoJson }
+                            });
                         // 调用 OnInstall (首次)
                         await plugin.OnInstall();
                     }

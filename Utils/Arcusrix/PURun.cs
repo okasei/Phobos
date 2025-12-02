@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Phobos.Utils.System
+namespace Phobos.Utils.Arcusrix
 {
     public class PURun
     {

@@ -3,7 +3,7 @@ using System.Management;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Phobos.Utils.System
+namespace Phobos.Utils.Arcusrix
 {
     /// <summary>
     /// 机器码工具类

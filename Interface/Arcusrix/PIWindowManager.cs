@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Phobos.Shared.Interface;
 
-namespace Phobos.Interface.System
+namespace Phobos.Interface.Arcusrix
 {
     /// <summary>
     /// 窗口管理器接口

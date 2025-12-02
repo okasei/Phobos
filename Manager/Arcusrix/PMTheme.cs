@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using Phobos.Class.Theme;
 using Phobos.Class.Plugin.BuiltIn;
-using Phobos.Interface.System;
+using Phobos.Interface.Arcusrix;
 using Phobos.Shared.Interface;
 
-namespace Phobos.Manager.System
+namespace Phobos.Manager.Arcusrix
 {
     /// <summary>
     /// 主题管理器实现
@@ -48,8 +48,8 @@ namespace Phobos.Manager.System
         private PMTheme()
         {
             // 注册代码定义的默认主题（作为回退）
-            RegisterTheme(new Class.System.PCLightTheme());
-            RegisterTheme(new Class.System.PCDarkTheme());
+            RegisterTheme(new Class.Arcusrix.PCLightTheme());
+            RegisterTheme(new Class.Arcusrix.PCDarkTheme());
         }
 
         #region 初始化

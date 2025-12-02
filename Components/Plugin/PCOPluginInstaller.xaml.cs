@@ -19,7 +19,8 @@ namespace Phobos.Components.Plugin
     {
         public PCOPluginInstaller()
         {
-        }/// <summary>
+        }
+        /// <summary>
          /// 设置插件信息
          /// </summary>
          /// <param name="pluginInfo">插件信息对象</param>

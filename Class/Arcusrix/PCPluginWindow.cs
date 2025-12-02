@@ -5,12 +5,12 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Phobos.Shared.Interface;
-using Phobos.Manager.System;
+using Phobos.Manager.Arcusrix;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using System.Windows.Media.Animation;
 
-namespace Phobos.Class.System
+namespace Phobos.Class.Arcusrix
 {
     /// <summary>
     /// 插件窗口类 - 提供默认布局
