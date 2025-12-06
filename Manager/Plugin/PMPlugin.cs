@@ -41,6 +41,81 @@ namespace Phobos.Manager.Plugin
     }
 
     /// <summary>
+    /// 插件管理器 i18n 错误消息
+    /// </summary>
+    internal static class PMPluginMessages
+    {
+        private static readonly Dictionary<string, Dictionary<string, string>> _messages = new()
+        {
+            ["error.secret_mismatch"] = new()
+            {
+                { "en-US", "Plugin update failed: Secret key mismatch. This may indicate a different publisher or tampering." },
+                { "zh-CN", "插件更新失败：密钥不匹配。这可能表示发布者不同或文件被篡改。" },
+                { "zh-TW", "插件更新失敗：密鑰不匹配。這可能表示發布者不同或檔案被竄改。" },
+                { "ja-JP", "プラグインの更新に失敗しました：秘密鍵が一致しません。発行者が異なるか、改ざんされている可能性があります。" },
+                { "ko-KR", "플러그인 업데이트 실패: 시크릿 키 불일치. 다른 게시자이거나 변조된 것일 수 있습니다." }
+            },
+            ["error.plugin_not_found"] = new()
+            {
+                { "en-US", "Plugin not found" },
+                { "zh-CN", "插件未找到" },
+                { "zh-TW", "插件未找到" },
+                { "ja-JP", "プラグインが見つかりません" },
+                { "ko-KR", "플러그인을 찾을 수 없습니다" }
+            },
+            ["error.file_not_found"] = new()
+            {
+                { "en-US", "Plugin file not found" },
+                { "zh-CN", "插件文件未找到" },
+                { "zh-TW", "插件檔案未找到" },
+                { "ja-JP", "プラグインファイルが見つかりません" },
+                { "ko-KR", "플러그인 파일을 찾을 수 없습니다" }
+            },
+            ["error.invalid_plugin"] = new()
+            {
+                { "en-US", "No valid plugin type found in assembly" },
+                { "zh-CN", "程序集中未找到有效的插件类型" },
+                { "zh-TW", "組件中未找到有效的插件類型" },
+                { "ja-JP", "アセンブリに有効なプラグインタイプが見つかりません" },
+                { "ko-KR", "어셈블리에서 유효한 플러그인 유형을 찾을 수 없습니다" }
+            },
+            ["error.create_instance_failed"] = new()
+            {
+                { "en-US", "Failed to create plugin instance" },
+                { "zh-CN", "创建插件实例失败" },
+                { "zh-TW", "創建插件實例失敗" },
+                { "ja-JP", "プラグインインスタンスの作成に失敗しました" },
+                { "ko-KR", "플러그인 인스턴스 생성 실패" }
+            },
+            ["error.already_installed"] = new()
+            {
+                { "en-US", "Plugin already installed" },
+                { "zh-CN", "插件已安装" },
+                { "zh-TW", "插件已安裝" },
+                { "ja-JP", "プラグインは既にインストールされています" },
+                { "ko-KR", "플러그인이 이미 설치되어 있습니다" }
+            }
+        };
+
+        public static string Get(string key)
+        {
+            var lang = LocalizationManager.Instance.CurrentLanguage;
+            if (_messages.TryGetValue(key, out var dict))
+            {
+                if (dict.TryGetValue(lang, out var str)) return str;
+                // Try base language
+                var baseLang = lang.Contains("-") ? lang.Split('-')[0] : lang;
+                foreach (var kvp in dict)
+                {
+                    if (kvp.Key.StartsWith(baseLang)) return kvp.Value;
+                }
+                if (dict.TryGetValue("en-US", out var enStr)) return enStr;
+            }
+            return key;
+        }
+    }
+
+    /// <summary>
     /// 插件管理器实现
     /// </summary>
     public class PMPlugin : PIPluginManager
@@ -146,6 +221,34 @@ namespace Phobos.Manager.Plugin
             };
         }
 
+        /// <summary>
+        /// Register a built-in plugin instance so it is available via GetPlugin/Launch
+        /// </summary>
+        /// <param name="plugin">插件实例</param>
+        public void RegisterBuiltInPlugin(IPhobosPlugin plugin)
+        {
+            if (plugin == null) return;
+
+            var packageName = plugin.Metadata.PackageName;
+            if (string.IsNullOrEmpty(packageName)) return;
+
+            if (_loadedPlugins.ContainsKey(packageName)) return;
+
+            if (plugin is PCPluginBase basePlugin)
+            {
+                basePlugin.SetPhobosHandlers(CreatePluginHandlers());
+            }
+
+            _loadedPlugins[packageName] = new PluginLoadContext
+            {
+                PackageName = packageName,
+                PluginPath = string.Empty,
+                Instance = plugin,
+                State = PluginState.Loaded,
+                LoadTime = DateTime.Now
+            };
+        }
+
         public async Task<RequestResult> Install(string pluginPath, PluginInstallOptions? options = null)
         {
             options ??= new PluginInstallOptions();
@@ -180,10 +283,26 @@ namespace Phobos.Manager.Plugin
                     "SELECT * FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
                     new Dictionary<string, object> { { "@packageName", metadata.PackageName } });
 
-                if (existing?.Count > 0 && !options.ForceReinstall)
+                if (existing?.Count > 0)
                 {
-                    tempContext.Unload();
-                    return new RequestResult { Success = false, Message = "Plugin already installed" };
+                    // 验证 Secret Key 是否一致
+                    var existingSecret = existing[0]["Secret"]?.ToString() ?? string.Empty;
+                    if (!string.IsNullOrEmpty(existingSecret) && existingSecret != metadata.Secret)
+                    {
+                        tempContext.Unload();
+                        PCLoggerPlugin.Warning("PMPlugin", $"Secret key mismatch for plugin {metadata.PackageName}");
+                        return new RequestResult
+                        {
+                            Success = false,
+                            Message = PMPluginMessages.Get("error.secret_mismatch")
+                        };
+                    }
+
+                    if (!options.ForceReinstall)
+                    {
+                        tempContext.Unload();
+                        return new RequestResult { Success = false, Message = PMPluginMessages.Get("error.already_installed") };
+                    }
                 }
 
                 if (!options.IgnoreDependencies)
@@ -234,7 +353,7 @@ namespace Phobos.Manager.Plugin
                                 Name = @name, Manufacturer = @manufacturer, Description = @description,
                                 Version = @version, Secret = @secret, Directory = @directory,
                                 Icon = @icon, IsSystemPlugin = @isSystemPlugin, SettingUri = @settingUri,
-                                UninstallInfo = @uninstallInfo, Entry = @entry, UpdateTime = datetime('now')
+                                UninstallInfo = @uninstallInfo, Entry = @entry, LaunchFlag = @launchFlag, UpdateTime = datetime('now')
                               WHERE PackageName = @packageName COLLATE NOCASE",
                             new Dictionary<string, object>
                             {
@@ -249,16 +368,17 @@ namespace Phobos.Manager.Plugin
                                 { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", metadata.SettingUri ?? string.Empty },
                                 { "@uninstallInfo", uninstallInfoJson },
-                                { "@entry", metadata.Entry ?? string.Empty }
+                                { "@entry", metadata.Entry ?? string.Empty },
+                                { "@launchFlag", metadata.LaunchFlag == true ? 1 : 0 }
                             });
                     }
                     else
                     {
                         await _database.ExecuteNonQuery(
                             @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory,
-                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime, Entry)
+                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime, Entry, LaunchFlag)
                               VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, @directory,
-                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'), @entry)",
+                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'), @entry, @launchFlag)",
                             new Dictionary<string, object>
                             {
                                 { "@packageName", metadata.PackageName },
@@ -272,7 +392,8 @@ namespace Phobos.Manager.Plugin
                                 { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", metadata.SettingUri ?? string.Empty },
                                 { "@uninstallInfo", uninstallInfoJson },
-                                { "@entry", metadata.Entry ?? string.Empty }
+                                { "@entry", metadata.Entry ?? string.Empty },
+                                { "@launchFlag", metadata.LaunchFlag == true ? 1 : 0 }
                             });
                     }
                 }
@@ -283,7 +404,15 @@ namespace Phobos.Manager.Plugin
                     var plugin = GetPlugin(metadata.PackageName);
                     if (plugin != null)
                     {
-                        await plugin.OnInstall();
+                        try
+                        {
+                            await plugin.OnInstall();
+                        }
+                        catch (Exception pluginEx)
+                        {
+                            // 插件安装回调失败不应阻止安装流程
+                            PCLoggerPlugin.Warning("PMPlugin", $"Plugin OnInstall callback failed for {metadata.PackageName}: {pluginEx.Message}");
+                        }
                     }
                 }
 
@@ -338,7 +467,15 @@ namespace Phobos.Manager.Plugin
                 var plugin = GetPlugin(packageName);
                 if (plugin != null)
                 {
-                    await plugin.OnUninstall();
+                    try
+                    {
+                        await plugin.OnUninstall();
+                    }
+                    catch (Exception pluginEx)
+                    {
+                        // 插件卸载回调失败不应阻止卸载流程
+                        PCLoggerPlugin.Warning("PMPlugin", $"Plugin OnUninstall callback failed for {packageName}: {pluginEx.Message}");
+                    }
                 }
 
                 await Unload(packageName);
@@ -517,12 +654,23 @@ namespace Phobos.Manager.Plugin
                     return new RequestResult { Success = false, Message = "Plugin instance not found" };
                 }
 
+                // 调用 OnLaunch 让插件初始化
                 var result = await context.Instance.OnLaunch(args);
-                if (result.Success)
+                if (!result.Success)
                 {
-                    context.State = PluginState.Running;
+                    return result;
                 }
 
+                // 如果插件有 ContentArea，则使用 WindowManager 载入窗口
+                if (context.Instance.ContentArea != null)
+                {
+                    var windowManager = PMWindow.Instance;
+                    var pluginWindow = windowManager.CreatePluginWindow(context.Instance, context.Instance.Metadata.GetLocalizedName(PCSysConfig.Instance.langCode));
+                    windowManager.ShowWindow(pluginWindow);
+                }
+                // 否则，插件自行设置自定义窗口启动（在 OnLaunch 中处理）
+
+                context.State = PluginState.Running;
                 return result;
             }
             catch (Exception ex)
@@ -1071,48 +1219,80 @@ namespace Phobos.Manager.Plugin
 
             try
             {
-                await _database.ExecuteNonQuery(
-                    @"INSERT OR REPLACE INTO Phobos_AssociatedItem (Name, PackageName, Description, Command)
-                      VALUES (@name, @packageName, @description, @command)",
-                    new Dictionary<string, object>
-                    {
-                        { "@name", association.Name },
-                        { "@packageName", caller.PackageName },
-                        { "@description", TextEscaper.Escape(association.Description) },
-                        { "@command", association.Command }
-                    });
+                var protocol = association.Protocol.ToLowerInvariant();
+                var packageName = caller.PackageName;
 
+                // 查询是否已存在该包名+协议的组合
                 var existing = await _database.ExecuteQuery(
-                    @"SELECT UUID FROM Phobos_Protocol 
-                      WHERE Protocol = @protocol COLLATE NOCASE AND AssociatedItem = @associatedItem COLLATE NOCASE",
+                    @"SELECT p.UUID, p.AssociatedItem
+                      FROM Phobos_Protocol p
+                      INNER JOIN Phobos_AssociatedItem a ON p.AssociatedItem = a.Name
+                      WHERE p.Protocol = @protocol COLLATE NOCASE AND a.PackageName = @packageName COLLATE NOCASE",
                     new Dictionary<string, object>
                     {
-                        { "@protocol", association.Protocol.ToLowerInvariant() },
-                        { "@associatedItem", association.Name }
+                        { "@protocol", protocol },
+                        { "@packageName", packageName }
                     });
 
                 if (existing?.Count > 0)
                 {
+                    // 已存在：更新记录，保存旧值到 LastValue
+                    var existingUuid = existing[0]["UUID"]?.ToString() ?? "";
+                    var oldAssociatedItem = existing[0]["AssociatedItem"]?.ToString() ?? "";
+
+                    // 更新已有的 AssociatedItem（通过旧 Name 找到它）
                     await _database.ExecuteNonQuery(
-                        @"UPDATE Phobos_Protocol SET UpdateTime = datetime('now'), UpdateUID = @uid
+                        @"UPDATE Phobos_AssociatedItem
+                          SET Name = @newName, Description = @description, Command = @command
+                          WHERE Name = @oldName AND PackageName = @packageName",
+                        new Dictionary<string, object>
+                        {
+                            { "@newName", association.Name },
+                            { "@oldName", oldAssociatedItem },
+                            { "@packageName", packageName },
+                            { "@description", TextEscaper.Escape(association.Description) },
+                            { "@command", association.Command }
+                        });
+
+                    // 更新 Protocol 记录，同时更新 AssociatedItem 引用和 LastValue
+                    await _database.ExecuteNonQuery(
+                        @"UPDATE Phobos_Protocol
+                          SET AssociatedItem = @associatedItem,
+                              UpdateUID = @uid,
+                              UpdateTime = datetime('now'),
+                              LastValue = @lastValue
                           WHERE UUID = @uuid",
                         new Dictionary<string, object>
                         {
-                            { "@uuid", existing[0]["UUID"]?.ToString() ?? string.Empty },
-                            { "@uid", caller.PackageName }
+                            { "@uuid", existingUuid },
+                            { "@associatedItem", association.Name },
+                            { "@uid", packageName },
+                            { "@lastValue", oldAssociatedItem }
                         });
                 }
                 else
                 {
+                    // 不存在：插入新记录
                     await _database.ExecuteNonQuery(
-                        @"INSERT INTO Phobos_Protocol (UUID, Protocol, AssociatedItem, UpdateUID, UpdateTime)
-                          VALUES (@uuid, @protocol, @associatedItem, @uid, datetime('now'))",
+                        @"INSERT OR REPLACE INTO Phobos_AssociatedItem (Name, PackageName, Description, Command)
+                          VALUES (@name, @packageName, @description, @command)",
+                        new Dictionary<string, object>
+                        {
+                            { "@name", association.Name },
+                            { "@packageName", packageName },
+                            { "@description", TextEscaper.Escape(association.Description) },
+                            { "@command", association.Command }
+                        });
+
+                    await _database.ExecuteNonQuery(
+                        @"INSERT INTO Phobos_Protocol (UUID, Protocol, AssociatedItem, UpdateUID, UpdateTime, LastValue)
+                          VALUES (@uuid, @protocol, @associatedItem, @uid, datetime('now'), '')",
                         new Dictionary<string, object>
                         {
                             { "@uuid", Guid.NewGuid().ToString("N") },
-                            { "@protocol", association.Protocol.ToLowerInvariant() },
+                            { "@protocol", protocol },
                             { "@associatedItem", association.Name },
-                            { "@uid", caller.PackageName }
+                            { "@uid", packageName }
                         });
                 }
 

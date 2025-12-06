@@ -6,7 +6,7 @@ using Phobos.Shared.Interface;
 namespace Phobos.Class.Plugin.BuiltIn
 {
     /// <summary>
-    /// Logger 插件
+    /// Logger 插件 - 系统日志记录组件
     /// </summary>
     public class PCLoggerPlugin : PCPluginBase
     {
@@ -17,7 +17,31 @@ namespace Phobos.Class.Plugin.BuiltIn
             Manufacturer = "Phobos Team",
             Version = "1.0.0",
             Secret = "phobos_logger_secret_kalf91ka0djs",
-            DatabaseKey = "log",
+            DatabaseKey = "PLogger",
+            Icon = "Assets/logger-icon.png",
+            IsSystemPlugin = true,
+            LaunchFlag = false,
+            SettingUri = "log://settings",
+            UninstallInfo = new PluginUninstallInfo
+            {
+                AllowUninstall = false,
+                Title = "Cannot Uninstall System Plugin",
+                Message = "Logger is a core component of Phobos and cannot be uninstalled.",
+                LocalizedTitles = new Dictionary<string, string>
+                {
+                    { "en-US", "Cannot Uninstall System Plugin" },
+                    { "zh-CN", "无法卸载系统插件" },
+                    { "zh-TW", "無法卸載系統插件" },
+                    { "ja-JP", "システムプラグインをアンインストールできません" }
+                },
+                LocalizedMessages = new Dictionary<string, string>
+                {
+                    { "en-US", "Logger is a core component of Phobos and cannot be uninstalled." },
+                    { "zh-CN", "日志记录器是 Phobos 的核心组件，无法卸载。" },
+                    { "zh-TW", "日誌記錄器是 Phobos 的核心元件，無法卸載。" },
+                    { "ja-JP", "ロガーは Phobos のコアコンポーネントであり、アンインストールできません。" }
+                }
+            },
             LocalizedNames = new Dictionary<string, string>
             {
                 { "en-US", "Logger" },
@@ -33,8 +57,7 @@ namespace Phobos.Class.Plugin.BuiltIn
                 { "zh-TW", "系統和插件日誌記錄" },
                 { "ja-JP", "システムとプラグインのログ記録" },
                 { "ko-KR", "시스템 및 플러그인 로깅" }
-            },
-            IsSystemPlugin = true
+            }
         };
 
         public override FrameworkElement? ContentArea => null;

@@ -101,7 +101,8 @@ namespace Phobos.Class.Database
                     UninstallInfo TEXT NOT NULL DEFAULT '',
                     IsEnabled INTEGER NOT NULL DEFAULT 1,
                     UpdateTime TEXT NOT NULL DEFAULT (datetime('now')),
-                    Entry TEXT NOT NULL DEFAULT ''
+                    Entry TEXT NOT NULL DEFAULT '',
+                    LaunchFlag INTEGER NOT NULL DEFAULT 0
                 );
 
                 CREATE TABLE IF NOT EXISTS Phobos_Appdata (

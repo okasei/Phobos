@@ -1,5 +1,5 @@
 ﻿using Phobos.Class.Plugin;
-using Phobos.Components.Arcusrix.Desktop;
+using Phobos.Components.Arcusrix.Dialog;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 using System;
@@ -104,136 +104,143 @@ namespace Phobos.Class.Plugin.BuiltIn
 
         public override async Task<RequestResult> Run(params object[] args)
         {
-            if (args.Length == 0)
-                return new RequestResult { Success = false, Message = "No command specified" };
-
-            var command = args[0]?.ToString()?.ToLowerInvariant() ?? string.Empty;
-
-            switch (command)
+            try
             {
-                case "show":
-                    return await HandleShow(args);
+                if (args.Length == 0)
+                    return new RequestResult { Success = false, Message = "No command specified" };
 
-                case "confirm":
-                    return await HandleConfirm(args);
+                var command = args[0]?.ToString()?.ToLowerInvariant() ?? string.Empty;
 
-                case "info":
-                    return await HandleInfo(args);
+                switch (command)
+                {
+                    case "show":
+                        return await HandleShowAsync(args);
 
-                case "warning":
-                    return await HandleWarning(args);
+                    case "confirm":
+                        return await HandleConfirmAsync(args);
 
-                case "error":
-                    return await HandleError(args);
+                    case "info":
+                        return await HandleInfoAsync(args);
 
-                case "yesno":
-                    return await HandleYesNo(args);
+                    case "warning":
+                        return await HandleWarningAsync(args);
 
-                case "yesnocancel":
-                    return await HandleYesNoCancel(args);
+                    case "error":
+                        return await HandleErrorAsync(args);
 
-                case "custom":
-                    return await HandleCustom(args);
+                    case "yesno":
+                        return await HandleYesNoAsync(args);
 
-                default:
-                    return new RequestResult { Success = false, Message = $"Unknown command: {command}" };
+                    case "yesnocancel":
+                        return await HandleYesNoCancelAsync(args);
+
+                    case "custom":
+                        return await HandleCustomAsync(args);
+
+                    default:
+                        return new RequestResult { Success = false, Message = $"Unknown command: {command}" };
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Dialog", $"Command failed: {ex.Message}");
+                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
             }
         }
 
-        #region Command Handlers
+        #region Async Command Handlers
 
-        private Task<RequestResult> HandleShow(object[] args)
+        private async Task<RequestResult> HandleShowAsync(object[] args)
         {
             if (args.Length < 2 || args[1] is not DialogConfig config)
             {
-                return Task.FromResult(new RequestResult
+                return new RequestResult
                 {
                     Success = false,
                     Message = "DialogConfig required"
-                });
+                };
             }
 
-            var result = PCOPhobosDialog.Show(config);
+            var result = await PCOPhobosDialog.ShowAsync(config);
 
-            return Task.FromResult(new RequestResult
+            return new RequestResult
             {
                 Success = true,
                 Message = "Dialog closed",
                 Data = new List<object> { result }
-            });
+            };
         }
 
-        private Task<RequestResult> HandleConfirm(object[] args)
+        private async Task<RequestResult> HandleConfirmAsync(object[] args)
         {
             var message = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
-            var isModal = args.Length > 4 ? args[4] as bool? ?? false : false;
 
-            var confirmed = PCOPhobosDialog.Confirm(message, title, isModal, owner);
+            var confirmed = await PCOPhobosDialog.ConfirmAsync(message, title, owner);
 
-            return Task.FromResult(new RequestResult
+            return new RequestResult
             {
                 Success = true,
                 Message = confirmed ? "Confirmed" : "Cancelled",
                 Data = new List<object> { confirmed }
-            });
+            };
         }
 
-        private Task<RequestResult> HandleInfo(object[] args)
+        private async Task<RequestResult> HandleInfoAsync(object[] args)
         {
             var message = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            PCOPhobosDialog.Info(message, title, true, owner);
+            await PCOPhobosDialog.InfoAsync(message, title, owner);
 
-            return Task.FromResult(new RequestResult
+            return new RequestResult
             {
                 Success = true,
                 Message = "Info dialog shown"
-            });
+            };
         }
 
-        private Task<RequestResult> HandleWarning(object[] args)
+        private async Task<RequestResult> HandleWarningAsync(object[] args)
         {
             var message = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            PCOPhobosDialog.Warning(message, title, true, owner);
+            await PCOPhobosDialog.WarningAsync(message, title, owner);
 
-            return Task.FromResult(new RequestResult
+            return new RequestResult
             {
                 Success = true,
                 Message = "Warning dialog shown"
-            });
+            };
         }
 
-        private Task<RequestResult> HandleError(object[] args)
+        private async Task<RequestResult> HandleErrorAsync(object[] args)
         {
             var message = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            PCOPhobosDialog.Error(message, title, true, owner);
+            await PCOPhobosDialog.ErrorAsync(message, title, owner);
 
-            return Task.FromResult(new RequestResult
+            return new RequestResult
             {
                 Success = true,
                 Message = "Error dialog shown"
-            });
+            };
         }
 
-        private Task<RequestResult> HandleYesNo(object[] args)
+        private async Task<RequestResult> HandleYesNoAsync(object[] args)
         {
             var message = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            var result = PCOPhobosDialog.YesNo(message, title, true, owner);
+            var result = await PCOPhobosDialog.YesNoAsync(message, title, owner);
 
-            return Task.FromResult(new RequestResult
+            return new RequestResult
             {
                 Success = true,
                 Message = result switch
@@ -243,18 +250,18 @@ namespace Phobos.Class.Plugin.BuiltIn
                     _ => "Cancelled"
                 },
                 Data = result.HasValue ? new List<object> { result.Value } : new List<object>()
-            });
+            };
         }
 
-        private Task<RequestResult> HandleYesNoCancel(object[] args)
+        private async Task<RequestResult> HandleYesNoCancelAsync(object[] args)
         {
             var message = args.Length > 1 ? args[1]?.ToString() ?? "" : "";
             var title = args.Length > 2 ? args[2]?.ToString() : null;
             var owner = args.Length > 3 ? args[3] as Window : null;
 
-            var result = PCOPhobosDialog.YesNoCancel(message, title, true, owner);
+            var result = await PCOPhobosDialog.YesNoCancelAsync(message, title, owner);
 
-            return Task.FromResult(new RequestResult
+            return new RequestResult
             {
                 Success = true,
                 Message = result switch
@@ -264,64 +271,139 @@ namespace Phobos.Class.Plugin.BuiltIn
                     _ => "Cancelled"
                 },
                 Data = result.HasValue ? new List<object> { result.Value } : new List<object>()
-            });
+            };
         }
 
-        private Task<RequestResult> HandleCustom(object[] args)
+        private async Task<RequestResult> HandleCustomAsync(object[] args)
         {
             if (args.Length < 2 || args[1] is not DialogConfig config)
             {
-                return Task.FromResult(new RequestResult
+                return new RequestResult
                 {
                     Success = false,
                     Message = "DialogConfig required"
-                });
+                };
             }
 
             // 设置自定义内容模式
             config.ContentMode = DialogContentMode.Custom;
 
-            var result = PCOPhobosDialog.Show(config);
+            var result = await PCOPhobosDialog.ShowAsync(config);
 
-            return Task.FromResult(new RequestResult
+            return new RequestResult
             {
                 Success = true,
                 Message = "Custom dialog closed",
                 Data = new List<object> { result }
-            });
+            };
         }
 
         #endregion
 
-        #region 静态便捷方法（供其他插件直接调用）
+        #region 静态异步方法（推荐使用）
 
         /// <summary>
-        /// 显示对话框
+        /// 异步显示对话框（推荐）
         /// </summary>
+        public static Task<DialogCallbackResult> ShowDialogAsync(DialogConfig config)
+        {
+            return PCOPhobosDialog.ShowAsync(config);
+        }
+
+        /// <summary>
+        /// 异步确认对话框（推荐）
+        /// </summary>
+        public static Task<bool> ConfirmDialogAsync(string message, string? title = null, Window? owner = null)
+        {
+            return PCOPhobosDialog.ConfirmAsync(message, title, owner);
+        }
+
+        /// <summary>
+        /// 异步信息对话框（推荐）
+        /// </summary>
+        public static Task InfoDialogAsync(string message, string? title = null, Window? owner = null)
+        {
+            return PCOPhobosDialog.InfoAsync(message, title, owner);
+        }
+
+        /// <summary>
+        /// 异步警告对话框（推荐）
+        /// </summary>
+        public static Task WarningDialogAsync(string message, string? title = null, Window? owner = null)
+        {
+            return PCOPhobosDialog.WarningAsync(message, title, owner);
+        }
+
+        /// <summary>
+        /// 异步错误对话框（推荐）
+        /// </summary>
+        public static Task ErrorDialogAsync(string message, string? title = null, Window? owner = null)
+        {
+            return PCOPhobosDialog.ErrorAsync(message, title, owner);
+        }
+
+        /// <summary>
+        /// 异步是/否对话框（推荐）
+        /// </summary>
+        public static Task<bool?> YesNoDialogAsync(string message, string? title = null, Window? owner = null)
+        {
+            return PCOPhobosDialog.YesNoAsync(message, title, owner);
+        }
+
+        /// <summary>
+        /// 异步是/否/取消对话框（推荐）
+        /// </summary>
+        public static Task<bool?> YesNoCancelDialogAsync(string message, string? title = null, Window? owner = null)
+        {
+            return PCOPhobosDialog.YesNoCancelAsync(message, title, owner);
+        }
+
+        #endregion
+
+        #region 静态便捷方法（供其他插件直接调用，保留向后兼容）
+
+        /// <summary>
+        /// [已弃用] 显示对话框，建议使用 ShowDialogAsync
+        /// </summary>
+        [Obsolete("Use ShowDialogAsync for better multi-dialog support")]
         public static DialogCallbackResult Show(DialogConfig config)
         {
+#pragma warning disable CS0618
             return PCOPhobosDialog.Show(config);
+#pragma warning restore CS0618
         }
 
         /// <summary>
         /// 显示对话框（异步回调）
         /// </summary>
+        public static void ShowWithCallback(DialogConfig config, Action<DialogCallbackResult>? callback = null)
+        {
+            PCOPhobosDialog.ShowWithCallback(config, callback);
+        }
+
+        /// <summary>
+        /// 显示对话框（异步回调，别名）
+        /// </summary>
         public static void ShowAsync(DialogConfig config, Action<DialogCallbackResult>? callback = null)
         {
-            PCOPhobosDialog.ShowAsync(config, callback);
+            PCOPhobosDialog.ShowWithCallback(config, callback);
         }
 
         /// <summary>
-        /// 显示确认对话框
+        /// [已弃用] 显示确认对话框，建议使用 ConfirmDialogAsync
         /// </summary>
+        [Obsolete("Use ConfirmDialogAsync for better multi-dialog support")]
         public static bool Confirm(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
+#pragma warning disable CS0618
             return PCOPhobosDialog.Confirm(message, title, isModal, owner);
+#pragma warning restore CS0618
         }
 
         /// <summary>
-        /// 显示确认对话框（带图标）
+        /// [已弃用] 显示确认对话框（带图标），建议使用 ConfirmDialogAsync
         /// </summary>
+        [Obsolete("Use ConfirmDialogAsync for better multi-dialog support")]
         public static bool Confirm(string message, string? title, ImageSource? callerIcon, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.Confirm(message, title);
@@ -332,48 +414,65 @@ namespace Phobos.Class.Plugin.BuiltIn
                 config.OwnerWindow = owner;
                 config.PositionMode = DialogPositionMode.CenterOwner;
             }
+#pragma warning disable CS0618
             var result = PCOPhobosDialog.Show(config);
+#pragma warning restore CS0618
             return result.ButtonTag == "ok";
         }
 
         /// <summary>
-        /// 显示信息对话框
+        /// [已弃用] 显示信息对话框，建议使用 InfoDialogAsync
         /// </summary>
+        [Obsolete("Use InfoDialogAsync for better multi-dialog support")]
         public static void Info(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
+#pragma warning disable CS0618
             PCOPhobosDialog.Info(message, title, isModal, owner);
+#pragma warning restore CS0618
         }
 
         /// <summary>
-        /// 显示警告对话框
+        /// [已弃用] 显示警告对话框，建议使用 WarningDialogAsync
         /// </summary>
+        [Obsolete("Use WarningDialogAsync for better multi-dialog support")]
         public static void Warning(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
+#pragma warning disable CS0618
             PCOPhobosDialog.Warning(message, title, isModal, owner);
+#pragma warning restore CS0618
         }
 
         /// <summary>
-        /// 显示错误对话框
+        /// [已弃用] 显示错误对话框，建议使用 ErrorDialogAsync
         /// </summary>
+        [Obsolete("Use ErrorDialogAsync for better multi-dialog support")]
         public static void Error(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
+#pragma warning disable CS0618
             PCOPhobosDialog.Error(message, title, isModal, owner);
+#pragma warning restore CS0618
         }
 
         /// <summary>
-        /// 显示是/否对话框
+        /// [已弃用] 显示是/否对话框，建议使用 YesNoDialogAsync
         /// </summary>
+        [Obsolete("Use YesNoDialogAsync for better multi-dialog support")]
         public static bool? YesNo(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
+#pragma warning disable CS0618
             return PCOPhobosDialog.YesNo(message, title, isModal, owner);
+#pragma warning restore CS0618
         }
 
         /// <summary>
-        /// 显示是/否/取消对话框
+        /// [已弃用] 显示是/否/取消对话框，建议使用 YesNoCancelDialogAsync
         /// </summary>
+        [Obsolete("Use YesNoCancelDialogAsync for better multi-dialog support")]
         public static bool? YesNoCancel(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
+#pragma warning disable CS0618
             return PCOPhobosDialog.YesNoCancel(message, title, isModal, owner);
+#pragma warning restore CS0618
         }
 
         /// <summary>
@@ -449,6 +548,30 @@ namespace Phobos.Class.Plugin.BuiltIn
             _config.ContentMode = DialogContentMode.ImageWithText;
             _config.ContentText = text;
             _config.ContentImagePath = imagePath;
+            return this;
+        }
+
+        /// <summary>
+        /// 设置居中图片+注释模式
+        /// </summary>
+        public DialogBuilder WithImageAndCaption(string text, ImageSource image, string caption)
+        {
+            _config.ContentMode = DialogContentMode.ImageWithCaption;
+            _config.ContentText = text;
+            _config.ContentImage = image;
+            _config.ContentImageCaption = caption;
+            return this;
+        }
+
+        /// <summary>
+        /// 设置居中图片+注释模式（使用路径）
+        /// </summary>
+        public DialogBuilder WithImageAndCaption(string text, string imagePath, string caption)
+        {
+            _config.ContentMode = DialogContentMode.ImageWithCaption;
+            _config.ContentText = text;
+            _config.ContentImagePath = imagePath;
+            _config.ContentImageCaption = caption;
             return this;
         }
 
@@ -531,11 +654,11 @@ namespace Phobos.Class.Plugin.BuiltIn
         }
 
         /// <summary>
-        /// 设置显示按钮数量
+        /// 设置显示按钮数量（1-5）
         /// </summary>
         public DialogBuilder WithButtonCount(int count)
         {
-            _config.VisibleButtonCount = count;
+            _config.VisibleButtonCount = Math.Max(1, Math.Min(5, count));
             return this;
         }
 
@@ -661,19 +784,30 @@ namespace Phobos.Class.Plugin.BuiltIn
         }
 
         /// <summary>
-        /// 显示对话框
+        /// 异步显示对话框（推荐）
         /// </summary>
-        public DialogCallbackResult Show()
+        public Task<DialogCallbackResult> ShowAsync()
         {
-            return PCOPhobosDialog.Show(_config);
+            return PCOPhobosDialog.ShowAsync(_config);
         }
 
         /// <summary>
         /// 显示对话框（异步回调）
         /// </summary>
-        public void ShowAsync(Action<DialogCallbackResult>? callback = null)
+        public void ShowWithCallback(Action<DialogCallbackResult>? callback = null)
         {
-            PCOPhobosDialog.ShowAsync(_config, callback);
+            PCOPhobosDialog.ShowWithCallback(_config, callback);
+        }
+
+        /// <summary>
+        /// [已弃用] 同步显示对话框，建议使用 ShowAsync
+        /// </summary>
+        [Obsolete("Use ShowAsync for better multi-dialog support")]
+        public DialogCallbackResult Show()
+        {
+#pragma warning disable CS0618
+            return PCOPhobosDialog.Show(_config);
+#pragma warning restore CS0618
         }
     }
 }

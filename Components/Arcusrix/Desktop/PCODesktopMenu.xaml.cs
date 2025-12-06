@@ -19,23 +19,101 @@ namespace Phobos.Components.Arcusrix.Desktop
         public string Icon { get; set; } = string.Empty;
         public bool IsSeparator { get; set; } = false;
         public bool IsDanger { get; set; } = false;
+        public bool IsEnabled { get; set; } = true;
+        public object? Tag { get; set; }
         public Action? OnClick { get; set; }
+
+        /// <summary>
+        /// 本地化文本
+        /// </summary>
+        public Dictionary<string, string>? LocalizedTexts { get; set; }
+
+        /// <summary>
+        /// 获取本地化文本
+        /// </summary>
+        public string GetLocalizedText(string languageCode)
+        {
+            if (LocalizedTexts != null && LocalizedTexts.TryGetValue(languageCode, out var text))
+                return text;
+            if (LocalizedTexts != null && LocalizedTexts.TryGetValue("en-US", out var fallback))
+                return fallback;
+            return Text;
+        }
+
+        /// <summary>
+        /// 快速创建分隔符
+        /// </summary>
+        public static DesktopMenuItem Separator() => new DesktopMenuItem { IsSeparator = true };
+
+        /// <summary>
+        /// 快速创建菜单项
+        /// </summary>
+        public static DesktopMenuItem Create(string id, string text, string icon = "", Action? onClick = null, bool isDanger = false)
+        {
+            return new DesktopMenuItem
+            {
+                Id = id,
+                Text = text,
+                Icon = icon,
+                OnClick = onClick,
+                IsDanger = isDanger
+            };
+        }
     }
 
     /// <summary>
-    /// PCODesktopMenu.xaml 的交互逻辑
+    /// 菜单选中事件参数
+    /// </summary>
+    public class MenuItemSelectedEventArgs : EventArgs
+    {
+        public DesktopMenuItem SelectedItem { get; }
+        public string ItemId => SelectedItem.Id;
+        public object? Tag => SelectedItem.Tag;
+
+        public MenuItemSelectedEventArgs(DesktopMenuItem selectedItem)
+        {
+            SelectedItem = selectedItem;
+        }
+    }
+
+    /// <summary>
+    /// PCODesktopMenu - 通用菜单组件
+    /// 提供设置菜单项和菜单项被选中的回调功能
     /// </summary>
     public partial class PCODesktopMenu : UserControl
     {
         private Window? _parentWindow;
         private bool _isOpen = false;
+        private string _currentLanguage = System.Globalization.CultureInfo.CurrentCulture.IetfLanguageTag;
 
+        /// <summary>
+        /// 菜单关闭事件
+        /// </summary>
         public event EventHandler? MenuClosed;
+
+        /// <summary>
+        /// 菜单项被选中事件
+        /// </summary>
+        public event EventHandler<MenuItemSelectedEventArgs>? ItemSelected;
+
+        /// <summary>
+        /// 菜单是否打开
+        /// </summary>
+        public bool IsOpen => _isOpen;
 
         public PCODesktopMenu()
         {
             InitializeComponent();
             Loaded += PCODesktopMenu_Loaded;
+
+            try
+            {
+                _currentLanguage = Phobos.Shared.Class.LocalizationManager.Instance.CurrentLanguage;
+            }
+            catch
+            {
+                _currentLanguage = "en-US";
+            }
         }
 
         private void PCODesktopMenu_Loaded(object sender, RoutedEventArgs e)
@@ -109,12 +187,40 @@ namespace Phobos.Components.Arcusrix.Desktop
         }
 
         /// <summary>
+        /// 显示菜单（带回调）
+        /// </summary>
+        public void Show(IEnumerable<DesktopMenuItem> items, Point position, Action<DesktopMenuItem>? onItemSelected)
+        {
+            if (onItemSelected != null)
+            {
+                EventHandler<MenuItemSelectedEventArgs>? handler = null;
+                handler = (s, e) =>
+                {
+                    onItemSelected(e.SelectedItem);
+                    ItemSelected -= handler;
+                };
+                ItemSelected += handler;
+            }
+
+            Show(items, position);
+        }
+
+        /// <summary>
         /// 在元素旁边显示菜单
         /// </summary>
         public void ShowAt(IEnumerable<DesktopMenuItem> items, FrameworkElement target)
         {
             var position = target.TransformToAncestor((Visual)Parent).Transform(new Point(0, target.ActualHeight));
             Show(items, position);
+        }
+
+        /// <summary>
+        /// 在元素旁边显示菜单（带回调）
+        /// </summary>
+        public void ShowAt(IEnumerable<DesktopMenuItem> items, FrameworkElement target, Action<DesktopMenuItem>? onItemSelected)
+        {
+            var position = target.TransformToAncestor((Visual)Parent).Transform(new Point(0, target.ActualHeight));
+            Show(items, position, onItemSelected);
         }
 
         /// <summary>
@@ -133,6 +239,18 @@ namespace Phobos.Components.Arcusrix.Desktop
         }
 
         /// <summary>
+        /// 立即关闭菜单（无动画）
+        /// </summary>
+        public void CloseImmediately()
+        {
+            if (!_isOpen) return;
+
+            Visibility = Visibility.Collapsed;
+            _isOpen = false;
+            MenuClosed?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
         /// 创建菜单项
         /// </summary>
         private Border CreateMenuItem(DesktopMenuItem item)
@@ -142,8 +260,9 @@ namespace Phobos.Components.Arcusrix.Desktop
                 Background = Brushes.Transparent,
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(12, 8, 12, 8),
-                Cursor = Cursors.Hand,
-                Tag = item
+                Cursor = item.IsEnabled ? Cursors.Hand : Cursors.Arrow,
+                Tag = item,
+                Opacity = item.IsEnabled ? 1.0 : 0.5
             };
 
             var grid = new Grid();
@@ -161,10 +280,11 @@ namespace Phobos.Components.Arcusrix.Desktop
             Grid.SetColumn(iconText, 0);
             grid.Children.Add(iconText);
 
-            // 文本
+            // 文本（支持本地化）
+            var displayText = item.GetLocalizedText(_currentLanguage);
             var textBlock = new TextBlock
             {
-                Text = item.Text,
+                Text = displayText,
                 FontSize = (double)FindResource("FontSizeSm"),
                 Foreground = item.IsDanger
                     ? (SolidColorBrush)FindResource("DangerBrush")
@@ -177,24 +297,28 @@ namespace Phobos.Components.Arcusrix.Desktop
 
             border.Child = grid;
 
-            // 悬停效果
-            border.MouseEnter += (s, e) =>
+            if (item.IsEnabled)
             {
-                AnimateMenuItemHover(border, true);
-            };
+                // 悬停效果
+                border.MouseEnter += (s, e) =>
+                {
+                    AnimateMenuItemHover(border, true);
+                };
 
-            border.MouseLeave += (s, e) =>
-            {
-                AnimateMenuItemHover(border, false);
-            };
+                border.MouseLeave += (s, e) =>
+                {
+                    AnimateMenuItemHover(border, false);
+                };
 
-            // 点击事件
-            border.MouseLeftButtonUp += (s, e) =>
-            {
-                item.OnClick?.Invoke();
-                Close();
-                e.Handled = true;
-            };
+                // 点击事件
+                border.MouseLeftButtonUp += (s, e) =>
+                {
+                    item.OnClick?.Invoke();
+                    ItemSelected?.Invoke(this, new MenuItemSelectedEventArgs(item));
+                    Close();
+                    e.Handled = true;
+                };
+            }
 
             return border;
         }

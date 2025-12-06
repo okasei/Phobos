@@ -4,7 +4,13 @@
       "Bash(dotnet build:*)",
       "Bash(dir \"c:\\Aurev\\Dev\\Phobos\\Components\\Arcusrix\")",
       "Bash(mkdir:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(copy \"C:\\Aurev\\Dev\\Phobos.Shared\\bin\\Debug\\net10.0-windows\\Phobos.Shared.dll\" \"C:\\Aurev\\Dev\\Phobos\\Shared\\Phobos.Shared.dll\" /Y)",
+      "Bash(cmd /c copy:*)",
+      "Bash(cmd /c dir \"C:\\Aurev\\Dev\\Phobos\\Shared\")",
+      "Bash(cmd /c:*)",
+      "Bash(powershell -Command:*)"
     ],
     "deny": [],
     "ask": []

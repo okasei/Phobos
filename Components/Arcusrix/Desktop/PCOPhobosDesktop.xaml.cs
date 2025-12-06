@@ -88,6 +88,14 @@ namespace Phobos.Components.Arcusrix.Desktop
         public event EventHandler<string>? PluginClicked;
 
         /// <summary>
+        /// 公共方法：刷新插件列表
+        /// </summary>
+        public async void RefreshPlugins()
+        {
+            await LoadPlugins();
+        }
+
+        /// <summary>
         /// 创建桌面窗口
         /// </summary>
         public PCOPhobosDesktop()
@@ -406,10 +414,14 @@ namespace Phobos.Components.Arcusrix.Desktop
                     var directory = record["Directory"]?.ToString() ?? string.Empty;
                     var icon = record["Icon"]?.ToString() ?? string.Empty;
                     var isSystemPlugin = Convert.ToBoolean(record["IsSystemPlugin"]);
-                    var entry = record["Entry"]?.ToString() ?? string.Empty;
+                    var launchFlag = Convert.ToInt32(record["LaunchFlag"] ?? 0) == 1;
 
-                    // 跳过没有 Entry 的插件（后台服务类插件不在桌面显示）
-                    if (string.IsNullOrEmpty(entry))
+                    // 跳过 LaunchFlag 为 false 的插件（不可被显式启动的插件不在桌面显示）
+                    if (!launchFlag)
+                        continue;
+
+                    // 跳过 Desktop 插件自身（不在桌面显示自己）
+                    if (packageName == "com.phobos.desktop")
                         continue;
 
                     // 判断是否为内建插件
