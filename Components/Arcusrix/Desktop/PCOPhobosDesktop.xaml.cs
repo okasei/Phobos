@@ -71,6 +71,7 @@ namespace Phobos.Components.Arcusrix.Desktop
         private string _layoutPath = string.Empty;
         private FolderDesktopItem? _currentOpenFolder = null;
         private bool _isLayoutLoaded = false; // 布局是否已加载完成
+        private bool _isClosingFromTray = false; // 是否从托盘关闭（真正关闭）
 
         // 拖拽相关
         private Border? _draggingIcon = null;
@@ -101,6 +102,9 @@ namespace Phobos.Components.Arcusrix.Desktop
         public PCOPhobosDesktop()
         {
             InitializeComponent();
+            EnableTrayIcon = true;
+            EnableAutoHide = true;
+            EnableTaskbarAwareAnimation = true;
 
             // 设置布局文件路径
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -112,7 +116,11 @@ namespace Phobos.Components.Arcusrix.Desktop
 
             StateChanged += (s, e) =>
             {
-                UpdateGridLayout();
+                // 全屏/还原时保存状态
+                if (_isLayoutLoaded)
+                {
+                    SaveLayout();
+                }
                 // 全屏/还原时播放动画
                 AnimateWindowStateChange();
             };
@@ -136,15 +144,17 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// </summary>
         private void PCOPhobosDesktop_Closing(object? sender, CancelEventArgs e)
         {
-            // 如果需要播放关闭动画，取消默认关闭行为
-            if (!_isClosingAnimationComplete)
+            // 如果是从托盘退出，直接关闭
+            if (_isClosingFromTray)
             {
-                e.Cancel = true;
-                PlayWindowCloseAnimation();
+                CleanupTrayExtension();
+                return;
             }
-        }
 
-        private bool _isClosingAnimationComplete = false;
+            // 否则取消关闭，改为隐藏到托盘
+            e.Cancel = true;
+            HideToTray();
+        }
 
         /// <summary>
         /// 设置数据库实例
@@ -232,59 +242,6 @@ namespace Phobos.Components.Arcusrix.Desktop
             Storyboard.SetTarget(scaleY, MainBorder);
             Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
             storyboard.Children.Add(scaleY);
-
-            storyboard.Begin();
-        }
-
-        /// <summary>
-        /// 播放窗口关闭动画
-        /// </summary>
-        private void PlayWindowCloseAnimation()
-        {
-            var storyboard = new Storyboard();
-
-            var cubicEase = new CubicEase { EasingMode = EasingMode.EaseIn };
-
-            // 淡出
-            var fadeOut = new DoubleAnimation
-            {
-                From = 1,
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(200),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(fadeOut, MainBorder);
-            Storyboard.SetTargetProperty(fadeOut, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(fadeOut);
-
-            // 缩放
-            var scaleX = new DoubleAnimation
-            {
-                From = 1,
-                To = 0.95,
-                Duration = TimeSpan.FromMilliseconds(200),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(scaleX, MainBorder);
-            Storyboard.SetTargetProperty(scaleX, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
-            storyboard.Children.Add(scaleX);
-
-            var scaleY = new DoubleAnimation
-            {
-                From = 1,
-                To = 0.95,
-                Duration = TimeSpan.FromMilliseconds(200),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(scaleY, MainBorder);
-            Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
-            storyboard.Children.Add(scaleY);
-
-            storyboard.Completed += (s, e) =>
-            {
-                _isClosingAnimationComplete = true;
-                Close();
-            };
 
             storyboard.Begin();
         }
@@ -808,6 +765,10 @@ namespace Phobos.Components.Arcusrix.Desktop
                 {
                     iconControl = CreateFolderIcon(folderItem);
                 }
+                else if (item is ShortcutDesktopItem shortcutItem)
+                {
+                    iconControl = CreateShortcutIcon(shortcutItem);
+                }
 
                 if (iconControl != null)
                 {
@@ -1311,9 +1272,421 @@ namespace Phobos.Components.Arcusrix.Desktop
         }
 
         /// <summary>
+        /// 创建快捷方式图标控件
+        /// </summary>
+        private Border CreateShortcutIcon(ShortcutDesktopItem shortcut)
+        {
+            var border = new Border
+            {
+                Style = (Style)FindResource("DesktopIconStyle"),
+                Tag = shortcut
+            };
+
+            // 使用Grid布局，图标固定在顶部，文字在下方
+            var grid = new Grid
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Top,
+                Width = 88,
+                Height = 100 // 64 (图标) + 36 (文字) = 100，与插件图标一致
+            };
+
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(64) }); // 图标固定高度
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(36) }); // 文字固定高度
+
+            // 图标容器（带右下角插件标识）
+            var iconContainer = new Grid
+            {
+                Width = 68, // 64 + 4 用于容纳超出的overlayBorder
+                Height = 68,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, -4) // 补偿超出部分
+            };
+
+            // 主图标
+            var iconBorder = new Border
+            {
+                Width = 64,
+                Height = 64,
+                CornerRadius = new CornerRadius(12),
+                Background = (SolidColorBrush)FindResource("Background3Brush"),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top
+            };
+
+            var iconImage = new Image
+            {
+                Width = 48,
+                Height = 48,
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            // 设置图标
+            try
+            {
+                // 优先使用自定义图标
+                if (!string.IsNullOrEmpty(shortcut.CustomIconPath) && System.IO.File.Exists(shortcut.CustomIconPath))
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(shortcut.CustomIconPath, UriKind.Absolute);
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    iconImage.Source = bitmap;
+                }
+                // 否则使用目标插件的图标
+                else if (_allPlugins.TryGetValue(shortcut.TargetPackageName, out var targetPlugin))
+                {
+                    iconImage.Source = targetPlugin.Icon;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CreateShortcutIcon] Failed to load icon: {ex.Message}");
+            }
+
+            iconBorder.Child = iconImage;
+            iconContainer.Children.Add(iconBorder);
+
+            // 右下角的插件标识小图标
+            if (_allPlugins.TryGetValue(shortcut.TargetPackageName, out var plugin))
+            {
+                var overlayBorder = new Border
+                {
+                    Width = 20,
+                    Height = 20,
+                    CornerRadius = new CornerRadius(4),
+                    Background = (SolidColorBrush)FindResource("Background2Brush"),
+                    BorderBrush = (SolidColorBrush)FindResource("BorderBrush"),
+                    BorderThickness = new Thickness(1),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Bottom
+                };
+
+                var overlayImage = new Image
+                {
+                    Width = 14,
+                    Height = 14,
+                    Source = plugin.Icon,
+                    Stretch = Stretch.Uniform
+                };
+
+                overlayBorder.Child = overlayImage;
+                iconContainer.Children.Add(overlayBorder);
+            }
+
+            Grid.SetRow(iconContainer, 0);
+            grid.Children.Add(iconContainer);
+
+            // 快捷方式名称 - 限制两行，超出省略
+            var nameText = new TextBlock
+            {
+                Text = shortcut.Name,
+                FontSize = (double)FindResource("FontSizeSm"),
+                Foreground = (SolidColorBrush)FindResource("Foreground1Brush"),
+                TextAlignment = TextAlignment.Center,
+                TextWrapping = TextWrapping.Wrap,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                MaxHeight = 32,
+                Margin = new Thickness(0, 4, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Top
+            };
+
+            Grid.SetRow(nameText, 1);
+            grid.Children.Add(nameText);
+
+            border.Child = grid;
+
+            // 事件处理 - 左键按下（启动长按计时器）
+            border.MouseLeftButtonDown += (s, e) =>
+            {
+                try
+                {
+                    _mouseDownPosition = e.GetPosition(DesktopGrid);
+                    _draggingIcon = border;
+                    _draggingPlugin = null;
+                    _draggingFolder = null;
+                    _isDragging = false;
+                    _isDraggingFromFolder = false;
+
+                    // 启动长按计时器（500ms）
+                    _longPressTimer = new System.Windows.Threading.DispatcherTimer
+                    {
+                        Interval = TimeSpan.FromMilliseconds(500)
+                    };
+                    _longPressTimer.Tick += (ts, te) =>
+                    {
+                        _longPressTimer?.Stop();
+                        _isDragging = true;
+                        StartShortcutDragging(border, shortcut);
+                    };
+                    _longPressTimer.Start();
+
+                    border.CaptureMouse();
+                    e.Handled = true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateShortcutIcon] MouseLeftButtonDown error: {ex.Message}");
+                }
+            };
+
+            // 鼠标移动
+            border.MouseMove += (s, e) =>
+            {
+                try
+                {
+                    if (_draggingIcon == border && border.IsMouseCaptured)
+                    {
+                        var currentPos = e.GetPosition(DesktopGrid);
+                        var distance = (currentPos - _mouseDownPosition).Length;
+
+                        // 如果移动超过阈值，取消长按
+                        if (distance > 10 && !_isDragging)
+                        {
+                            CancelDragging();
+                        }
+                        else if (_isDragging)
+                        {
+                            // 更新拖拽预览位置
+                            UpdateDragPreview(currentPos);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateShortcutIcon] MouseMove error: {ex.Message}");
+                }
+            };
+
+            // 左键抬起
+            border.MouseLeftButtonUp += (s, e) =>
+            {
+                try
+                {
+                    border.ReleaseMouseCapture();
+
+                    if (_isDragging)
+                    {
+                        // 完成快捷方式拖拽
+                        CompleteShortcutDragging(e.GetPosition(DesktopGrid), shortcut);
+                    }
+                    else if (_longPressTimer?.IsEnabled == true)
+                    {
+                        // 短按 - 运行快捷方式
+                        _longPressTimer.Stop();
+                        RunShortcut(shortcut);
+                    }
+
+                    CancelDragging();
+                    e.Handled = true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateShortcutIcon] MouseLeftButtonUp error: {ex.Message}");
+                }
+            };
+
+            border.MouseRightButtonDown += (s, e) =>
+            {
+                try
+                {
+                    CancelDragging();
+                    ShowShortcutContextMenu(shortcut, border);
+                    e.Handled = true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateShortcutIcon] MouseRightButtonDown error: {ex.Message}");
+                }
+            };
+
+            // 悬停效果 - 对整个iconContainer进行缩放，这样主图标和右下角小图标会一起动
+            border.MouseEnter += (s, e) =>
+            {
+                try
+                {
+                    if (!_isDragging)
+                        AnimateIconScale(iconContainer, 1.1, 150);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateShortcutIcon] MouseEnter error: {ex.Message}");
+                }
+            };
+
+            border.MouseLeave += (s, e) =>
+            {
+                try
+                {
+                    if (!_isDragging)
+                        AnimateIconScale(iconContainer, 1.0, 150);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateShortcutIcon] MouseLeave error: {ex.Message}");
+                }
+            };
+
+            return border;
+        }
+
+        /// <summary>
+        /// 运行快捷方式
+        /// </summary>
+        private async void RunShortcut(ShortcutDesktopItem shortcut)
+        {
+            try
+            {
+                var args = shortcut.ParseArguments();
+                System.Diagnostics.Debug.WriteLine($"[RunShortcut] Running {shortcut.TargetPackageName} with {args.Length} arguments");
+
+                await PMPlugin.Instance.Launch(shortcut.TargetPackageName, args);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[RunShortcut] Error: {ex.Message}");
+                Service.Arcusrix.PSDialogService.Warning(
+                    ex.Message,
+                    DesktopLocalization.Get(DesktopLocalization.Dialog_LaunchError),
+                    true,
+                    this);
+            }
+        }
+
+        /// <summary>
+        /// 开始拖拽快捷方式
+        /// </summary>
+        private void StartShortcutDragging(Border iconBorder, ShortcutDesktopItem shortcut)
+        {
+            _draggingIcon = iconBorder;
+
+            // 获取图标
+            ImageSource? icon = null;
+            if (!string.IsNullOrEmpty(shortcut.CustomIconPath) && System.IO.File.Exists(shortcut.CustomIconPath))
+            {
+                try
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(shortcut.CustomIconPath, UriKind.Absolute);
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    icon = bitmap;
+                }
+                catch { }
+            }
+            else if (_allPlugins.TryGetValue(shortcut.TargetPackageName, out var plugin))
+            {
+                icon = plugin.Icon;
+            }
+
+            CreateDragPreview(shortcut.Name, icon, false);
+            iconBorder.Opacity = 0.3;
+        }
+
+        /// <summary>
+        /// 完成快捷方式拖拽
+        /// </summary>
+        private void CompleteShortcutDragging(Point dropPosition, ShortcutDesktopItem shortcut)
+        {
+            RemoveDragPreview();
+
+            // 计算目标网格位置
+            int targetCol = (int)(dropPosition.X / (DesktopGrid.ActualWidth / _layout.Columns));
+            int targetRow = (int)(dropPosition.Y / 110);
+
+            targetCol = Math.Max(0, Math.Min(targetCol, _layout.Columns - 1));
+            targetRow = Math.Max(0, targetRow);
+
+            // 检查目标位置是否已被占用
+            var existingItem = _layout.Items.FirstOrDefault(i => i.GridX == targetCol && i.GridY == targetRow);
+            if (existingItem != null && existingItem != shortcut)
+            {
+                // 交换位置
+                existingItem.GridX = shortcut.GridX;
+                existingItem.GridY = shortcut.GridY;
+            }
+
+            // 更新快捷方式位置
+            shortcut.GridX = targetCol;
+            shortcut.GridY = targetRow;
+
+            SaveLayout();
+            RenderDesktop();
+        }
+
+        /// <summary>
+        /// 显示快捷方式右键菜单
+        /// </summary>
+        private void ShowShortcutContextMenu(ShortcutDesktopItem shortcut, Border iconBorder)
+        {
+            var items = new List<DesktopMenuItem>
+            {
+                new DesktopMenuItem
+                {
+                    Id = "open",
+                    Text = DesktopLocalization.Get(DesktopLocalization.Menu_Shortcut_Open),
+                    Icon = "▶",
+                    OnClick = () => RunShortcut(shortcut)
+                },
+                new DesktopMenuItem
+                {
+                    Id = "edit",
+                    Text = DesktopLocalization.Get(DesktopLocalization.Menu_Shortcut_Edit),
+                    Icon = "✏",
+                    OnClick = () => EditShortcut(shortcut)
+                },
+                new DesktopMenuItem { IsSeparator = true },
+                new DesktopMenuItem
+                {
+                    Id = "delete",
+                    Text = DesktopLocalization.Get(DesktopLocalization.Menu_Shortcut_Delete),
+                    Icon = "🗑",
+                    OnClick = () => DeleteShortcut(shortcut)
+                }
+            };
+
+            var position = iconBorder.TransformToAncestor(MainBorder).Transform(new Point(iconBorder.ActualWidth, 0));
+            DesktopMenu.Show(items, position);
+        }
+
+        /// <summary>
+        /// 编辑快捷方式
+        /// </summary>
+        private void EditShortcut(ShortcutDesktopItem shortcut)
+        {
+            var result = PCOShortcutEditDialog.ShowDialog(this, _allPlugins, shortcut);
+            if (result != null)
+            {
+                // 更新快捷方式属性
+                shortcut.Name = result.Name;
+                shortcut.TargetPackageName = result.TargetPackageName;
+                shortcut.Arguments = result.Arguments;
+                shortcut.CustomIconPath = result.CustomIconPath;
+
+                SaveLayout();
+                RenderDesktop();
+            }
+        }
+
+        /// <summary>
+        /// 删除快捷方式
+        /// </summary>
+        private void DeleteShortcut(ShortcutDesktopItem shortcut)
+        {
+            _layout.Items.Remove(shortcut);
+            SaveLayout();
+            RenderDesktop();
+        }
+
+        /// <summary>
         /// 图标缩放动画
         /// </summary>
-        private void AnimateIconScale(Border icon, double scale, int duration)
+        private void AnimateIconScale(FrameworkElement icon, double scale, int duration)
         {
             var scaleTransform = icon.RenderTransform as ScaleTransform;
             if (scaleTransform == null)
@@ -1446,6 +1819,13 @@ namespace Phobos.Components.Arcusrix.Desktop
                     Text = DesktopLocalization.Get(DesktopLocalization.Menu_Desktop_NewFolder),
                     Icon = "📁",
                     OnClick = () => CreateNewFolder()
+                },
+                new DesktopMenuItem
+                {
+                    Id = "newShortcut",
+                    Text = DesktopLocalization.Get(DesktopLocalization.Menu_Desktop_NewShortcut),
+                    Icon = "🔗",
+                    OnClick = () => CreateNewShortcut()
                 }
             };
 
@@ -1679,6 +2059,47 @@ namespace Phobos.Components.Arcusrix.Desktop
 
                 _layout.Items.Add(folder);
                 _layout.Folders.Add(folder);
+                RenderDesktop();
+                SaveLayout();
+            }
+        }
+
+        /// <summary>
+        /// 创建新快捷方式
+        /// </summary>
+        private void CreateNewShortcut()
+        {
+            var result = PCOShortcutEditDialog.ShowDialog(this, _allPlugins, null);
+            if (result != null)
+            {
+                // 查找空闲位置
+                int gridX = 0, gridY = 0;
+                bool positionFound = false;
+
+                for (int y = 0; y < _layout.Rows && !positionFound; y++)
+                {
+                    for (int x = 0; x < _layout.Columns && !positionFound; x++)
+                    {
+                        if (!_layout.Items.Any(item => item.GridX == x && item.GridY == y))
+                        {
+                            gridX = x;
+                            gridY = y;
+                            positionFound = true;
+                        }
+                    }
+                }
+
+                // 如果没找到位置，放在新行
+                if (!positionFound)
+                {
+                    gridY = _layout.Items.Max(i => i.GridY) + 1;
+                    gridX = 0;
+                }
+
+                result.GridX = gridX;
+                result.GridY = gridY;
+
+                _layout.Items.Add(result);
                 RenderDesktop();
                 SaveLayout();
             }
@@ -2602,10 +3023,11 @@ namespace Phobos.Components.Arcusrix.Desktop
             DesktopGrid.RowDefinitions.Clear();
             DesktopGrid.ColumnDefinitions.Clear();
 
-            // 收集匹配的插件
+            // 收集匹配的插件和快捷方式
             var matchedPlugins = new List<PluginDisplayItem>();
+            var matchedShortcuts = new List<ShortcutDesktopItem>();
 
-            // 搜索桌面上的插件
+            // 搜索桌面上的项目
             foreach (var item in _layout.Items)
             {
                 if (item is PluginDesktopItem pluginItem)
@@ -2632,6 +3054,13 @@ namespace Phobos.Components.Arcusrix.Desktop
                         }
                     }
                 }
+                else if (item is ShortcutDesktopItem shortcut)
+                {
+                    if (MatchesSearch(shortcut))
+                    {
+                        matchedShortcuts.Add(shortcut);
+                    }
+                }
             }
 
             // 也搜索未放置在桌面上的插件
@@ -2646,14 +3075,14 @@ namespace Phobos.Components.Arcusrix.Desktop
             // 去重
             matchedPlugins = matchedPlugins.Distinct().ToList();
 
-            if (matchedPlugins.Count == 0)
+            int totalItems = matchedPlugins.Count + matchedShortcuts.Count;
+            if (totalItems == 0)
             {
                 // 没有搜索结果，显示一个空网格
                 return;
             }
 
             // 计算需要的行数
-            int totalItems = matchedPlugins.Count;
             int columns = _layout.Columns;
             int rows = (int)Math.Ceiling((double)totalItems / columns);
 
@@ -2668,12 +3097,27 @@ namespace Phobos.Components.Arcusrix.Desktop
             var iconControls = new List<(Border control, int index)>();
             int index = 0;
 
+            // 先渲染插件
             foreach (var plugin in matchedPlugins)
             {
                 int row = index / columns;
                 int col = index % columns;
 
                 var iconControl = CreatePluginIcon(plugin, index);
+                Grid.SetRow(iconControl, row);
+                Grid.SetColumn(iconControl, col);
+                DesktopGrid.Children.Add(iconControl);
+                iconControls.Add((iconControl, index));
+                index++;
+            }
+
+            // 再渲染快捷方式
+            foreach (var shortcut in matchedShortcuts)
+            {
+                int row = index / columns;
+                int col = index % columns;
+
+                var iconControl = CreateShortcutIcon(shortcut);
                 Grid.SetRow(iconControl, row);
                 Grid.SetColumn(iconControl, col);
                 DesktopGrid.Children.Add(iconControl);
@@ -2698,6 +3142,20 @@ namespace Phobos.Components.Arcusrix.Desktop
 
             return plugin.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
                    plugin.PackageName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// 检查快捷方式是否匹配搜索条件
+        /// </summary>
+        private bool MatchesSearch(ShortcutDesktopItem shortcut)
+        {
+            if (string.IsNullOrEmpty(_searchQuery))
+                return true;
+
+            // 搜索名称、目标包名、参数
+            return shortcut.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                   shortcut.TargetPackageName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                   shortcut.Arguments.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

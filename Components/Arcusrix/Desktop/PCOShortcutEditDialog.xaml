@@ -1,0 +1,287 @@
+<Window x:Class="Phobos.Components.Arcusrix.Desktop.PCOShortcutEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Edit Shortcut"
+        Width="560"
+        Height="620"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Loaded="Window_Loaded">
+
+    <Border x:Name="MainBorder"
+            Background="{DynamicResource Background2Brush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Margin="10"
+            RenderTransformOrigin="0.5,0.5">
+
+        <Border.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform x:Name="DialogScale" ScaleX="1" ScaleY="1"/>
+                <TranslateTransform x:Name="DialogTranslate" Y="0"/>
+            </TransformGroup>
+        </Border.RenderTransform>
+
+        <Border.Effect>
+            <DropShadowEffect Color="Black"
+                              BlurRadius="20"
+                              ShadowDepth="0"
+                              Opacity="0.3"/>
+        </Border.Effect>
+
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <TextBlock x:Name="DialogTitle"
+                           Text="New Shortcut"
+                           FontSize="{DynamicResource FontSizeLg}"
+                           FontWeight="{DynamicResource FontWeightSemibold}"
+                           Foreground="{DynamicResource Foreground1Brush}"
+                           VerticalAlignment="Center"/>
+
+                <Button x:Name="CloseButton"
+                        Content="&#10005;"
+                        Width="32"
+                        Height="32"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="{DynamicResource Foreground3Brush}"
+                        FontSize="14"
+                        Cursor="Hand"
+                        HorizontalAlignment="Right"
+                        Click="CloseButton_Click"/>
+            </Grid>
+
+            <!-- Content -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          Margin="0,0,0,16">
+                <StackPanel>
+                    <!-- Name -->
+                    <TextBlock x:Name="NameLabel"
+                               Text="Shortcut Name"
+                               FontSize="{DynamicResource FontSizeSm}"
+                               Foreground="{DynamicResource Foreground2Brush}"
+                               Margin="0,0,0,8"/>
+                    <TextBox x:Name="NameTextBox"
+                             Background="{DynamicResource Background3Brush}"
+                             BorderBrush="{DynamicResource BorderBrush}"
+                             BorderThickness="1"
+                             Foreground="{DynamicResource Foreground1Brush}"
+                             FontSize="{DynamicResource FontSizeMd}"
+                             Padding="12,10"
+                             Margin="0,0,0,16"/>
+
+                    <!-- Target Package -->
+                    <TextBlock x:Name="PackageLabel"
+                               Text="Target Plugin"
+                               FontSize="{DynamicResource FontSizeSm}"
+                               Foreground="{DynamicResource Foreground2Brush}"
+                               Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- 下拉选择已有插件 -->
+                        <ComboBox x:Name="PackageComboBox" Style="{StaticResource PhobosComboBox}"
+                                  Grid.Row="0"
+                                  Background="{DynamicResource Background3Brush}"
+                                  Foreground="{DynamicResource Foreground1Brush}"
+                                  BorderBrush="{DynamicResource BorderBrush}"
+                                  BorderThickness="1"
+                                  FontSize="{DynamicResource FontSizeMd}"
+                                  Padding="12,10"
+                                  SelectionChanged="PackageComboBox_SelectionChanged"/>
+
+                        <!-- 或手动输入包名 -->
+                        <TextBlock x:Name="OrInputLabel"
+                                   Grid.Row="1"
+                                   Text="Or input package name manually:"
+                                   FontSize="{DynamicResource FontSizeSm}"
+                                   Foreground="{DynamicResource Foreground3Brush}"
+                                   Margin="0,8,0,4"/>
+                        <TextBox x:Name="PackageNameTextBox"
+                                 Grid.Row="1"
+                                 Background="{DynamicResource Background3Brush}"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 BorderThickness="1"
+                                 Foreground="{DynamicResource Foreground1Brush}"
+                                 FontSize="{DynamicResource FontSizeMd}"
+                                 Padding="12,10"
+                                 Margin="0,28,0,0"
+                                 TextChanged="PackageNameTextBox_TextChanged"/>
+                    </Grid>
+
+                    <!-- Arguments -->
+                    <TextBlock x:Name="ArgsLabel"
+                               Text="Arguments (comma separated, use quotes for values with commas)"
+                               FontSize="{DynamicResource FontSizeSm}"
+                               Foreground="{DynamicResource Foreground2Brush}"
+                               Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="ArgsTextBox"
+                                 Grid.Column="0"
+                                 Background="{DynamicResource Background3Brush}"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 BorderThickness="1"
+                                 Foreground="{DynamicResource Foreground1Brush}"
+                                 FontSize="{DynamicResource FontSizeMd}"
+                                 Padding="12,10"/>
+                        <Button x:Name="BrowseFileButton"
+                                Grid.Column="1"
+                                Content="..."
+                                Width="40"
+                                Height="38"
+                                Background="{DynamicResource Background3Brush}"
+                                Foreground="{DynamicResource Foreground1Brush}"
+                                BorderThickness="0"
+                                FontSize="{DynamicResource FontSizeMd}"
+                                Cursor="Hand"
+                                Margin="8,0,0,0"
+                                ToolTip="Browse for file"
+                                Click="BrowseFileButton_Click">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="6"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                    </Grid>
+
+                    <!-- Custom Icon -->
+                    <TextBlock x:Name="IconLabel"
+                               Text="Custom Icon (optional, defaults to plugin icon)"
+                               FontSize="{DynamicResource FontSizeSm}"
+                               Foreground="{DynamicResource Foreground2Brush}"
+                               Margin="0,0,0,8"/>
+
+                    <!-- Icon Preview -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                Width="64"
+                                Height="64"
+                                Background="{DynamicResource Background3Brush}"
+                                CornerRadius="8"
+                                Margin="0,0,16,0">
+                            <Image x:Name="IconPreview"
+                                   Width="48"
+                                   Height="48"
+                                   Stretch="Uniform"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBox x:Name="IconPathTextBox"
+                                     Background="{DynamicResource Background3Brush}"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1"
+                                     Foreground="{DynamicResource Foreground1Brush}"
+                                     FontSize="{DynamicResource FontSizeSm}"
+                                     Padding="10,8"
+                                     IsReadOnly="True"
+                                     Margin="0,0,0,8"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="BrowseIconButton" Style="{StaticResource PhobosButton}"
+                                        Content="Browse"
+                                        Width="70"
+                                        Height="32"
+                                        Background="{DynamicResource Background3Brush}"
+                                        Foreground="{DynamicResource Foreground1Brush}"
+                                        BorderThickness="0"
+                                        FontSize="{DynamicResource FontSizeSm}"
+                                        Cursor="Hand"
+                                        Margin="0,0,8,0"
+                                        Click="BrowseIconButton_Click">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button x:Name="ClearIconButton" Style="{StaticResource PhobosButtonDanger}"
+                                        Content="Clear"
+                                        Width="60"
+                                        Height="32"
+                                        Background="{DynamicResource DangerBrush}"
+                                        Foreground="{DynamicResource Foreground1Brush}"
+                                        BorderThickness="0"
+                                        FontSize="{DynamicResource FontSizeSm}"
+                                        Cursor="Hand"
+                                        Click="ClearIconButton_Click">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button x:Name="CancelButton" Style="{StaticResource PhobosButton}"
+                        Content="Cancel"
+                        Width="100"
+                        Height="40"
+                        Background="{DynamicResource Background3Brush}"
+                        Foreground="{DynamicResource Foreground1Brush}"
+                        BorderThickness="0"
+                        FontSize="{DynamicResource FontSizeMd}"
+                        Cursor="Hand"
+                        Margin="0,0,12,0"
+                        Click="CancelButton_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+                <Button x:Name="SaveButton" Style="{StaticResource PhobosButton}"
+                        Content="Save"
+                        Width="100"
+                        Height="40"
+                        Background="{DynamicResource PrimaryBrush}"
+                        Foreground="{DynamicResource Foreground1Brush}"
+                        BorderThickness="0"
+                        FontSize="{DynamicResource FontSizeMd}"
+                        Cursor="Hand"
+                        Click="SaveButton_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

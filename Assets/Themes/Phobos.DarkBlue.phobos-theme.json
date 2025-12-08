@@ -1,0 +1,170 @@
+{
+  "$schema": "https://phobos.lavirix.com/schemas/themev2.json",
+  "metadata": {
+    "id": "com.phobos.theme.dark-blue",
+    "name": "Dark Blue",
+    "version": "2.0.0",
+    "author": "Phobos Team",
+    "description": "Dark theme with sky blue accent",
+    "localizedNames": {
+      "en-US": "Dark Blue",
+      "zh-CN": "深色天蓝",
+      "zh-TW": "深色天藍",
+      "ja-JP": "ダークブルー"
+    }
+  },
+  "colors": {
+    "foreground1": "#F5F5F5",
+    "foreground2": "#E0E0E0",
+    "foreground3": "#A0A0A0",
+    "foreground4": "#6A6A6A",
+    "foreground5": "#454545",
+
+    "background1": "#0D1117",
+    "background2": "#161B22",
+    "background3": "#21262D",
+    "background4": "#2D333B",
+    "background5": "#3D444D",
+
+    "primary": "#58A6FF",
+    "primaryHover": "#79B8FF",
+    "primaryPressed": "#388BFD",
+    "primaryDisabled": "#58A6FF60",
+
+    "success": "#3FB950",
+    "warning": "#D29922",
+    "danger": "#F85149",
+    "info": "#58A6FF",
+
+    "accent1": "#FF7B72",
+    "accent2": "#7EE787",
+    "accent3": "#D2A8FF",
+    "accent4": "#FFA657",
+    "accent5": "#79C0FF",
+    "accent6": "#A5D6FF",
+
+    "border": "#30363D",
+    "borderLight": "#3D444D",
+    "borderFocus": "#58A6FF",
+
+    "scrollbar": "#3D444D",
+    "scrollbarHover": "#545D68",
+    "shadow": "#00000080",
+    "overlay": "#00000060"
+  },
+  "fonts": {
+    "primary": "Segoe UI, Microsoft YaHei, sans-serif",
+    "secondary": "Arial, Helvetica, sans-serif",
+    "mono": "Cascadia Code, Consolas, Microsoft YaHei Mono, monospace",
+
+    "sizeXs": 10,
+    "sizeSm": 12,
+    "sizeMd": 14,
+    "sizeLg": 16,
+    "sizeXl": 20,
+    "size2xl": 24,
+    "size3xl": 32,
+
+    "weightLight": 300,
+    "weightNormal": 400,
+    "weightMedium": 500,
+    "weightSemibold": 600,
+    "weightBold": 700,
+
+    "lineHeightTight": 1.25,
+    "lineHeightNormal": 1.5,
+    "lineHeightRelaxed": 1.75
+  },
+  "dimensions": {
+    "borderRadius": 6,
+    "borderRadiusLarge": 10,
+    "borderWidth": 1,
+    "spacing": 8,
+    "spacingSmall": 4,
+    "spacingLarge": 16,
+    "buttonHeight": 34,
+    "buttonHeightSmall": 26,
+    "buttonHeightLarge": 42,
+    "buttonPadding": "8,18",
+    "inputHeight": 34,
+    "inputPadding": "8,12",
+    "titleBarHeight": 32,
+    "windowMinWidth": 400,
+    "windowMinHeight": 300
+  },
+  "controls": {
+    "button": {
+      "background": "${colors.primary}",
+      "backgroundHover": "${colors.primaryHover}",
+      "backgroundPressed": "${colors.primaryPressed}",
+      "backgroundDisabled": "${colors.primaryDisabled}",
+      "foreground": "${colors.background1}",
+      "foregroundDisabled": "${colors.foreground4}",
+      "borderColor": "transparent",
+      "borderRadius": "${dimensions.borderRadius}",
+      "fontSize": "${fonts.sizeMd}",
+      "fontWeight": "${fonts.weightMedium}"
+    },
+    "buttonSecondary": {
+      "background": "transparent",
+      "backgroundHover": "${colors.background4}",
+      "backgroundPressed": "${colors.background5}",
+      "foreground": "${colors.foreground1}",
+      "borderColor": "${colors.border}"
+    },
+    "textBox": {
+      "background": "${colors.background2}",
+      "backgroundFocused": "${colors.background1}",
+      "foreground": "${colors.foreground1}",
+      "foregroundPlaceholder": "${colors.foreground4}",
+      "borderColor": "${colors.border}",
+      "borderColorFocused": "${colors.borderFocus}",
+      "borderRadius": "${dimensions.borderRadius}",
+      "fontSize": "${fonts.sizeMd}"
+    },
+    "label": {
+      "foreground": "${colors.foreground1}",
+      "foregroundSecondary": "${colors.foreground3}",
+      "fontSize": "${fonts.sizeMd}"
+    },
+    "listBox": {
+      "background": "${colors.background2}",
+      "foreground": "${colors.foreground1}",
+      "itemBackground": "transparent",
+      "itemBackgroundHover": "${colors.background4}",
+      "itemBackgroundSelected": "${colors.primary}",
+      "itemForegroundSelected": "${colors.background1}",
+      "borderColor": "${colors.border}"
+    },
+    "scrollBar": {
+      "background": "transparent",
+      "thumbBackground": "${colors.scrollbar}",
+      "thumbBackgroundHover": "${colors.scrollbarHover}",
+      "width": 10,
+      "thumbRadius": 5
+    },
+    "window": {
+      "background": "${colors.background1}",
+      "titleBarBackground": "${colors.background2}",
+      "titleBarForeground": "${colors.foreground1}",
+      "borderColor": "${colors.border}",
+      "shadowColor": "${colors.shadow}",
+      "shadowBlurRadius": 20
+    },
+    "titleBarButton": {
+      "background": "transparent",
+      "backgroundHover": "${colors.background4}",
+      "foreground": "${colors.foreground3}",
+      "foregroundHover": "${colors.foreground1}",
+      "closeBackgroundHover": "#F85149",
+      "closeForegroundHover": "#FFFFFF"
+    }
+  },
+  "animations": {
+    "defaultDuration": 200,
+    "fastDuration": 100,
+    "slowDuration": 400,
+    "easing": "CubicEaseOut",
+    "enableAnimations": true
+  }
+}

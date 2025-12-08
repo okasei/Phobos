@@ -70,6 +70,8 @@ namespace Phobos.Manager.Arcusrix
                 _themesDirectory = themesDirectory;
             }
 
+            await LoadExternalThemes(_themesDirectory);
+
             // 加载内置主题
             await RegisterDefaultThemes();
 
@@ -108,10 +110,10 @@ namespace Phobos.Manager.Arcusrix
         /// <summary>
         /// 加载外部主题（用户自定义主题）
         /// </summary>
-        private async Task LoadExternalThemes()
+        private async Task LoadExternalThemes(string? DirectoryPath = null)
         {
             // 用户主题目录
-            var userThemesDir = Path.Combine(
+            var userThemesDir = DirectoryPath ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Phobos", "Themes");
             if (!Directory.Exists(userThemesDir))
             {

@@ -1,0 +1,181 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 
+    ============================================================
+    Phobos UI - 进度条和滑块样式 (PhobosProgressStyles.xaml)
+    ============================================================
+    -->
+
+    <!-- ============ 进度条样式 ============ -->
+    <Style x:Key="PhobosProgressBar" TargetType="ProgressBar">
+        <Setter Property="Background" Value="{DynamicResource Background4Brush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        <Setter Property="Height" Value="6"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid>
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3"/>
+                        <Border x:Name="PART_Indicator"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="3"
+                                HorizontalAlignment="Left"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 大型进度条 ============ -->
+    <Style x:Key="PhobosProgressBarLarge" TargetType="ProgressBar" BasedOn="{StaticResource PhobosProgressBar}">
+        <Setter Property="Height" Value="10"/>
+    </Style>
+
+    <!-- ============ 成功进度条 ============ -->
+    <Style x:Key="PhobosProgressBarSuccess" TargetType="ProgressBar" BasedOn="{StaticResource PhobosProgressBar}">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+    </Style>
+
+    <!-- ============ 警告进度条 ============ -->
+    <Style x:Key="PhobosProgressBarWarning" TargetType="ProgressBar" BasedOn="{StaticResource PhobosProgressBar}">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+    </Style>
+
+    <!-- ============ 危险进度条 ============ -->
+    <Style x:Key="PhobosProgressBarDanger" TargetType="ProgressBar" BasedOn="{StaticResource PhobosProgressBar}">
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+    </Style>
+
+    <!-- ============ 滑块滑块样式 ============ -->
+    <Style x:Key="PhobosSliderThumb" TargetType="Thumb">
+        <Setter Property="Width" Value="18"/>
+        <Setter Property="Height" Value="18"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Grid Width="22" Height="22">
+                        <!-- 外层容器保持固定大小，内层圆从中心缩放 -->
+                        <Ellipse x:Name="ThumbCircle"
+                                 Fill="{TemplateBinding Background}"
+                                 Width="18"
+                                 Height="18"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="6" ShadowDepth="2" Opacity="0.25"/>
+                            </Ellipse.Effect>
+                            <Ellipse.RenderTransform>
+                                <ScaleTransform x:Name="ThumbScale" ScaleX="1" ScaleY="1"/>
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ThumbScale"
+                                                         Storyboard.TargetProperty="ScaleX"
+                                                         To="1.2" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="ThumbScale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="1.2" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ThumbScale"
+                                                         Storyboard.TargetProperty="ScaleX"
+                                                         To="1" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="ThumbScale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="1" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsDragging" Value="True">
+                            <Setter TargetName="ThumbCircle" Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 滑块样式 ============ -->
+    <Style x:Key="PhobosSlider" TargetType="Slider">
+        <Setter Property="Background" Value="{DynamicResource Background4Brush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="IsMoveToPointEnabled" Value="True"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Border x:Name="TrackBackground"
+                                Grid.Row="1"
+                                Height="6"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="3"
+                                VerticalAlignment="Center"/>
+                        <Track x:Name="PART_Track" Grid.Row="1">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="Slider.DecreaseLarge">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Background="{DynamicResource PrimaryBrush}"
+                                                    Height="6"
+                                                    CornerRadius="3,0,0,3"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource PhobosSliderThumb}" Cursor="Hand"/>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="Slider.IncreaseLarge">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Background="Transparent"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

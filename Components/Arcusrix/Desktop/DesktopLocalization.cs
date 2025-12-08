@@ -5,7 +5,7 @@ namespace Phobos.Components.Arcusrix.Desktop
     /// <summary>
     /// 桌面本地化资源
     /// </summary>
-    public static class DesktopLocalization
+    public static partial class DesktopLocalization
     {
         // 资源键常量
         public const string Desktop_Title = "Desktop.Title";
@@ -27,6 +27,25 @@ namespace Phobos.Components.Arcusrix.Desktop
         public const string Menu_Desktop_ExitFullscreen = "Menu.Desktop.ExitFullscreen";
         public const string Menu_Desktop_Settings = "Menu.Desktop.Settings";
         public const string Menu_Desktop_NewFolder = "Menu.Desktop.NewFolder";
+        public const string Menu_Desktop_NewShortcut = "Menu.Desktop.NewShortcut";
+
+        // 快捷方式
+        public const string Shortcut_NewTitle = "Shortcut.NewTitle";
+        public const string Shortcut_EditTitle = "Shortcut.EditTitle";
+        public const string Shortcut_Name = "Shortcut.Name";
+        public const string Shortcut_TargetPlugin = "Shortcut.TargetPlugin";
+        public const string Shortcut_OrInputPackageName = "Shortcut.OrInputPackageName";
+        public const string Shortcut_Arguments = "Shortcut.Arguments";
+        public const string Shortcut_CustomIcon = "Shortcut.CustomIcon";
+        public const string Shortcut_Cancel = "Shortcut.Cancel";
+        public const string Shortcut_Save = "Shortcut.Save";
+        public const string Shortcut_SelectFile = "Shortcut.SelectFile";
+        public const string Shortcut_SelectIcon = "Shortcut.SelectIcon";
+        public const string Shortcut_NameRequired = "Shortcut.NameRequired";
+        public const string Shortcut_PluginRequired = "Shortcut.PluginRequired";
+        public const string Menu_Shortcut_Open = "Menu.Shortcut.Open";
+        public const string Menu_Shortcut_Edit = "Menu.Shortcut.Edit";
+        public const string Menu_Shortcut_Delete = "Menu.Shortcut.Delete";
 
         // 设置面板
         public const string Settings_Title = "Settings.Title";
@@ -196,6 +215,160 @@ namespace Phobos.Components.Arcusrix.Desktop
                 { "zh-TW", "新增資料夾" },
                 { "ja-JP", "新しいフォルダー" },
                 { "ko-KR", "새 폴더" }
+            }));
+
+            lm.Register(Menu_Desktop_NewShortcut, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "New Shortcut" },
+                { "zh-CN", "新建快捷方式" },
+                { "zh-TW", "新增捷徑" },
+                { "ja-JP", "新しいショートカット" },
+                { "ko-KR", "새 바로 가기" }
+            }));
+
+            // 快捷方式
+            lm.Register(Shortcut_NewTitle, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "New Shortcut" },
+                { "zh-CN", "新建快捷方式" },
+                { "zh-TW", "新增捷徑" },
+                { "ja-JP", "新しいショートカット" },
+                { "ko-KR", "새 바로 가기" }
+            }));
+
+            lm.Register(Shortcut_EditTitle, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Edit Shortcut" },
+                { "zh-CN", "编辑快捷方式" },
+                { "zh-TW", "編輯捷徑" },
+                { "ja-JP", "ショートカットを編集" },
+                { "ko-KR", "바로 가기 편집" }
+            }));
+
+            lm.Register(Shortcut_Name, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Shortcut Name" },
+                { "zh-CN", "快捷方式名称" },
+                { "zh-TW", "捷徑名稱" },
+                { "ja-JP", "ショートカット名" },
+                { "ko-KR", "바로 가기 이름" }
+            }));
+
+            lm.Register(Shortcut_TargetPlugin, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Target Plugin" },
+                { "zh-CN", "目标插件" },
+                { "zh-TW", "目標插件" },
+                { "ja-JP", "対象プラグイン" },
+                { "ko-KR", "대상 플러그인" }
+            }));
+
+            lm.Register(Shortcut_OrInputPackageName, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Or input package name manually:" },
+                { "zh-CN", "或手动输入包名：" },
+                { "zh-TW", "或手動輸入套件名稱：" },
+                { "ja-JP", "またはパッケージ名を手動入力：" },
+                { "ko-KR", "또는 패키지 이름을 직접 입력:" }
+            }));
+
+            lm.Register(Shortcut_Arguments, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Arguments (comma separated, use quotes for values with commas)" },
+                { "zh-CN", "参数（逗号分隔，包含逗号的值请用双引号包裹）" },
+                { "zh-TW", "參數（逗號分隔，包含逗號的值請用雙引號包裹）" },
+                { "ja-JP", "引数（カンマ区切り、カンマを含む値は引用符で囲む）" },
+                { "ko-KR", "인수 (쉼표로 구분, 쉼표가 포함된 값은 따옴표로 묶음)" }
+            }));
+
+            lm.Register(Shortcut_CustomIcon, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Custom Icon (optional, defaults to plugin icon)" },
+                { "zh-CN", "自定义图标（可选，默认使用插件图标）" },
+                { "zh-TW", "自訂圖示（可選，預設使用插件圖示）" },
+                { "ja-JP", "カスタムアイコン（オプション、デフォルトはプラグインアイコン）" },
+                { "ko-KR", "사용자 지정 아이콘 (선택 사항, 기본값은 플러그인 아이콘)" }
+            }));
+
+            lm.Register(Shortcut_Cancel, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Cancel" },
+                { "zh-CN", "取消" },
+                { "zh-TW", "取消" },
+                { "ja-JP", "キャンセル" },
+                { "ko-KR", "취소" }
+            }));
+
+            lm.Register(Shortcut_Save, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Save" },
+                { "zh-CN", "保存" },
+                { "zh-TW", "儲存" },
+                { "ja-JP", "保存" },
+                { "ko-KR", "저장" }
+            }));
+
+            lm.Register(Shortcut_SelectFile, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Select File" },
+                { "zh-CN", "选择文件" },
+                { "zh-TW", "選擇檔案" },
+                { "ja-JP", "ファイルを選択" },
+                { "ko-KR", "파일 선택" }
+            }));
+
+            lm.Register(Shortcut_SelectIcon, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Select Icon" },
+                { "zh-CN", "选择图标" },
+                { "zh-TW", "選擇圖示" },
+                { "ja-JP", "アイコンを選択" },
+                { "ko-KR", "아이콘 선택" }
+            }));
+
+            lm.Register(Shortcut_NameRequired, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Please enter a name for the shortcut." },
+                { "zh-CN", "请输入快捷方式名称。" },
+                { "zh-TW", "請輸入捷徑名稱。" },
+                { "ja-JP", "ショートカット名を入力してください。" },
+                { "ko-KR", "바로 가기 이름을 입력하세요." }
+            }));
+
+            lm.Register(Shortcut_PluginRequired, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Please select a target plugin." },
+                { "zh-CN", "请选择目标插件。" },
+                { "zh-TW", "請選擇目標插件。" },
+                { "ja-JP", "対象プラグインを選択してください。" },
+                { "ko-KR", "대상 플러그인을 선택하세요." }
+            }));
+
+            lm.Register(Menu_Shortcut_Open, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Open" },
+                { "zh-CN", "打开" },
+                { "zh-TW", "開啟" },
+                { "ja-JP", "開く" },
+                { "ko-KR", "열기" }
+            }));
+
+            lm.Register(Menu_Shortcut_Edit, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Edit" },
+                { "zh-CN", "编辑" },
+                { "zh-TW", "編輯" },
+                { "ja-JP", "編集" },
+                { "ko-KR", "편집" }
+            }));
+
+            lm.Register(Menu_Shortcut_Delete, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Delete" },
+                { "zh-CN", "删除" },
+                { "zh-TW", "刪除" },
+                { "ja-JP", "削除" },
+                { "ko-KR", "삭제" }
             }));
 
             // 设置面板

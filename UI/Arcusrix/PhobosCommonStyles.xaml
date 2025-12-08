@@ -1,0 +1,324 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 
+    ============================================================
+    Phobos UI - 其他控件样式 (PhobosCommonStyles.xaml)
+    ============================================================
+    包含: Label, ToolTip, GroupBox, Expander, TabControl, ListBox 等
+    ============================================================
+    -->
+
+    <!-- ============ 标签样式 ============ -->
+    <Style x:Key="PhobosLabel" TargetType="Label">
+        <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
+        <Setter Property="FontFamily" Value="{DynamicResource FontPrimary}"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMd}"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style x:Key="PhobosLabelSecondary" TargetType="Label" BasedOn="{StaticResource PhobosLabel}">
+        <Setter Property="Foreground" Value="{DynamicResource Foreground3Brush}"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSm}"/>
+    </Style>
+
+    <!-- ============ 文本块样式 ============ -->
+    <Style x:Key="PhobosTextBlock" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
+        <Setter Property="FontFamily" Value="{DynamicResource FontPrimary}"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMd}"/>
+    </Style>
+
+    <Style x:Key="PhobosTextBlockHeading" TargetType="TextBlock" BasedOn="{StaticResource PhobosTextBlock}">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeLg}"/>
+        <Setter Property="FontWeight" Value="{DynamicResource FontWeightSemibold}"/>
+    </Style>
+
+    <Style x:Key="PhobosTextBlockCaption" TargetType="TextBlock" BasedOn="{StaticResource PhobosTextBlock}">
+        <Setter Property="Foreground" Value="{DynamicResource Foreground3Brush}"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSm}"/>
+    </Style>
+
+    <!-- ============ 工具提示样式 ============ -->
+    <Style x:Key="PhobosToolTip" TargetType="ToolTip">
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontFamily" Value="{DynamicResource FontPrimary}"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSm}"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="HasDropShadow" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{DynamicResource CornerRadiusSmAll}"
+                            Padding="{TemplateBinding Padding}">
+                        <Border.Effect>
+                            <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="3" Opacity="0.3"/>
+                        </Border.Effect>
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 分组框样式 ============ -->
+    <Style x:Key="PhobosGroupBox" TargetType="GroupBox">
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontFamily" Value="{DynamicResource FontPrimary}"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GroupBox">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <!-- 标题 -->
+                        <Border Background="{DynamicResource Background3Brush}"
+                                CornerRadius="8,8,0,0"
+                                Padding="16,12">
+                            <ContentPresenter ContentSource="Header"
+                                              TextBlock.Foreground="{DynamicResource Foreground1Brush}"
+                                              TextBlock.FontWeight="{DynamicResource FontWeightMedium}"/>
+                        </Border>
+                        <!-- 内容 -->
+                        <Border Grid.Row="1"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1,0,1,1"
+                                CornerRadius="0,0,8,8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 展开器样式 ============ -->
+    <Style x:Key="PhobosExpander" TargetType="Expander">
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{DynamicResource CornerRadiusLgAll}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition x:Name="ContentRow" Height="*"/>
+                            </Grid.RowDefinitions>
+                            <!-- 标题栏 -->
+                            <ToggleButton x:Name="HeaderToggle"
+                                          Grid.Row="0"
+                                          IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          Cursor="Hand"
+                                          Padding="16,12">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="HeaderBorder"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="8"
+                                                Padding="{TemplateBinding Padding}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter ContentSource="Content"
+                                                                  VerticalAlignment="Center"/>
+                                                <Path x:Name="Arrow"
+                                                      Grid.Column="1"
+                                                      Data="M 0 0 L 6 6 L 12 0"
+                                                      Stroke="{DynamicResource Foreground3Brush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round"
+                                                      VerticalAlignment="Center"
+                                                      RenderTransformOrigin="0.5,0.5">
+                                                    <Path.RenderTransform>
+                                                        <RotateTransform x:Name="ArrowRotate" Angle="0"/>
+                                                    </Path.RenderTransform>
+                                                </Path>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource Background3Brush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Trigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="ArrowRotate"
+                                                                             Storyboard.TargetProperty="Angle"
+                                                                             To="180" Duration="0:0:0.2">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.EnterActions>
+                                                <Trigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="ArrowRotate"
+                                                                             Storyboard.TargetProperty="Angle"
+                                                                             To="0" Duration="0:0:0.2">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseOut"/>
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.ExitActions>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <ContentPresenter ContentSource="Header"/>
+                            </ToggleButton>
+                            <!-- 内容 -->
+                            <Border x:Name="Content"
+                                    Grid.Row="1"
+                                    Padding="{TemplateBinding Padding}"
+                                    Visibility="Collapsed">
+                                <ContentPresenter/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True">
+                            <Setter TargetName="Content" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 列表框样式 ============ -->
+    <Style x:Key="PhobosListBox" TargetType="ListBox">
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{DynamicResource CornerRadiusMdAll}">
+                        <ScrollViewer Padding="{TemplateBinding Padding}"
+                                      Focusable="False"
+                                      Style="{DynamicResource PhobosScrollViewer}">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 列表项样式 ============ -->
+    <Style x:Key="PhobosListBoxItem" TargetType="ListBoxItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="{DynamicResource CornerRadiusSmAll}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource Background3Brush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource Background4Brush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 分隔线样式 ============ -->
+    <Style x:Key="PhobosSeparatorHorizontal" TargetType="Separator">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Margin" Value="0,8"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Background="{TemplateBinding Background}" Height="{TemplateBinding Height}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="PhobosSeparatorVertical" TargetType="Separator">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="Width" Value="1"/>
+        <Setter Property="Margin" Value="8,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Background="{TemplateBinding Background}" Width="{TemplateBinding Width}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 卡片样式 ============ -->
+    <Style x:Key="PhobosCard" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusLgAll}"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <!-- ============ 悬浮卡片样式 ============ -->
+    <Style x:Key="PhobosCardHoverable" TargetType="Border" BasedOn="{StaticResource PhobosCard}">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Background3Brush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+</ResourceDictionary>

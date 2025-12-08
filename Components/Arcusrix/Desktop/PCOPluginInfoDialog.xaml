@@ -51,7 +51,7 @@
                        Margin="0,0,0,20"/>
 
             <!-- 内容区域 -->
-            <ScrollViewer Grid.Row="1"
+            <ScrollViewer Grid.Row="1" Style="{StaticResource PhobosScrollViewer}"
                           VerticalScrollBarVisibility="Auto"
                           Margin="0,0,0,20">
                 <StackPanel>
@@ -186,7 +186,7 @@
             </ScrollViewer>
 
             <!-- 关闭按钮 -->
-            <Button Grid.Row="2"
+            <Button Grid.Row="2" Style="{DynamicResource PhobosButton}"
                     x:Name="CloseButton"
                     Content="Close"
                     Width="100"

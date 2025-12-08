@@ -938,25 +938,25 @@ namespace Phobos.Class.Arcusrix
             // Segoe MDL2 Assets 图标: E922 = ChromeMaximize, E923 = ChromeRestore
             if (WindowState == WindowState.Maximized)
             {
-                ResBtn.Content = "\uE923"; // ChromeRestore 图标
+                ResBtn?.Content = "\uE923"; // ChromeRestore 图标
                 // 最大化时动画过渡到无圆角
                 PlayMaximizeAnimation();
             }
             else if (_lastState == WindowState.Maximized && WindowState == WindowState.Normal)
             {
-                ResBtn.Content = "\uE922"; // ChromeMaximize 图标
+                ResBtn?.Content = "\uE922"; // ChromeMaximize 图标
                 // 从最大化恢复到正常
                 PlayRestoreFromMaximizeAnimation();
             }
             else if (_lastState == WindowState.Minimized && WindowState != WindowState.Minimized)
             {
-                ResBtn.Content = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+                ResBtn?.Content = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
                 // 从最小化恢复
                 PlayRestoreFromMinimizeAnimation();
             }
             else
             {
-                ResBtn.Content = "\uE922"; // ChromeMaximize 图标
+                ResBtn?.Content = "\uE922"; // ChromeMaximize 图标
                 BackBorder.CornerRadius = new CornerRadius(8);
             }
 

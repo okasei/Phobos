@@ -209,6 +209,9 @@ namespace Phobos.Manager.Plugin
                 RemoveBootWithPhobos = HandleRemoveBootWithPhobos,
                 GetBootItems = HandleGetBootItems,
                 Log = HandleLog,
+                Subscribe = HandleSubscribe,
+                Unsubscribe = HandleUnsubscribe,
+                TriggerEvent = HandleTriggerEvent,
                 GetMergedDictionaries = (ctx) =>
                 {
                     var currentTheme = PMTheme.Instance.CurrentTheme;
@@ -220,6 +223,60 @@ namespace Phobos.Manager.Plugin
                 },
             };
         }
+
+        /// <summary>
+        /// 处理订阅请求
+        /// </summary>
+        private async Task<RequestResult> HandleSubscribe(
+            PluginCallerContext caller,
+            string eventId,
+            string eventName,
+            object[] args)
+        {
+            return PMEvent.Instance.Subscribe(caller.PackageName, eventId, eventName);
+        }
+
+        /// <summary>
+        /// 处理取消订阅请求
+        /// </summary>
+        private async Task<RequestResult> HandleUnsubscribe(
+            PluginCallerContext caller,
+            string eventId,
+            string eventName,
+            object[] args)
+        {
+            return PMEvent.Instance.Unsubscribe(caller.PackageName, eventId, eventName);
+        }
+
+        /// <summary>
+        /// 处理事件触发请求
+        /// </summary>
+        private async Task<RequestResult> HandleTriggerEvent(
+            PluginCallerContext caller,
+            string eventId,
+            string eventName,
+            object[] args)
+        {
+            try
+            {
+                await PMEvent.Instance.TriggerFromPluginAsync(caller.PackageName, eventId, eventName, args);
+                return new RequestResult
+                {
+                    Success = true,
+                    Message = $"Event {eventId}.{eventName} triggered successfully"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new RequestResult
+                {
+                    Success = false,
+                    Message = $"Failed to trigger event: {ex.Message}",
+                    Error = ex
+                };
+            }
+        }
+
 
         /// <summary>
         /// Register a built-in plugin instance so it is available via GetPlugin/Launch

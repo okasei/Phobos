@@ -84,7 +84,7 @@
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
 
-                <Button x:Name="CancelButton"
+                <Button x:Name="CancelButton" Style="{StaticResource PhobosButtonSecondary}"
                         Content="Cancel"
                         Width="80"
                         Height="32"
@@ -96,14 +96,9 @@
                         Cursor="Hand"
                         Margin="0,0,12,0"
                         Click="CancelButton_Click">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
-                        </Style>
-                    </Button.Resources>
                 </Button>
 
-                <Button x:Name="OkButton"
+                <Button x:Name="OkButton" Style="{StaticResource PhobosButton}"
                         Content="OK"
                         Width="80"
                         Height="32"

@@ -10,7 +10,7 @@ namespace Phobos.Class.Plugin.BuiltIn
 {
     /// <summary>
     /// Phobos 桌面插件
-    /// 提供桌面启动器功能
+    /// 提供桌面启动器功能，支持托盘图标和自动隐藏
     /// </summary>
     public class PCDesktopPlugin : PCPluginBase
     {
@@ -73,7 +73,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             }
         };
 
-        // 桌面插件不使用ContentArea，而是直接管理窗口
+        // 桌面插件不使用 ContentArea，而是直接管理窗口
         public override FrameworkElement? ContentArea => null;
 
         public PCDesktopPlugin()
@@ -107,10 +107,14 @@ namespace Phobos.Class.Plugin.BuiltIn
         {
             try
             {
+                // 订阅 App.Installed 和 App.Uninstalled 事件
+                await Subscribe(PhobosEventIds.App, "Installed");
+                await Subscribe(PhobosEventIds.App, "Uninstalled");
+
                 // 如果窗口已存在且可见，激活它
                 if (_desktopWindow != null && _desktopWindow.IsVisible)
                 {
-                    _desktopWindow.Activate();
+                    _desktopWindow.ShowFromTray();
                     return new RequestResult { Success = true, Message = "Desktop activated" };
                 }
 
@@ -119,7 +123,7 @@ namespace Phobos.Class.Plugin.BuiltIn
                 {
                     _desktopWindow = new PCOPhobosDesktop();
                     _desktopWindow.Closed += (s, e) => _desktopWindow = null;
-                    _desktopWindow.Show();
+                    _desktopWindow.ShowFromTray();
                 });
 
                 return new RequestResult { Success = true, Message = "Desktop launched" };
@@ -133,6 +137,7 @@ namespace Phobos.Class.Plugin.BuiltIn
 
         public override async Task<RequestResult> OnClosing(params object[] args)
         {
+            // 取消订阅会在基类的 OnClosing 中自动处理
             if (_desktopWindow != null)
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
@@ -143,6 +148,64 @@ namespace Phobos.Class.Plugin.BuiltIn
             }
 
             return await base.OnClosing(args);
+        }
+
+        /// <summary>
+        /// 处理接收到的事件
+        /// </summary>
+        public override async Task OnEventReceived(string eventId, string eventName, params object[] args)
+        {
+            await base.OnEventReceived(eventId, eventName, args);
+
+            // 处理 App 事件
+            if (eventId == PhobosEventIds.App)
+            {
+                switch (eventName)
+                {
+                    case "Installed":
+                        await HandleAppInstalled(args);
+                        break;
+                    case "Uninstalled":
+                        await HandleAppUninstalled(args);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理应用安装事件
+        /// </summary>
+        private async Task HandleAppInstalled(object[] args)
+        {
+            if (args.Length > 0)
+            {
+                var packageName = args[0]?.ToString() ?? string.Empty;
+                PCLoggerPlugin.Info("Desktop", $"App installed: {packageName}");
+
+                // 刷新桌面
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _desktopWindow?.RefreshPlugins();
+                });
+            }
+        }
+
+        /// <summary>
+        /// 处理应用卸载事件
+        /// </summary>
+        private async Task HandleAppUninstalled(object[] args)
+        {
+            if (args.Length > 0)
+            {
+                var packageName = args[0]?.ToString() ?? string.Empty;
+                PCLoggerPlugin.Info("Desktop", $"App uninstalled: {packageName}");
+
+                // 刷新桌面
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _desktopWindow?.RefreshPlugins();
+                });
+            }
         }
 
         public override async Task<RequestResult> Run(params object[] args)
@@ -157,28 +220,16 @@ namespace Phobos.Class.Plugin.BuiltIn
                 switch (command)
                 {
                     case "show":
-                        return await OnLaunch(args);
+                        return await ShowDesktop();
 
                     case "hide":
-                        if (_desktopWindow != null)
-                        {
-                            await Application.Current.Dispatcher.InvokeAsync(() =>
-                            {
-                                _desktopWindow?.Hide();
-                            });
-                        }
-                        return new RequestResult { Success = true, Message = "Desktop hidden" };
+                        return await HideDesktop();
+
+                    case "toggle":
+                        return await ToggleDesktop();
 
                     case "refresh":
-                        if (_desktopWindow != null)
-                        {
-                            await Application.Current.Dispatcher.InvokeAsync(() =>
-                            {
-                                // 触发桌面刷新
-                                _desktopWindow?.RefreshPlugins();
-                            });
-                        }
-                        return new RequestResult { Success = true, Message = "Desktop refreshed" };
+                        return await RefreshDesktop();
 
                     default:
                         return new RequestResult { Success = false, Message = $"Unknown command: {command}" };
@@ -189,6 +240,57 @@ namespace Phobos.Class.Plugin.BuiltIn
                 PCLoggerPlugin.Error("Desktop", $"Command failed: {ex.Message}");
                 return new RequestResult { Success = false, Message = ex.Message, Error = ex };
             }
+        }
+
+        private async Task<RequestResult> ShowDesktop()
+        {
+            if (_desktopWindow == null)
+            {
+                return await OnLaunch();
+            }
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                _desktopWindow?.ShowFromTray();
+            });
+
+            return new RequestResult { Success = true, Message = "Desktop shown" };
+        }
+
+        private async Task<RequestResult> HideDesktop()
+        {
+            if (_desktopWindow != null)
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _desktopWindow?.HideToTray();
+                });
+            }
+            return new RequestResult { Success = true, Message = "Desktop hidden" };
+        }
+
+        private async Task<RequestResult> ToggleDesktop()
+        {
+            if (_desktopWindow == null)
+            {
+                return await ShowDesktop();
+            }
+
+            // 检查窗口可见性并切换
+            // 注意: 实际实现需要在 PCOPhobosDesktop 中暴露可见性状态
+            return await ShowDesktop();
+        }
+
+        private async Task<RequestResult> RefreshDesktop()
+        {
+            if (_desktopWindow != null)
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _desktopWindow?.RefreshPlugins();
+                });
+            }
+            return new RequestResult { Success = true, Message = "Desktop refreshed" };
         }
 
         /// <summary>

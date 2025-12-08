@@ -12,7 +12,8 @@ namespace Phobos.Components.Arcusrix.Desktop
     public enum DesktopItemType
     {
         Plugin,
-        Folder
+        Folder,
+        Shortcut
     }
 
     /// <summary>
@@ -65,6 +66,104 @@ namespace Phobos.Components.Arcusrix.Desktop
     }
 
     /// <summary>
+    /// 快捷方式桌面项
+    /// </summary>
+    public class ShortcutDesktopItem : DesktopItem
+    {
+        /// <summary>
+        /// 快捷方式显示名称
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 目标插件包名
+        /// </summary>
+        public string TargetPackageName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 启动参数（逗号分隔，双引号包裹可避免被分割）
+        /// </summary>
+        public string Arguments { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 自定义图标路径（可选，为空则使用插件图标）
+        /// </summary>
+        public string CustomIconPath { get; set; } = string.Empty;
+
+        public ShortcutDesktopItem()
+        {
+            Type = DesktopItemType.Shortcut;
+            Id = Guid.NewGuid().ToString("N");
+        }
+
+        /// <summary>
+        /// 解析参数字符串为参数数组
+        /// </summary>
+        public string[] ParseArguments()
+        {
+            if (string.IsNullOrWhiteSpace(Arguments))
+                return Array.Empty<string>();
+
+            var result = new List<string>();
+            var current = new System.Text.StringBuilder();
+            bool inQuotes = false;
+
+            for (int i = 0; i < Arguments.Length; i++)
+            {
+                char c = Arguments[i];
+
+                if (c == '"')
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (c == ',' && !inQuotes)
+                {
+                    // 分隔符
+                    result.Add(current.ToString().Trim());
+                    current.Clear();
+                }
+                else
+                {
+                    current.Append(c);
+                }
+            }
+
+            // 添加最后一个参数
+            if (current.Length > 0)
+            {
+                result.Add(current.ToString().Trim());
+            }
+
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// 将参数数组格式化为参数字符串
+        /// </summary>
+        public static string FormatArguments(string[] args)
+        {
+            if (args == null || args.Length == 0)
+                return string.Empty;
+
+            var result = new List<string>();
+            foreach (var arg in args)
+            {
+                // 如果参数包含逗号，用双引号包裹
+                if (arg.Contains(','))
+                {
+                    result.Add($"\"{arg}\"");
+                }
+                else
+                {
+                    result.Add(arg);
+                }
+            }
+
+            return string.Join(",", result);
+        }
+    }
+
+    /// <summary>
     /// 桌面项 JSON 转换器
     /// </summary>
     public class DesktopItemConverter : JsonConverter<DesktopItem>
@@ -81,6 +180,7 @@ namespace Phobos.Components.Arcusrix.Desktop
             {
                 DesktopItemType.Plugin => new PluginDesktopItem(),
                 DesktopItemType.Folder => new FolderDesktopItem(),
+                DesktopItemType.Shortcut => new ShortcutDesktopItem(),
                 _ => new PluginDesktopItem()
             };
 
@@ -116,6 +216,13 @@ namespace Phobos.Components.Arcusrix.Desktop
             {
                 jo["Name"] = folderItem.Name;
                 jo["PluginPackageNames"] = JArray.FromObject(folderItem.PluginPackageNames);
+            }
+            else if (value is ShortcutDesktopItem shortcutItem)
+            {
+                jo["Name"] = shortcutItem.Name;
+                jo["TargetPackageName"] = shortcutItem.TargetPackageName;
+                jo["Arguments"] = shortcutItem.Arguments;
+                jo["CustomIconPath"] = shortcutItem.CustomIconPath;
             }
 
             jo.WriteTo(writer);
@@ -224,6 +331,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                 {
                     DesktopItemType.Plugin => token.ToObject<PluginDesktopItem>(),
                     DesktopItemType.Folder => token.ToObject<FolderDesktopItem>(),
+                    DesktopItemType.Shortcut => token.ToObject<ShortcutDesktopItem>(),
                     _ => token.ToObject<PluginDesktopItem>()
                 };
 
@@ -270,6 +378,13 @@ namespace Phobos.Components.Arcusrix.Desktop
                 {
                     jo["Name"] = folderItem.Name;
                     jo["PluginPackageNames"] = JArray.FromObject(folderItem.PluginPackageNames);
+                }
+                else if (item is ShortcutDesktopItem shortcutItem)
+                {
+                    jo["Name"] = shortcutItem.Name;
+                    jo["TargetPackageName"] = shortcutItem.TargetPackageName;
+                    jo["Arguments"] = shortcutItem.Arguments;
+                    jo["CustomIconPath"] = shortcutItem.CustomIconPath;
                 }
 
                 jo.WriteTo(writer);

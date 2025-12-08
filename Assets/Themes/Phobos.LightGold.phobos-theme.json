@@ -1,0 +1,170 @@
+{
+  "$schema": "https://phobos.lavirix.com/schemas/themev2.json",
+  "metadata": {
+    "id": "com.phobos.theme.light-gold",
+    "name": "Light Gold",
+    "version": "2.0.0",
+    "author": "Phobos Team",
+    "description": "Light theme with gold accent",
+    "localizedNames": {
+      "en-US": "Light Gold",
+      "zh-CN": "浅色金黄",
+      "zh-TW": "淺色金黃",
+      "ja-JP": "ライトゴールド"
+    }
+  },
+  "colors": {
+    "foreground1": "#1A1A1A",
+    "foreground2": "#333333",
+    "foreground3": "#666666",
+    "foreground4": "#999999",
+    "foreground5": "#CCCCCC",
+
+    "background1": "#FFFFFF",
+    "background2": "#FDFBF5",
+    "background3": "#F9F5E8",
+    "background4": "#F2ECD8",
+    "background5": "#E8E0C5",
+
+    "primary": "#D4A012",
+    "primaryHover": "#E8B42A",
+    "primaryPressed": "#B8890E",
+    "primaryDisabled": "#D4A01260",
+
+    "success": "#22C55E",
+    "warning": "#F59E0B",
+    "danger": "#EF4444",
+    "info": "#3B82F6",
+
+    "accent1": "#F43F5E",
+    "accent2": "#14B8A6",
+    "accent3": "#8B5CF6",
+    "accent4": "#EC4899",
+    "accent5": "#06B6D4",
+    "accent6": "#84CC16",
+
+    "border": "#E5DCC5",
+    "borderLight": "#F0EAD8",
+    "borderFocus": "#D4A012",
+
+    "scrollbar": "#D0C5A8",
+    "scrollbarHover": "#B8AB88",
+    "shadow": "#00000018",
+    "overlay": "#00000040"
+  },
+  "fonts": {
+    "primary": "Segoe UI, Microsoft YaHei, sans-serif",
+    "secondary": "Arial, Helvetica, sans-serif",
+    "mono": "Cascadia Code, Consolas, Microsoft YaHei Mono, monospace",
+
+    "sizeXs": 10,
+    "sizeSm": 12,
+    "sizeMd": 14,
+    "sizeLg": 16,
+    "sizeXl": 20,
+    "size2xl": 24,
+    "size3xl": 32,
+
+    "weightLight": 300,
+    "weightNormal": 400,
+    "weightMedium": 500,
+    "weightSemibold": 600,
+    "weightBold": 700,
+
+    "lineHeightTight": 1.25,
+    "lineHeightNormal": 1.5,
+    "lineHeightRelaxed": 1.75
+  },
+  "dimensions": {
+    "borderRadius": 6,
+    "borderRadiusLarge": 10,
+    "borderWidth": 1,
+    "spacing": 8,
+    "spacingSmall": 4,
+    "spacingLarge": 16,
+    "buttonHeight": 34,
+    "buttonHeightSmall": 26,
+    "buttonHeightLarge": 42,
+    "buttonPadding": "8,18",
+    "inputHeight": 34,
+    "inputPadding": "8,12",
+    "titleBarHeight": 32,
+    "windowMinWidth": 400,
+    "windowMinHeight": 300
+  },
+  "controls": {
+    "button": {
+      "background": "${colors.primary}",
+      "backgroundHover": "${colors.primaryHover}",
+      "backgroundPressed": "${colors.primaryPressed}",
+      "backgroundDisabled": "${colors.primaryDisabled}",
+      "foreground": "#FFFFFF",
+      "foregroundDisabled": "${colors.foreground4}",
+      "borderColor": "transparent",
+      "borderRadius": "${dimensions.borderRadius}",
+      "fontSize": "${fonts.sizeMd}",
+      "fontWeight": "${fonts.weightMedium}"
+    },
+    "buttonSecondary": {
+      "background": "transparent",
+      "backgroundHover": "${colors.background4}",
+      "backgroundPressed": "${colors.background5}",
+      "foreground": "${colors.foreground1}",
+      "borderColor": "${colors.border}"
+    },
+    "textBox": {
+      "background": "${colors.background1}",
+      "backgroundFocused": "${colors.background1}",
+      "foreground": "${colors.foreground1}",
+      "foregroundPlaceholder": "${colors.foreground4}",
+      "borderColor": "${colors.border}",
+      "borderColorFocused": "${colors.borderFocus}",
+      "borderRadius": "${dimensions.borderRadius}",
+      "fontSize": "${fonts.sizeMd}"
+    },
+    "label": {
+      "foreground": "${colors.foreground1}",
+      "foregroundSecondary": "${colors.foreground3}",
+      "fontSize": "${fonts.sizeMd}"
+    },
+    "listBox": {
+      "background": "${colors.background1}",
+      "foreground": "${colors.foreground1}",
+      "itemBackground": "transparent",
+      "itemBackgroundHover": "${colors.background3}",
+      "itemBackgroundSelected": "${colors.primary}",
+      "itemForegroundSelected": "#FFFFFF",
+      "borderColor": "${colors.border}"
+    },
+    "scrollBar": {
+      "background": "transparent",
+      "thumbBackground": "${colors.scrollbar}",
+      "thumbBackgroundHover": "${colors.scrollbarHover}",
+      "width": 10,
+      "thumbRadius": 5
+    },
+    "window": {
+      "background": "${colors.background1}",
+      "titleBarBackground": "${colors.background2}",
+      "titleBarForeground": "${colors.foreground1}",
+      "borderColor": "${colors.border}",
+      "shadowColor": "${colors.shadow}",
+      "shadowBlurRadius": 20
+    },
+    "titleBarButton": {
+      "background": "transparent",
+      "backgroundHover": "${colors.background4}",
+      "foreground": "${colors.foreground3}",
+      "foregroundHover": "${colors.foreground1}",
+      "closeBackgroundHover": "#E81123",
+      "closeForegroundHover": "#FFFFFF"
+    }
+  },
+  "animations": {
+    "defaultDuration": 200,
+    "fastDuration": 100,
+    "slowDuration": 400,
+    "easing": "CubicEaseOut",
+    "enableAnimations": true
+  }
+}

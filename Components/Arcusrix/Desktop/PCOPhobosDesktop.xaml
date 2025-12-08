@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Phobos.Components.Arcusrix.Desktop"
+        xmlns:PhobosClipBorder="clr-namespace:Phobos.UI.PIBorder"
         mc:Ignorable="d"
         Title="Phobos Desktop"
         Width="1200"
@@ -13,8 +14,10 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        ResizeMode="CanResize"
-        WindowStartupLocation="CenterScreen">
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="False"
+        WindowStartupLocation="Manual">
 
     <Window.Resources>
         <ResourceDictionary>
@@ -49,7 +52,7 @@
             </Style>
 
             <!-- 关闭按钮样式 -->
-            <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowControlButtonStyle}">
+            <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource PhobosButton}">
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
@@ -117,20 +120,22 @@
             Background="{DynamicResource Background1Brush}"
             BorderBrush="{DynamicResource Background4Brush}"
             BorderThickness="1"
-            CornerRadius="8"
+            CornerRadius="16"
             Margin="10">
 
         <Border.Effect>
             <DropShadowEffect Color="Black"
-                              BlurRadius="20"
+                              BlurRadius="16"
                               ShadowDepth="0"
                               Opacity="0.3"/>
         </Border.Effect>
 
-        <Grid>
+        <!-- 内容裁剪容器（确保背景图片不超出圆角边界） -->
+        <PhobosClipBorder:ClippingBorder  CornerRadius="16" ClipToBounds="True">
+            <Grid>
             <Grid.RowDefinitions>
-                <!-- 标题栏 -->
-                <RowDefinition Height="48"/>
+                <!-- 搜索栏区域 -->
+                <RowDefinition Height="Auto"/>
                 <!-- 内容区域 -->
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
@@ -139,138 +144,74 @@
             <Image x:Name="BackgroundImage"
                    Grid.RowSpan="2"
                    Stretch="UniformToFill"
-                   Visibility="Collapsed"/>
+                   Visibility="Collapsed"
+                   ClipToBounds="True"/>
 
-            <!-- 标题栏 -->
-            <Grid x:Name="TitleBar"
-                  Grid.Row="0"
-                  Background="{DynamicResource Background2Brush}"
-                  MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <!-- 隐藏的图标和标题（保持代码兼容性） -->
+            <Image x:Name="WindowIcon" Visibility="Collapsed"/>
+            <TextBlock x:Name="TitleText" Visibility="Collapsed"/>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <!-- 顶部：搜索栏 -->
+            <Border x:Name="SearchBorder"
+                    Grid.Row="0"
+                    Background="{DynamicResource Background3Brush}"
+                    CornerRadius="6"
+                    Margin="20,16,20,8"
+                    MinWidth="300"
+                    Width="400"
+                    HorizontalAlignment="Center">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- 左侧：图标和标题 -->
-                <StackPanel Grid.Column="0"
-                            Orientation="Horizontal"
-                            Margin="16,0,0,0"
-                            VerticalAlignment="Center">
+                    <!-- 搜索图标 -->
+                    <TextBlock Grid.Column="0"
+                               Text="&#128269;"
+                               FontSize="12"
+                               Margin="10,0,6,0"
+                               VerticalAlignment="Center"
+                               Opacity="0.6"/>
 
-                    <!-- 窗口图标 -->
-                    <Image x:Name="WindowIcon"
-                           Width="20"
-                           Height="20"
-                           Margin="0,0,10,0"
-                           VerticalAlignment="Center"/>
+                    <!-- 搜索输入框 -->
+                    <TextBox x:Name="SearchBox"
+                             Grid.Column="1"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{DynamicResource Foreground1Brush}"
+                             FontSize="13"
+                             VerticalAlignment="Center"
+                             Padding="0,12"
+                             MinWidth="200"
+                             TextChanged="SearchBox_TextChanged"/>
 
-                    <!-- 标题文本 -->
-                    <TextBlock x:Name="TitleText"
-                               Text="Phobos Desktop"
+                    <!-- 占位符文本 -->
+                    <TextBlock x:Name="SearchPlaceholder"
+                               Grid.Column="1"
+                               Text="Search plugins..."
                                FontSize="13"
-                               FontWeight="Normal"
-                               Foreground="{DynamicResource Foreground1Brush}"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
+                               Foreground="{DynamicResource Foreground3Brush}"
+                               VerticalAlignment="Center"
+                               Margin="0,6"
+                               IsHitTestVisible="False"/>
 
-                <!-- 中间：搜索栏 -->
-                <Border x:Name="SearchBorder"
-                        Grid.Column="1"
-                        Background="{DynamicResource Background3Brush}"
-                        CornerRadius="6"
-                        Margin="20,8"
-                        MinWidth="300"
-                        Width="400"
-                        HorizontalAlignment="Center">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- 搜索图标 -->
-                        <TextBlock Grid.Column="0"
-                                   Text="🔍"
-                                   FontSize="12"
-                                   Margin="10,0,6,0"
-                                   VerticalAlignment="Center"
-                                   Opacity="0.6"/>
-
-                        <!-- 搜索输入框 -->
-                        <TextBox x:Name="SearchBox"
-                                 Grid.Column="1"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 Foreground="{DynamicResource Foreground1Brush}"
-                                 FontSize="13"
-                                 VerticalAlignment="Center"
-                                 Padding="0,6"
-                                 MinWidth="200"
-                                 TextChanged="SearchBox_TextChanged"/>
-
-                        <!-- 占位符文本 -->
-                        <TextBlock x:Name="SearchPlaceholder"
-                                   Grid.Column="1"
-                                   Text="Search plugins..."
-                                   FontSize="13"
-                                   Foreground="{DynamicResource Foreground3Brush}"
-                                   VerticalAlignment="Center"
-                                   Margin="0,6"
-                                   IsHitTestVisible="False"/>
-
-                        <!-- 清除按钮 -->
-                        <Button x:Name="SearchClearButton"
-                                Grid.Column="2"
-                                Content="✕"
-                                FontSize="10"
-                                Width="24"
-                                Height="24"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Foreground="{DynamicResource Foreground3Brush}"
-                                Cursor="Hand"
-                                Visibility="Collapsed"
-                                Click="SearchClearButton_Click"/>
-                    </Grid>
-                </Border>
-
-                <!-- 右侧空白区域（可拖动） -->
-                <Grid Grid.Column="2" Width="50"/>
-
-                <!-- 右侧：窗口控制按钮 -->
-                <StackPanel Grid.Column="3"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Right">
-
-                    <!-- 最小化按钮 -->
-                    <Button x:Name="MinimizeButton"
-                            Style="{StaticResource WindowControlButtonStyle}"
-                            Click="MinimizeButton_Click"
-                            ToolTip="Minimize">
-                        <Path Data="M0,0 L10,0"
-                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                              StrokeThickness="1"
-                              Width="10"
-                              Height="1"/>
-                    </Button>
-
-                    <!-- 关闭按钮 -->
-                    <Button x:Name="CloseButton"
-                            Style="{StaticResource CloseButtonStyle}"
-                            Click="CloseButton_Click"
-                            ToolTip="Close">
-                        <Path Data="M0,0 L10,10 M10,0 L0,10"
-                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                              StrokeThickness="1"
-                              Width="10"
-                              Height="10"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
+                    <!-- 清除按钮 -->
+                    <Button x:Name="SearchClearButton"
+                            Grid.Column="2"
+                            Content="&#10005;"
+                            FontSize="10"
+                            Width="24"
+                            Height="24"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource Foreground3Brush}"
+                            Cursor="Hand"
+                            Visibility="Collapsed"
+                            Click="SearchClearButton_Click"/>
+                </Grid>
+            </Border>
 
             <!-- 桌面图标滚动容器 -->
             <ScrollViewer x:Name="DesktopScrollViewer"
@@ -349,7 +290,7 @@
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
                         CornerRadius="12"
-                        Width="450"
+                        Width="600"
                         MaxHeight="600"
                         Padding="24"
                         HorizontalAlignment="Center"
@@ -379,7 +320,7 @@
                                        Foreground="{DynamicResource Foreground1Brush}"
                                        VerticalAlignment="Center"/>
 
-                            <Button x:Name="SettingsCloseButton"
+                            <Button x:Name="SettingsCloseButton" Style="{DynamicResource CloseButtonStyle}"
                                     Content="✕"
                                     Width="32"
                                     Height="32"
@@ -393,7 +334,7 @@
                         </Grid>
 
                         <!-- 设置内容 -->
-                        <ScrollViewer Grid.Row="1"
+                        <ScrollViewer Grid.Row="1" Style="{StaticResource PhobosScrollViewer}"
                                       VerticalScrollBarVisibility="Auto"
                                       Margin="0,0,0,16">
                             <StackPanel>
@@ -439,20 +380,20 @@
                                              BorderThickness="1"
                                              Foreground="{DynamicResource Foreground1Brush}"
                                              FontSize="{DynamicResource FontSizeSm}"
-                                             Padding="10,8"
+                                             Padding="12,8"
                                              IsReadOnly="True"/>
 
-                                    <Button x:Name="BrowseBackgroundButton"
+                                    <Button x:Name="BrowseBackgroundButton" Style="{StaticResource PhobosButton}"
                                             Grid.Column="1"
                                             Content="Browse"
-                                            Width="70"
+                                            Width="75"
                                             Height="34"
                                             Background="{DynamicResource Background3Brush}"
                                             Foreground="{DynamicResource Foreground1Brush}"
                                             BorderThickness="0"
                                             FontSize="{DynamicResource FontSizeSm}"
                                             Cursor="Hand"
-                                            Margin="8,0,0,0"
+                                            Margin="5,0,0,0"
                                             Click="BrowseBackgroundButton_Click">
                                         <Button.Resources>
                                             <Style TargetType="Border">
@@ -461,7 +402,7 @@
                                         </Button.Resources>
                                     </Button>
 
-                                    <Button x:Name="ClearBackgroundButton"
+                                        <Button x:Name="ClearBackgroundButton"  Style="{StaticResource PhobosButtonDanger}"
                                             Grid.Column="2"
                                             Content="Clear"
                                             Width="60"
@@ -488,7 +429,7 @@
                                            Foreground="{DynamicResource Foreground2Brush}"
                                            Margin="0,8,0,8"/>
 
-                                <ComboBox x:Name="ScaleModeComboBox"
+                                    <ComboBox x:Name="ScaleModeComboBox"  Style="{StaticResource PhobosComboBox}"
                                           Background="{DynamicResource Background3Brush}"
                                           Foreground="{DynamicResource Foreground1Brush}"
                                           BorderBrush="{DynamicResource BorderBrush}"
@@ -515,7 +456,7 @@
                                         <ColumnDefinition Width="50"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <Slider x:Name="BackgroundOpacitySlider"
+                                    <Slider x:Name="BackgroundOpacitySlider" Style="{StaticResource PhobosSlider}"
                                             Grid.Column="0"
                                             Minimum="0"
                                             Maximum="100"
@@ -535,7 +476,7 @@
                         </ScrollViewer>
 
                         <!-- 保存按钮 -->
-                        <Button Grid.Row="2"
+                        <Button Grid.Row="2" Style="{StaticResource PhobosButton}"
                                 x:Name="SaveSettingsButton"
                                 Content="Save Settings"
                                 Height="40"
@@ -559,5 +500,6 @@
             <local:PCODesktopMenu x:Name="DesktopMenu" Grid.RowSpan="2"/>
 
         </Grid>
+        </PhobosClipBorder:ClippingBorder>
     </Border>
 </Window>

@@ -7,6 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
+    <UseWindowsForms>False</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hardcodet.Wpf.TaskbarNotification" Version="1.0.5" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.Management" Version="10.0.0" />
@@ -24,6 +26,8 @@
   <ItemGroup>
     <Folder Include="Assets\Themes\" />
     <Folder Include="Assets\Plugin\" />
+    <Folder Include="Documents\Menu\" />
+    <Folder Include="Documents\UI\" />
     <Folder Include="Shared\" />
   </ItemGroup>
 

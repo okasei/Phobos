@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Phobos.Shared.Interface;
 
-namespace Phobos.UI.Plugin
+namespace Phobos.UI.PIPlugin
 {
     /*
      * 
