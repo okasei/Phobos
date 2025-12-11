@@ -85,7 +85,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             // 注册协议
             await Link(new LinkAssociation
             {
-                Protocol = "dialog",
+                Protocol = "dialog:",
                 Name = "PhobosDialogHandler",
                 Description = "Phobos Dialog Protocol Handler",
                 Command = "phobos://plugin/com.phobos.dialog?action=%0"
@@ -93,7 +93,15 @@ namespace Phobos.Class.Plugin.BuiltIn
 
             await Link(new LinkAssociation
             {
-                Protocol = "Phobos.Dialog",
+                Protocol = "phobostest:",
+                Name = "PhobosDialogHandler",
+                Description = "Phobos Dialog Protocol Handler",
+                Command = "phobos://plugin/com.phobos.dialog?action=%0"
+            });
+
+            await Link(new LinkAssociation
+            {
+                Protocol = "Phobos.Dialog:",
                 Name = "PhobosDialogHandler",
                 Description = "Phobos Dialog Protocol Handler",
                 Command = "phobos://plugin/com.phobos.dialog?action=%0"

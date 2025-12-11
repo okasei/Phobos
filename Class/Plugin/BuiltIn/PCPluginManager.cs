@@ -84,7 +84,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         {
             await Link(new LinkAssociation
             {
-                Protocol = "pm",
+                Protocol = "pm:",
                 Name = "PluginManagerHandler_General",
                 Description = "Plugin Manager Protocol Handler",
                 Command = "pm://v1?action=%0"
@@ -92,7 +92,7 @@ namespace Phobos.Class.Plugin.BuiltIn
 
             await Link(new LinkAssociation
             {
-                Protocol = "Phobos.PluginManager",
+                Protocol = "Phobos.PluginManager:",
                 Name = "PluginManagerHandler_General",
                 Description = "Plugin Manager Protocol Handler",
                 Command = "pm://v1?action=%0"

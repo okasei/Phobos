@@ -2,6 +2,7 @@
 using System.Windows;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
+using Phobos.Utils.IO;
 
 namespace Phobos.Class.Plugin.BuiltIn
 {
@@ -65,7 +66,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         public override async Task<RequestResult> OnInstall(params object[] args)
         {
             // 注册协议
-            var protocols = new[] { "log", "logi", "loge", "logc", "Phobos.Logger" };
+            var protocols = new[] { "log:", "logi:", "loge:", "logc:", "Phobos.Logger:","phobostest:" };
             foreach (var protocol in protocols)
             {
                 await Link(new LinkAssociation
@@ -102,6 +103,12 @@ namespace Phobos.Class.Plugin.BuiltIn
             return base.OnLaunch(args);
         }
 
+        private static void ClearOldLogs()
+        {
+            var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Phobos", "Logs");
+            PUFile.Instance.DeleteFilesExcept(logDir, "*.log", $"Phobos_{DateTime.Now:yyyyMMdd}.log");
+        }
+
         /// <summary>
         /// 静态日志方法
         /// </summary>
@@ -114,9 +121,15 @@ namespace Phobos.Class.Plugin.BuiltIn
                 Message = TextEscaper.Escape(message)
             };
 
+            try
+            {
+                ClearOldLogs();
+            }
+            catch { }
+
             // 写入文件
             try
-            {       
+            {
                 File.AppendAllText(CreateLogDirectory(), entry.ToString() + Environment.NewLine);
             }
             catch { }

@@ -12,6 +12,14 @@ namespace Phobos.Components.Arcusrix.Desktop
     /// </summary>
     public partial class PCOPluginInfoDialog : Window
     {
+        private DesktopItem? _desktopItem;
+        private Action<DesktopItem>? _onHotkeyChanged;
+
+        /// <summary>
+        /// 快捷键是否发生变化
+        /// </summary>
+        public bool HotkeyChanged { get; private set; }
+
         public PCOPluginInfoDialog()
         {
             InitializeComponent();
@@ -29,8 +37,39 @@ namespace Phobos.Components.Arcusrix.Desktop
             StatusLabel.Text = DesktopLocalization.Get(DesktopLocalization.PluginInfo_Status);
             SystemPluginBadgeText.Text = DesktopLocalization.Get(DesktopLocalization.PluginInfo_SystemPlugin);
             CloseButton.Content = DesktopLocalization.Get(DesktopLocalization.PluginInfo_Close);
+            UpdateHotkeyButtonText();
 
             PlayOpenAnimation();
+        }
+
+        /// <summary>
+        /// 更新快捷键按钮文本
+        /// </summary>
+        private void UpdateHotkeyButtonText()
+        {
+            if (_desktopItem != null && !string.IsNullOrEmpty(_desktopItem.Hotkey))
+            {
+                HotkeyButtonText.Text = $"{DesktopLocalization.Get(DesktopLocalization.Hotkey_SetHotkey)}: {_desktopItem.Hotkey}";
+            }
+            else
+            {
+                HotkeyButtonText.Text = DesktopLocalization.Get(DesktopLocalization.Menu_Plugin_SetHotkey);
+            }
+        }
+
+        private void HotkeyButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_desktopItem == null)
+                return;
+
+            var result = PCOHotkeyDialog.ShowDialog(this, _desktopItem.Hotkey);
+            if (result != null)
+            {
+                _desktopItem.Hotkey = result;
+                HotkeyChanged = true;
+                UpdateHotkeyButtonText();
+                _onHotkeyChanged?.Invoke(_desktopItem);
+            }
         }
 
         private void PlayOpenAnimation()
@@ -159,15 +198,24 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// <summary>
         /// 显示插件信息对话框
         /// </summary>
-        public static async Task ShowAsync(Window owner, string packageName, PCSqliteDatabase? database)
+        public static async Task<bool> ShowAsync(Window owner, string packageName, PCSqliteDatabase? database, DesktopItem? desktopItem = null, Action<DesktopItem>? onHotkeyChanged = null)
         {
             var dialog = new PCOPluginInfoDialog
             {
-                Owner = owner
+                Owner = owner,
+                _desktopItem = desktopItem,
+                _onHotkeyChanged = onHotkeyChanged
             };
+
+            // 注册为子窗口
+            if (owner is PCOPhobosDesktop desktop)
+            {
+                desktop.RegisterChildWindow(dialog);
+            }
 
             await dialog.LoadPluginInfo(packageName, database);
             dialog.ShowDialog();
+            return dialog.HotkeyChanged;
         }
 
         private async Task LoadPluginInfo(string packageName, PCSqliteDatabase? database)

@@ -51,16 +51,55 @@ namespace Phobos.Manager.Arcusrix
 
             try
             {
-                await _database.ExecuteNonQuery(
-                    @"INSERT OR REPLACE INTO Phobos_Protocol (Protocol, AssociatedItem, UpdateUID, UpdateTime)
-                      VALUES (@protocol, @associatedItem, @uid, datetime('now'))",
+                var protocolLower = protocol.ToLowerInvariant();
+
+                // 查询是否已存在该包名+协议的组合
+                var existing = await _database.ExecuteQuery(
+                    @"SELECT UUID, AssociatedItem FROM Phobos_Protocol
+                      WHERE Protocol = @protocol AND UpdateUID = @packageName",
                     new Dictionary<string, object>
                     {
-                        { "@protocol", protocol.ToLowerInvariant() },
-                        { "@associatedItem", associatedItemName },
-                        { "@uid", packageName },
-                        { "@UpdateTime", "datetime('now')" }
+                        { "@protocol", protocolLower },
+                        { "@packageName", packageName }
                     });
+
+                if (existing?.Count > 0)
+                {
+                    // 已存在：检查是否有变化
+                    var existingUuid = existing[0]["UUID"]?.ToString() ?? "";
+                    var oldAssociatedItem = existing[0]["AssociatedItem"]?.ToString() ?? "";
+
+                    // 只有当 AssociatedItem 变化时才更新
+                    if (oldAssociatedItem != associatedItemName)
+                    {
+                        await _database.ExecuteNonQuery(
+                            @"UPDATE Phobos_Protocol
+                              SET AssociatedItem = @associatedItem,
+                                  UpdateTime = datetime('now'),
+                                  LastValue = @lastValue
+                              WHERE UUID = @uuid",
+                            new Dictionary<string, object>
+                            {
+                                { "@uuid", existingUuid },
+                                { "@associatedItem", associatedItemName },
+                                { "@lastValue", oldAssociatedItem }
+                            });
+                    }
+                }
+                else
+                {
+                    // 不存在：插入新记录
+                    await _database.ExecuteNonQuery(
+                        @"INSERT INTO Phobos_Protocol (UUID, Protocol, AssociatedItem, UpdateUID, UpdateTime, LastValue)
+                          VALUES (@uuid, @protocol, @associatedItem, @uid, datetime('now'), '')",
+                        new Dictionary<string, object>
+                        {
+                            { "@uuid", Guid.NewGuid().ToString("N") },
+                            { "@protocol", protocolLower },
+                            { "@associatedItem", associatedItemName },
+                            { "@uid", packageName }
+                        });
+                }
 
                 return new RequestResult { Success = true, Message = "Protocol registered" };
             }

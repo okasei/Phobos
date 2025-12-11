@@ -18,11 +18,17 @@ namespace Phobos.Components.Arcusrix.Desktop
         private bool _isEditMode = false;
         private bool _isUpdatingFromComboBox = false;
         private bool _isUpdatingFromTextBox = false;
+        private string _currentHotkey = string.Empty;
 
         /// <summary>
         /// 对话框结果
         /// </summary>
         public ShortcutDesktopItem? Result { get; private set; }
+
+        /// <summary>
+        /// 热键是否变更
+        /// </summary>
+        public bool HotkeyChanged { get; private set; } = false;
 
         /// <summary>
         /// 创建新快捷方式对话框
@@ -185,6 +191,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                 NameTextBox.Text = _shortcut.Name;
                 ArgsTextBox.Text = _shortcut.Arguments;
                 IconPathTextBox.Text = _shortcut.CustomIconPath;
+                _currentHotkey = _shortcut.Hotkey ?? string.Empty;
 
                 // 尝试选择目标插件，如果找不到则填入手动输入框
                 bool found = false;
@@ -206,6 +213,46 @@ namespace Phobos.Components.Arcusrix.Desktop
                 }
 
                 UpdateIconPreview();
+            }
+
+            // 更新热键按钮显示
+            UpdateHotkeyButtonText();
+        }
+
+        /// <summary>
+        /// 更新热键按钮文本
+        /// </summary>
+        private void UpdateHotkeyButtonText()
+        {
+            if (string.IsNullOrEmpty(_currentHotkey))
+            {
+                HotkeyButtonText.Text = DesktopLocalization.Get(DesktopLocalization.Menu_Shortcut_SetHotkey);
+            }
+            else
+            {
+                var hotkeyInfo = Manager.Hotkey.HotkeyInfo.Parse(_currentHotkey);
+                if (hotkeyInfo != null)
+                {
+                    HotkeyButtonText.Text = $"{DesktopLocalization.Get(DesktopLocalization.Hotkey_SetHotkey)}: {hotkeyInfo.GetDisplayString()}";
+                }
+                else
+                {
+                    HotkeyButtonText.Text = DesktopLocalization.Get(DesktopLocalization.Menu_Shortcut_SetHotkey);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 热键按钮点击事件
+        /// </summary>
+        private void HotkeyButton_Click(object sender, RoutedEventArgs e)
+        {
+            var result = PCOHotkeyDialog.ShowDialog(this, _currentHotkey);
+            if (result != null)
+            {
+                _currentHotkey = result;
+                HotkeyChanged = true;
+                UpdateHotkeyButtonText();
             }
         }
 
@@ -437,6 +484,7 @@ namespace Phobos.Components.Arcusrix.Desktop
             Result.TargetPackageName = selectedPackage;
             Result.Arguments = ArgsTextBox.Text.Trim();
             Result.CustomIconPath = IconPathTextBox.Text.Trim();
+            Result.Hotkey = _currentHotkey;
 
             PlayCloseAnimation(() =>
             {

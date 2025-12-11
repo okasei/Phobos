@@ -80,7 +80,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         public override async Task<RequestResult> OnInstall(params object[] args)
         {
             // 注册协议
-            var protocols = new[] { "seq", "sequence", "Phobos.Sequencer" };
+            var protocols = new[] { "seq:", "sequence:", "Phobos.Sequencer:" };
             foreach (var protocol in protocols)
             {
                 await Link(new LinkAssociation

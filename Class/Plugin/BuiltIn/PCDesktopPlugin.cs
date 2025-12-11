@@ -86,7 +86,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             // 注册协议
             await Link(new LinkAssociation
             {
-                Protocol = "desktop",
+                Protocol = "desktop:",
                 Name = "PhobosDesktopHandler",
                 Description = "Phobos Desktop Protocol Handler",
                 Command = "phobos://plugin/com.phobos.desktop?action=%0"
@@ -94,7 +94,15 @@ namespace Phobos.Class.Plugin.BuiltIn
 
             await Link(new LinkAssociation
             {
-                Protocol = "Phobos.Desktop",
+                Protocol = "home:",
+                Name = "PhobosDesktopHandler",
+                Description = "Phobos Desktop Protocol Handler",
+                Command = "phobos://plugin/com.phobos.desktop?action=%0"
+            });
+
+            await Link(new LinkAssociation
+            {
+                Protocol = "Phobos.Desktop:",
                 Name = "PhobosDesktopHandler",
                 Description = "Phobos Desktop Protocol Handler",
                 Command = "phobos://plugin/com.phobos.desktop?action=%0"

@@ -245,43 +245,67 @@
             </ScrollViewer>
 
             <!-- Buttons -->
-            <StackPanel Grid.Row="2"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Right">
-                <Button x:Name="CancelButton" Style="{StaticResource PhobosButton}"
-                        Content="Cancel"
-                        Width="100"
+            <Grid Grid.Row="2">
+                <!-- Hotkey Button (Left) -->
+                <Button x:Name="HotkeyButton" Style="{StaticResource PhobosButton}"
                         Height="40"
                         Background="{DynamicResource Background3Brush}"
                         Foreground="{DynamicResource Foreground1Brush}"
                         BorderThickness="0"
                         FontSize="{DynamicResource FontSizeMd}"
                         Cursor="Hand"
-                        Margin="0,0,12,0"
-                        Click="CancelButton_Click">
+                        HorizontalAlignment="Left"
+                        Padding="16,0"
+                        Click="HotkeyButton_Click">
                     <Button.Resources>
                         <Style TargetType="Border">
                             <Setter Property="CornerRadius" Value="6"/>
                         </Style>
                     </Button.Resources>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⌨" Margin="0,0,8,0"/>
+                        <TextBlock x:Name="HotkeyButtonText" Text="Set Hotkey"/>
+                    </StackPanel>
                 </Button>
-                <Button x:Name="SaveButton" Style="{StaticResource PhobosButton}"
-                        Content="Save"
-                        Width="100"
-                        Height="40"
-                        Background="{DynamicResource PrimaryBrush}"
-                        Foreground="{DynamicResource Foreground1Brush}"
-                        BorderThickness="0"
-                        FontSize="{DynamicResource FontSizeMd}"
-                        Cursor="Hand"
-                        Click="SaveButton_Click">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
-            </StackPanel>
+
+                <!-- Cancel and Save (Right) -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton" Style="{StaticResource PhobosButton}"
+                            Content="Cancel"
+                            Width="100"
+                            Height="40"
+                            Background="{DynamicResource Background3Brush}"
+                            Foreground="{DynamicResource Foreground1Brush}"
+                            BorderThickness="0"
+                            FontSize="{DynamicResource FontSizeMd}"
+                            Cursor="Hand"
+                            Margin="0,0,12,0"
+                            Click="CancelButton_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button x:Name="SaveButton" Style="{StaticResource PhobosButton}"
+                            Content="Save"
+                            Width="100"
+                            Height="40"
+                            Background="{DynamicResource PrimaryBrush}"
+                            Foreground="{DynamicResource Foreground1Brush}"
+                            BorderThickness="0"
+                            FontSize="{DynamicResource FontSizeMd}"
+                            Cursor="Hand"
+                            Click="SaveButton_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Border>
 </Window>

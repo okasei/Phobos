@@ -157,6 +157,8 @@ namespace Phobos.Components.Arcusrix.Desktop
             // 如果是从托盘退出，直接关闭
             if (_isClosingFromTray)
             {
+                // 注销所有快捷键
+                Manager.Hotkey.PMHotkey.Instance.Dispose();
                 CleanupTrayExtension();
                 return;
             }
@@ -197,6 +199,9 @@ namespace Phobos.Components.Arcusrix.Desktop
             System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Layout loaded: {_layout.Items.Count} items");
 
             RenderDesktop(playAnimation: true); // 窗口初次加载时播放动画
+
+            // 注册所有快捷键
+            RegisterAllHotkeys();
         }
 
         #region 窗口动画
@@ -1665,18 +1670,122 @@ namespace Phobos.Components.Arcusrix.Desktop
         }
 
         /// <summary>
+        /// 注册单个桌面项的快捷键
+        /// </summary>
+        private void RegisterItemHotkey(DesktopItem item)
+        {
+            if (string.IsNullOrEmpty(item.Hotkey))
+                return;
+
+            var hotkeyInfo = Manager.Hotkey.HotkeyInfo.Parse(item.Hotkey);
+            if (hotkeyInfo == null)
+                return;
+
+            hotkeyInfo.Id = item.Id;
+            hotkeyInfo.Callback = () => ExecuteItemAction(item);
+
+            if (!Manager.Hotkey.PMHotkey.Instance.Register(hotkeyInfo))
+            {
+                Service.Arcusrix.PSDialogService.Warning(
+                    $"Failed to register hotkey: {item.Hotkey}",
+                    DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
+                    true,
+                    this);
+            }
+        }
+
+        /// <summary>
+        /// 执行桌面项的操作（由快捷键触发）
+        /// </summary>
+        private void ExecuteItemAction(DesktopItem item)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                switch (item)
+                {
+                    case PluginDesktopItem pluginItem:
+                        if (_allPlugins.TryGetValue(pluginItem.PackageName, out var plugin))
+                        {
+                            LaunchPlugin(plugin);
+                        }
+                        break;
+
+                    case ShortcutDesktopItem shortcut:
+                        RunShortcut(shortcut);
+                        break;
+
+                    case FolderDesktopItem folder:
+                        // 显示桌面并打开文件夹
+                        ShowFromTray();
+                        OpenFolder(folder);
+                        break;
+                }
+            });
+        }
+
+        /// <summary>
+        /// 注册所有桌面项的快捷键
+        /// </summary>
+        private void RegisterAllHotkeys()
+        {
+            // 初始化快捷键管理器
+            Manager.Hotkey.PMHotkey.Instance.Initialize(this);
+
+            foreach (var item in _layout.Items)
+            {
+                if (!string.IsNullOrEmpty(item.Hotkey))
+                {
+                    RegisterItemHotkey(item);
+                }
+            }
+
+            Class.Plugin.BuiltIn.PCLoggerPlugin.Info("PCOPhobosDesktop", $"[RegisterAllHotkeys] Registered hotkeys for {_layout.Items.Count(i => !string.IsNullOrEmpty(i.Hotkey))} items");
+        }
+
+        /// <summary>
+        /// 注销所有快捷键
+        /// </summary>
+        private void UnregisterAllHotkeys()
+        {
+            Manager.Hotkey.PMHotkey.Instance.UnregisterAll();
+        }
+
+        /// <summary>
         /// 编辑快捷方式
         /// </summary>
         private void EditShortcut(ShortcutDesktopItem shortcut)
         {
-            var result = PCOShortcutEditDialog.ShowDialog(this, _allPlugins, shortcut);
-            if (result != null)
+            var dialog = new PCOShortcutEditDialog(_allPlugins, shortcut)
             {
+                Owner = this
+            };
+            RegisterChildWindow(dialog);
+
+            if (dialog.ShowDialog() == true && dialog.Result != null)
+            {
+                var result = dialog.Result;
+
                 // 更新快捷方式属性
                 shortcut.Name = result.Name;
                 shortcut.TargetPackageName = result.TargetPackageName;
                 shortcut.Arguments = result.Arguments;
                 shortcut.CustomIconPath = result.CustomIconPath;
+
+                // 处理热键变更
+                if (dialog.HotkeyChanged || shortcut.Hotkey != result.Hotkey)
+                {
+                    // 注销旧热键
+                    Manager.Hotkey.PMHotkey.Instance.Unregister(shortcut.Id);
+
+                    // 更新热键
+                    shortcut.Hotkey = result.Hotkey;
+
+                    // 注册新热键
+                    if (!string.IsNullOrEmpty(shortcut.Hotkey))
+                    {
+                        RegisterItemHotkey(shortcut);
+                    }
+                }
 
                 SaveLayout();
                 RenderDesktop();
@@ -1688,6 +1797,12 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// </summary>
         private void DeleteShortcut(ShortcutDesktopItem shortcut)
         {
+            // 注销热键
+            if (!string.IsNullOrEmpty(shortcut.Hotkey))
+            {
+                Manager.Hotkey.PMHotkey.Instance.Unregister(shortcut.Id);
+            }
+
             _layout.Items.Remove(shortcut);
             SaveLayout();
             RenderDesktop();
@@ -2079,9 +2194,16 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// </summary>
         private void CreateNewShortcut()
         {
-            var result = PCOShortcutEditDialog.ShowDialog(this, _allPlugins, null);
-            if (result != null)
+            var dialog = new PCOShortcutEditDialog(_allPlugins, null)
             {
+                Owner = this
+            };
+            RegisterChildWindow(dialog);
+
+            if (dialog.ShowDialog() == true && dialog.Result != null)
+            {
+                var result = dialog.Result;
+
                 // 查找空闲位置
                 int gridX = 0, gridY = 0;
                 bool positionFound = false;
@@ -2110,6 +2232,13 @@ namespace Phobos.Components.Arcusrix.Desktop
                 result.GridY = gridY;
 
                 _layout.Items.Add(result);
+
+                // 注册热键
+                if (!string.IsNullOrEmpty(result.Hotkey))
+                {
+                    RegisterItemHotkey(result);
+                }
+
                 RenderDesktop();
                 SaveLayout();
             }
@@ -2788,7 +2917,21 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             try
             {
-                await PCOPluginInfoDialog.ShowAsync(this, plugin.PackageName, _database);
+                // 查找对应的 DesktopItem
+                var desktopItem = _layout.Items.FirstOrDefault(i => i is PluginDesktopItem pi && pi.PackageName == plugin.PackageName);
+
+                var hotkeyChanged = await PCOPluginInfoDialog.ShowAsync(
+                    this,
+                    plugin.PackageName,
+                    _database,
+                    desktopItem,
+                    OnPluginHotkeyChanged);
+
+                if (hotkeyChanged)
+                {
+                    SaveLayout();
+                    RenderDesktop();
+                }
             }
             catch (Exception ex)
             {
@@ -2798,6 +2941,21 @@ namespace Phobos.Components.Arcusrix.Desktop
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
                     true,
                     this);
+            }
+        }
+
+        /// <summary>
+        /// 插件快捷键变更回调
+        /// </summary>
+        private void OnPluginHotkeyChanged(DesktopItem item)
+        {
+            // 先注销旧快捷键
+            Manager.Hotkey.PMHotkey.Instance.Unregister(item.Id);
+
+            // 如果有新快捷键，注册
+            if (!string.IsNullOrEmpty(item.Hotkey))
+            {
+                RegisterItemHotkey(item);
             }
         }
 

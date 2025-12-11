@@ -74,6 +74,18 @@ namespace Phobos.Components.Arcusrix.Desktop
         public const string PluginInfo_SystemPlugin = "PluginInfo.SystemPlugin";
         public const string PluginInfo_Close = "PluginInfo.Close";
 
+        // 快捷键
+        public const string Hotkey_Title = "Hotkey.Title";
+        public const string Hotkey_Hint = "Hotkey.Hint";
+        public const string Hotkey_PressKey = "Hotkey.PressKey";
+        public const string Hotkey_Clear = "Hotkey.Clear";
+        public const string Hotkey_None = "Hotkey.None";
+        public const string Hotkey_NeedModifier = "Hotkey.NeedModifier";
+        public const string Hotkey_SetHotkey = "Hotkey.SetHotkey";
+        public const string Menu_Shortcut_SetHotkey = "Menu.Shortcut.SetHotkey";
+        public const string Menu_Plugin_SetHotkey = "Menu.Plugin.SetHotkey";
+        public const string Menu_Folder_SetHotkey = "Menu.Folder.SetHotkey";
+
         // 对话框
         public const string Dialog_NewFolder = "Dialog.NewFolder";
         public const string Dialog_NewFolder_Prompt = "Dialog.NewFolder.Prompt";
@@ -578,6 +590,97 @@ namespace Phobos.Components.Arcusrix.Desktop
                 { "zh-TW", "關閉" },
                 { "ja-JP", "閉じる" },
                 { "ko-KR", "닫기" }
+            }));
+
+            // 快捷键
+            lm.Register(Hotkey_Title, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Set Hotkey" },
+                { "zh-CN", "设置快捷键" },
+                { "zh-TW", "設定快捷鍵" },
+                { "ja-JP", "ホットキーを設定" },
+                { "ko-KR", "단축키 설정" }
+            }));
+
+            lm.Register(Hotkey_Hint, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Press the key combination you want to use:" },
+                { "zh-CN", "按下您想要使用的组合键：" },
+                { "zh-TW", "按下您想要使用的組合鍵：" },
+                { "ja-JP", "使用したいキーの組み合わせを押してください：" },
+                { "ko-KR", "사용하려는 키 조합을 누르세요:" }
+            }));
+
+            lm.Register(Hotkey_PressKey, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Press a key..." },
+                { "zh-CN", "按下按键..." },
+                { "zh-TW", "按下按鍵..." },
+                { "ja-JP", "キーを押してください..." },
+                { "ko-KR", "키를 누르세요..." }
+            }));
+
+            lm.Register(Hotkey_Clear, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Clear Hotkey" },
+                { "zh-CN", "清除快捷键" },
+                { "zh-TW", "清除快捷鍵" },
+                { "ja-JP", "ホットキーをクリア" },
+                { "ko-KR", "단축키 지우기" }
+            }));
+
+            lm.Register(Hotkey_None, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "None" },
+                { "zh-CN", "无" },
+                { "zh-TW", "無" },
+                { "ja-JP", "なし" },
+                { "ko-KR", "없음" }
+            }));
+
+            lm.Register(Hotkey_NeedModifier, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Please use at least one modifier key (Ctrl, Alt, Shift, or Win)." },
+                { "zh-CN", "请至少使用一个修饰键（Ctrl、Alt、Shift 或 Win）。" },
+                { "zh-TW", "請至少使用一個修飾鍵（Ctrl、Alt、Shift 或 Win）。" },
+                { "ja-JP", "少なくとも1つの修飾キー（Ctrl、Alt、Shift、またはWin）を使用してください。" },
+                { "ko-KR", "수정자 키(Ctrl, Alt, Shift 또는 Win)를 하나 이상 사용하세요." }
+            }));
+
+            lm.Register(Hotkey_SetHotkey, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Hotkey" },
+                { "zh-CN", "快捷键" },
+                { "zh-TW", "快捷鍵" },
+                { "ja-JP", "ホットキー" },
+                { "ko-KR", "단축키" }
+            }));
+
+            lm.Register(Menu_Shortcut_SetHotkey, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Set Hotkey" },
+                { "zh-CN", "设置快捷键" },
+                { "zh-TW", "設定快捷鍵" },
+                { "ja-JP", "ホットキーを設定" },
+                { "ko-KR", "단축키 설정" }
+            }));
+
+            lm.Register(Menu_Plugin_SetHotkey, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Set Hotkey" },
+                { "zh-CN", "设置快捷键" },
+                { "zh-TW", "設定快捷鍵" },
+                { "ja-JP", "ホットキーを設定" },
+                { "ko-KR", "단축키 설정" }
+            }));
+
+            lm.Register(Menu_Folder_SetHotkey, new LocalizedString(new Dictionary<string, string>
+            {
+                { "en-US", "Set Hotkey" },
+                { "zh-CN", "设置快捷键" },
+                { "zh-TW", "設定快捷鍵" },
+                { "ja-JP", "ホットキーを設定" },
+                { "ko-KR", "단축키 설정" }
             }));
 
             // 对话框

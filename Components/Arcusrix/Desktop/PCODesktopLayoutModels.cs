@@ -25,6 +25,11 @@ namespace Phobos.Components.Arcusrix.Desktop
         public DesktopItemType Type { get; set; }
         public int GridX { get; set; }
         public int GridY { get; set; }
+
+        /// <summary>
+        /// 快捷键绑定（格式: "Ctrl+Alt+A"）
+        /// </summary>
+        public string Hotkey { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -205,7 +210,8 @@ namespace Phobos.Components.Arcusrix.Desktop
                 ["Id"] = value.Id,
                 ["Type"] = (int)value.Type,
                 ["GridX"] = value.GridX,
-                ["GridY"] = value.GridY
+                ["GridY"] = value.GridY,
+                ["Hotkey"] = value.Hotkey ?? string.Empty
             };
 
             if (value is PluginDesktopItem pluginItem)
@@ -367,7 +373,8 @@ namespace Phobos.Components.Arcusrix.Desktop
                     ["Id"] = item.Id,
                     ["Type"] = (int)item.Type,
                     ["GridX"] = item.GridX,
-                    ["GridY"] = item.GridY
+                    ["GridY"] = item.GridY,
+                    ["Hotkey"] = item.Hotkey ?? string.Empty
                 };
 
                 if (item is PluginDesktopItem pluginItem)

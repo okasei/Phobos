@@ -83,7 +83,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             // 格式: pi://install?path=C:\path\to\plugin.dll
             await Link(new LinkAssociation
             {
-                Protocol = "pi",
+                Protocol = "pi:",
                 Name = "PluginInstallerHandler_General",
                 Description = "Plugin Installer Protocol Handler",
                 Command = "pi://%0"
