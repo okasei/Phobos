@@ -516,7 +516,8 @@ namespace Phobos
                 new PCSequencerPlugin(),
                 new PCDialogPlugin(),
                 new PCPluginInstaller(),
-                new PCDesktopPlugin()
+                new PCDesktopPlugin(),
+                new PCRunnerPlugin()
             };
             // 创建处理器
 
@@ -615,7 +616,20 @@ namespace Phobos
                 WriteSysConfig = (caller, key, val) => Task.FromResult(new ConfigResult { Success = true }),
                 BootWithPhobos = (caller, cmd, priority, args) => Task.FromResult(new BootResult { Success = true }),
                 RemoveBootWithPhobos = (caller, uuid) => Task.FromResult(new BootResult { Success = true }),
-                GetBootItems = (caller) => Task.FromResult(new System.Collections.Generic.List<object>())
+                GetBootItems = (caller) => Task.FromResult(new System.Collections.Generic.List<object>()),
+                Subscribe = async (caller, eventId, eventName, args) =>
+                {
+                    return PMEvent.Instance.Subscribe(caller.PackageName, eventId, eventName);
+                },
+                Unsubscribe = async (caller, eventId, eventName, args) =>
+                {
+                    return PMEvent.Instance.Unsubscribe(caller.PackageName, eventId, eventName);
+                },
+                TriggerEvent = async (caller, eventId, eventName, args) =>
+                {
+                    await PMEvent.Instance.TriggerFromPluginAsync(caller.PackageName, eventId, eventName, args);
+                    return new RequestResult { Success = true, Message = $"Event {eventId}.{eventName} triggered" };
+                }
 
             };
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Manager.Plugin;
 using Phobos.Shared.Interface;
 
@@ -80,6 +81,7 @@ namespace Phobos.Manager.Arcusrix
 
                 if (_subscriptions[key].Any(s => s.PackageName == packageName))
                 {
+                    PCLoggerPlugin.Info("PMEvent", $"[PMEvent] {packageName} already subscribed to {eventId}.{eventName}");
                     return new RequestResult { Success = true, Message = "Already subscribed" };
                 }
 
@@ -90,6 +92,8 @@ namespace Phobos.Manager.Arcusrix
                     EventName = eventName,
                     SubscribedAt = DateTime.Now
                 });
+
+                PCLoggerPlugin.Info("PMEvent", $"[PMEvent] {packageName} subscribed to {eventId}.{eventName}");
             }
 
             return new RequestResult { Success = true, Message = $"Subscribed to {eventId}.{eventName}" };
@@ -160,19 +164,21 @@ namespace Phobos.Manager.Arcusrix
         /// <summary>
         /// 触发事件（由主程序调用）- 通知所有订阅者
         /// </summary>
-        public async Task TriggerAsync(string eventId, string eventName, params object[] args)
+        public async Task TriggerAsync(string eventId, string eventName, string source, params object[] args)
         {
             var subscribers = GetSubscribers(eventId, eventName);
+
             foreach (var packageName in subscribers)
             {
-                try
-                {
-                    await NotifyPluginAsync(packageName, eventId, eventName, args);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[PMEvent] Failed to notify {packageName}: {ex.Message}");
-                }
+                if (!packageName.Equals(source))
+                    try
+                    {
+                        await NotifyPluginAsync(packageName, eventId, eventName, args);
+                    }
+                    catch (Exception ex)
+                    {
+                        PCLoggerPlugin.Warning("PMEvent", $"[PMEvent] Failed to notify {packageName}: {ex.Message}");
+                    }
             }
         }
 
@@ -186,7 +192,7 @@ namespace Phobos.Manager.Arcusrix
             fullArgs[0] = sourcePackageName;
             Array.Copy(args, 0, fullArgs, 1, args.Length);
 
-            await TriggerAsync(eventId, eventName, fullArgs);
+            await TriggerAsync(eventId, eventName, sourcePackageName, fullArgs);
         }
 
         /// <summary>
@@ -201,42 +207,6 @@ namespace Phobos.Manager.Arcusrix
             {
                 await plugin.OnEventReceived(eventId, eventName, args);
             }
-        }
-
-        #endregion
-
-        #region 预定义事件触发方法
-
-        /// <summary>
-        /// 触发 App.Installed 事件
-        /// </summary>
-        public async Task TriggerAppInstalledAsync(string installedPackageName)
-        {
-            await TriggerAsync(PhobosEventIds.App, PhobosAppEventNames.Installed, installedPackageName);
-        }
-
-        /// <summary>
-        /// 触发 App.Uninstalled 事件
-        /// </summary>
-        public async Task TriggerAppUninstalledAsync(string uninstalledPackageName)
-        {
-            await TriggerAsync(PhobosEventIds.App, PhobosAppEventNames.Uninstalled, uninstalledPackageName);
-        }
-
-        /// <summary>
-        /// 触发 Theme.Changed 事件
-        /// </summary>
-        public async Task TriggerThemeChangedAsync(string newThemeId)
-        {
-            await TriggerAsync(PhobosEventIds.Theme, PhobosEventNames.ThemeChanged, newThemeId);
-        }
-
-        /// <summary>
-        /// 触发 Language.Changed 事件
-        /// </summary>
-        public async Task TriggerLanguageChangedAsync(string newLanguageCode)
-        {
-            await TriggerAsync(PhobosEventIds.Language, PhobosEventNames.LanguageChanged, newLanguageCode);
         }
 
         #endregion

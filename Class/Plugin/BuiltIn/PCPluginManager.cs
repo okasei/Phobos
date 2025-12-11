@@ -105,7 +105,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         {
             try
             {
-                _content = new PCOPluginManager();
+                _content = new PCOPluginManager(this);
                 return await base.OnLaunch(args);
             }
             catch (Exception ex)

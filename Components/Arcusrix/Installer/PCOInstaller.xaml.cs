@@ -497,7 +497,7 @@ namespace Phobos.Components.Arcusrix.Installer
 
                 if (result.Success)
                 {
-                    SetInstallStatus("✓ 安装成功");
+                    SetInstallStatus("安装成功");
                     InstallButton.Content = "已安装";
 
                     InstallCompleted?.Invoke(this, new InstallCompletedEventArgs
@@ -506,7 +506,8 @@ namespace Phobos.Components.Arcusrix.Installer
                         Message = result.Message,
                         PackageName = _installContext.Metadata?.PackageName ?? string.Empty
                     });
-
+                    if (_hostPlugin != null)
+                        await _hostPlugin?.TriggerEvent("App", "Installed", _installContext.Metadata?.PackageName ?? string.Empty, _installContext.Metadata?.Name ?? string.Empty);
                     // 延迟后自动关闭或返回
                     await Task.Delay(1500);
 
@@ -521,7 +522,7 @@ namespace Phobos.Components.Arcusrix.Installer
                 }
                 else
                 {
-                    SetInstallStatus($"✗ 安装失败: {result.Message}");
+                    SetInstallStatus($"安装失败: {result.Message}");
                     InstallButton.IsEnabled = true;
                     InstallButton.Content = "重试安装";
                 }
@@ -529,7 +530,7 @@ namespace Phobos.Components.Arcusrix.Installer
             catch (Exception ex)
             {
                 HideLoading();
-                SetInstallStatus($"✗ 安装出错: {ex.Message}");
+                SetInstallStatus($"安装出错: {ex.Message}");
                 InstallButton.IsEnabled = true;
                 InstallButton.Content = "重试安装";
             }

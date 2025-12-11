@@ -97,6 +97,16 @@ namespace Phobos.Components.Arcusrix.Desktop
         }
 
         /// <summary>
+        /// 刷新插件列表并将新安装的插件添加到桌面布局
+        /// </summary>
+        public async void RefreshAndAddNewPlugins()
+        {
+            await LoadPlugins();
+            AddMissingPluginsToLayout();
+            RenderDesktop();
+        }
+
+        /// <summary>
         /// 创建桌面窗口
         /// </summary>
         public PCOPhobosDesktop()
@@ -471,7 +481,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                                 folderCount++;
                                 PCLoggerPlugin.Info("PCOPhobosDesktop", $"[LoadLayout] Folder: {fi.Name} (Id={fi.Id}) at ({fi.GridX}, {fi.GridY}) with {fi.PluginPackageNames.Count} plugins");
                             }
-                            else
+                            else if (item is not ShortcutDesktopItem si)
                             {
                                 PCLoggerPlugin.Warning("PCOPhobosDesktop", $"[LoadLayout] Unknown item type: {item.GetType().Name}, Type enum = {item.Type}");
                             }
@@ -710,7 +720,7 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// 渲染桌面图标
         /// </summary>
         /// <param name="playAnimation">是否播放飞入动画（仅在窗口初次加载和取消搜索时为true）</param>
-        private void RenderDesktop(bool playAnimation = false)
+        public void RenderDesktop(bool playAnimation = false)
         {
             DesktopGrid.Children.Clear();
             DesktopGrid.RowDefinitions.Clear();
@@ -2178,6 +2188,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                 System.Diagnostics.Debug.WriteLine($"[LaunchPlugin] Launching plugin: {plugin.PackageName}");
                 PluginClicked?.Invoke(this, plugin.PackageName);
                 await PMPlugin.Instance.Launch(plugin.PackageName);
+                HideToTray();
             }
             catch (Exception ex)
             {
@@ -2834,21 +2845,22 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// <summary>
         /// 卸载插件
         /// </summary>
-        private async void UninstallPlugin(PluginDisplayItem plugin)
+        public async void UninstallPlugin(PluginDisplayItem plugin, bool? alreadyUninstalled = false)
         {
+            var t = alreadyUninstalled == true;
             // 显示确认对话框
-            var result = Service.Arcusrix.PSDialogService.Confirm(
+            var result = t ? t : Service.Arcusrix.PSDialogService.Confirm(
                 DesktopLocalization.GetFormat(DesktopLocalization.Dialog_ConfirmUninstall_Message, plugin.Name),
                 DesktopLocalization.Get(DesktopLocalization.Dialog_ConfirmUninstall),
-                true,
-                this);
+                true, this);
 
             if (result)
             {
                 try
                 {
-                    // 使用 PMPlugin 卸载插件
-                    await PMPlugin.Instance.Uninstall(plugin.PackageName);
+                    if (!t)
+                        // 使用 PMPlugin 卸载插件
+                        await PMPlugin.Instance.Uninstall(plugin.PackageName);
 
                     // 从布局中移除插件
                     var itemsToRemove = _layout.Items
@@ -2866,6 +2878,16 @@ namespace Phobos.Components.Arcusrix.Desktop
                         folder.PluginPackageNames.Remove(plugin.PackageName);
                     }
 
+                    //移除指向的快捷方式
+                    var linkItems = _layout.Items
+                        .Where(item => item is ShortcutDesktopItem pluginItem && pluginItem.TargetPackageName == plugin.PackageName)
+                        .ToList();
+
+                    foreach (var item in linkItems)
+                    {
+                        _layout.Items.Remove(item);
+                    }
+
                     // 从插件列表中移除
                     _allPlugins.Remove(plugin.PackageName);
 
@@ -2873,11 +2895,12 @@ namespace Phobos.Components.Arcusrix.Desktop
                     RenderDesktop();
                     SaveLayout();
 
-                    Service.Arcusrix.PSDialogService.Warning(
-                        $"Plugin '{plugin.Name}' has been uninstalled successfully.",
-                        DesktopLocalization.Get(DesktopLocalization.Dialog_UninstallComplete),
-                        true,
-                        this);
+                    if (!t)
+                        Service.Arcusrix.PSDialogService.Info(
+                            $"Plugin '{plugin.Name}' has been uninstalled successfully.",
+                            DesktopLocalization.Get(DesktopLocalization.Dialog_UninstallComplete),
+                            true,
+                            this);
                 }
                 catch (Exception ex)
                 {

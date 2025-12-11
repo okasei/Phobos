@@ -214,7 +214,7 @@
             </Border>
 
             <!-- 桌面图标滚动容器 -->
-            <ScrollViewer x:Name="DesktopScrollViewer"
+            <ScrollViewer x:Name="DesktopScrollViewer" Style="{StaticResource PhobosScrollViewer}"
                           Grid.Row="1"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
@@ -429,7 +429,7 @@
                                            Foreground="{DynamicResource Foreground2Brush}"
                                            Margin="0,8,0,8"/>
 
-                                    <ComboBox x:Name="ScaleModeComboBox"  Style="{StaticResource PhobosComboBox}"
+                                    <ComboBox x:Name="ScaleModeComboBox"  Style="{StaticResource PhobosComboBox}" ItemContainerStyle="{StaticResource PhobosComboBoxItem}"
                                           Background="{DynamicResource Background3Brush}"
                                           Foreground="{DynamicResource Foreground1Brush}"
                                           BorderBrush="{DynamicResource BorderBrush}"

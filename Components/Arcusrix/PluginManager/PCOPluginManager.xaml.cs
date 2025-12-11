@@ -1,3 +1,9 @@
+using Phobos.Class.Plugin.BuiltIn;
+using Phobos.Components.Plugin;
+using Phobos.Manager.Arcusrix;
+using Phobos.Manager.Plugin;
+using Phobos.Shared.Class;
+using Phobos.Shared.Interface;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -5,11 +11,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Phobos.Class.Plugin.BuiltIn;
-using Phobos.Manager.Arcusrix;
-using Phobos.Manager.Plugin;
-using Phobos.Shared.Class;
-using Phobos.Shared.Interface;
 
 namespace Phobos.Components.Arcusrix.PluginManager
 {
@@ -91,10 +92,12 @@ namespace Phobos.Components.Arcusrix.PluginManager
         private List<PluginMetadata> _allPlugins = new();
         private string _searchPlaceholder = string.Empty;
         private string _selfPackageName = "com.phobos.plugin.manager";
+        private PCPluginManager? _pm;
 
-        public PCOPluginManager()
+        public PCOPluginManager(PCPluginManager pm)
         {
             InitializeComponent();
+            _pm = pm;   
             Loaded += PCOPluginManager_Loaded;
         }
 
@@ -404,6 +407,8 @@ namespace Phobos.Components.Arcusrix.PluginManager
                             await PCDialogPlugin.ErrorDialogAsync(result.Message, PluginManagerLocalization.Get(PluginManagerLocalization.ConfirmUninstall));
                         }
                         await RefreshPluginList();
+                        if (_pm != null)
+                            await _pm.TriggerEvent("App", "Uninstalled", plugin.PackageName, plugin.Name);
                     }
                 }
                 catch (Exception ex)
@@ -435,6 +440,9 @@ namespace Phobos.Components.Arcusrix.PluginManager
                 if (result.Success)
                 {
                     await RefreshPluginList();
+
+                    if (_pm != null)
+                        await _pm.TriggerEvent("App", "Installed", result.Data.Count > 0 ? result.Data[0] ?? "" : "", result.Data.Count > 1 ? result.Data[1] ?? "" : "");
                 }
             }
         }

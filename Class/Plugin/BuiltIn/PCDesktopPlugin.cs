@@ -177,15 +177,18 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// </summary>
         private async Task HandleAppInstalled(object[] args)
         {
-            if (args.Length > 0)
+            // args[0] = sourcePackageName (触发事件的插件)
+            // args[1] = installedPackageName (被安装的插件包名)
+            // args[2] = installedPluginName (被安装的插件名称，可选)
+            if (args.Length > 1)
             {
-                var packageName = args[0]?.ToString() ?? string.Empty;
+                var packageName = args[1]?.ToString() ?? string.Empty;
                 PCLoggerPlugin.Info("Desktop", $"App installed: {packageName}");
 
-                // 刷新桌面
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                // 刷新桌面并添加新安装的插件到布局
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    _desktopWindow?.RefreshPlugins();
+                    _desktopWindow?.RefreshAndAddNewPlugins();
                 });
             }
         }
@@ -195,15 +198,19 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// </summary>
         private async Task HandleAppUninstalled(object[] args)
         {
-            if (args.Length > 0)
+            // args[0] = sourcePackageName (触发事件的插件)
+            // args[1] = uninstalledPackageName (被卸载的插件包名)
+            if (args.Length > 1)
             {
-                var packageName = args[0]?.ToString() ?? string.Empty;
+                var packageName = args[1]?.ToString() ?? string.Empty;
                 PCLoggerPlugin.Info("Desktop", $"App uninstalled: {packageName}");
+                _desktopWindow?.UninstallPlugin(new() { PackageName = packageName }, true);
 
                 // 刷新桌面
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     _desktopWindow?.RefreshPlugins();
+                    _desktopWindow?.RenderDesktop();
                 });
             }
         }

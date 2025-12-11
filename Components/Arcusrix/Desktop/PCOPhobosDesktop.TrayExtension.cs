@@ -1,4 +1,5 @@
 ﻿using Hardcodet.Wpf.TaskbarNotification;
+using Phobos.Utils.Arcusrix;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,38 +23,6 @@ namespace Phobos.Components.Arcusrix.Desktop
     /// </summary>
     public partial class PCOPhobosDesktop
     {
-        #region Win32 API for Taskbar Position
-
-        [DllImport("shell32.dll", SetLastError = true)]
-        private static extern IntPtr SHAppBarMessage(uint dwMessage, ref APPBARDATA pData);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct APPBARDATA
-        {
-            public int cbSize;
-            public IntPtr hWnd;
-            public uint uCallbackMessage;
-            public uint uEdge;
-            public RECT rc;
-            public int lParam;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct RECT
-        {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
-        }
-
-        private const uint ABM_GETTASKBARPOS = 0x00000005;
-        private const uint ABE_LEFT = 0;
-        private const uint ABE_TOP = 1;
-        private const uint ABE_RIGHT = 2;
-        private const uint ABE_BOTTOM = 3;
-
-        #endregion
 
         #region Tray Icon Fields
 
@@ -90,7 +59,7 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// <summary>
         /// 窗口边距（距离任务栏的距离）
         /// </summary>
-        private const int WindowMargin = 23;
+        private const int WindowMargin = 8;
 
         #endregion
 
@@ -286,30 +255,30 @@ namespace Phobos.Components.Arcusrix.Desktop
                 case TaskbarPosition.Bottom:
                     // 左右居中，底部贴边
                     left = (screenWidth - windowWidth) / 2;
-                    top = workArea.Bottom - windowHeight - WindowMargin;
+                    top = workArea.Bottom - windowHeight - WindowMargin - 16;
                     break;
 
                 case TaskbarPosition.Top:
                     // 左右居中，顶部贴边
                     left = (screenWidth - windowWidth) / 2;
-                    top = workArea.Top + WindowMargin;
+                    top = workArea.Top  + WindowMargin;
                     break;
 
                 case TaskbarPosition.Left:
                     // 上下居中，左侧贴边
-                    left = workArea.Left + WindowMargin;
+                    left = workArea.Left  + WindowMargin;
                     top = (screenHeight - windowHeight) / 2;
                     break;
 
                 case TaskbarPosition.Right:
                     // 上下居中，右侧贴边
-                    left = workArea.Right - windowWidth - WindowMargin;
+                    left = workArea.Right  - windowWidth - WindowMargin;
                     top = (screenHeight - windowHeight) / 2;
                     break;
 
                 default:
                     left = (screenWidth - windowWidth) / 2;
-                    top = workArea.Bottom - windowHeight - WindowMargin;
+                    top = workArea.Bottom - windowHeight - WindowMargin - 16;
                     break;
             }
 
@@ -444,59 +413,24 @@ namespace Phobos.Components.Arcusrix.Desktop
 
         #region Taskbar Position Detection
 
-        /// <summary>
-        /// 任务栏位置枚举
-        /// </summary>
-        public enum TaskbarPosition
-        {
-            Bottom,
-            Top,
-            Left,
-            Right
-        }
 
         /// <summary>
         /// 获取任务栏位置
         /// </summary>
         public TaskbarPosition GetTaskbarPosition()
         {
-            var data = new APPBARDATA();
-            data.cbSize = Marshal.SizeOf(data);
-
-            if (SHAppBarMessage(ABM_GETTASKBARPOS, ref data) != IntPtr.Zero)
-            {
-                return data.uEdge switch
-                {
-                    ABE_LEFT => TaskbarPosition.Left,
-                    ABE_TOP => TaskbarPosition.Top,
-                    ABE_RIGHT => TaskbarPosition.Right,
-                    _ => TaskbarPosition.Bottom
-                };
-            }
-
-            return TaskbarPosition.Bottom;
+            var helper = PUTaskbar.Instance;
+            return helper.GetPosition(helper.GetTaskbarData());
         }
 
         /// <summary>
         /// 获取任务栏尺寸
         /// </summary>
-        public int GetTaskbarSize()
+        public double GetTaskbarSize()
         {
-            var data = new APPBARDATA();
-            data.cbSize = Marshal.SizeOf(data);
+            var helper = PUTaskbar.Instance;
+            return helper.GetTaskbarSizeDip();
 
-            if (SHAppBarMessage(ABM_GETTASKBARPOS, ref data) != IntPtr.Zero)
-            {
-                var position = GetTaskbarPosition();
-                return position switch
-                {
-                    TaskbarPosition.Top or TaskbarPosition.Bottom => data.rc.Bottom - data.rc.Top,
-                    TaskbarPosition.Left or TaskbarPosition.Right => data.rc.Right - data.rc.Left,
-                    _ => 40
-                };
-            }
-
-            return 40;
         }
 
         #endregion

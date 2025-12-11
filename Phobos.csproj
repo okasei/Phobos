@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="Hardcodet.Wpf.TaskbarNotification" Version="1.0.5" />
+    <PackageReference Include="Interop.IWshRuntimeLibrary" Version="1.0.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.Management" Version="10.0.0" />

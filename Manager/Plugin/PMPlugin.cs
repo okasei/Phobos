@@ -473,7 +473,7 @@ namespace Phobos.Manager.Plugin
                     }
                 }
 
-                return new RequestResult { Success = true, Message = "Plugin installed successfully" };
+                return new RequestResult { Success = true, Message = "Plugin installed successfully", Data = [metadata.PackageName, metadata.Name] };
             }
             catch (Exception ex)
             {
@@ -815,7 +815,7 @@ namespace Phobos.Manager.Plugin
                     await plugin.OnUpdate(oldVersion, plugin.Metadata.Version);
                 }
 
-                return new RequestResult { Success = true, Message = "Plugin updated successfully" };
+                return new RequestResult { Success = true, Message = "Plugin updated successfully", Data = [plugin?.Metadata.PackageName ?? string.Empty, plugin?.Metadata.Name ?? string.Empty] };
             }
             catch (Exception ex)
             {

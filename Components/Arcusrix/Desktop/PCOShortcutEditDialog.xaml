@@ -99,7 +99,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- 下拉选择已有插件 -->
-                        <ComboBox x:Name="PackageComboBox" Style="{StaticResource PhobosComboBox}"
+                        <ComboBox x:Name="PackageComboBox" Style="{StaticResource PhobosComboBox}"  ItemContainerStyle="{StaticResource PhobosComboBoxItem}"
                                   Grid.Row="0"
                                   Background="{DynamicResource Background3Brush}"
                                   Foreground="{DynamicResource Foreground1Brush}"
