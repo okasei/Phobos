@@ -4,7 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Phobos.Manager.Hotkey;
 
-namespace Phobos.Components.Arcusrix.Desktop
+namespace Phobos.Components.Arcusrix.Desktop.Components
 {
     /// <summary>
     /// 快捷键绑定对话框

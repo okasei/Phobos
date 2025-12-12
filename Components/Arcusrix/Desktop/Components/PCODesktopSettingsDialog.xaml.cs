@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 
-namespace Phobos.Components.Arcusrix.Desktop
+namespace Phobos.Components.Arcusrix.Desktop.Components
 {
     /// <summary>
     /// PCODesktopSettingsDialog.xaml 的交互逻辑

@@ -1,3 +1,4 @@
+using Phobos.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
-namespace Phobos.Components.Arcusrix.Desktop
+namespace Phobos.Components.Arcusrix.Desktop.Components
 {
     /// <summary>
     /// 快捷方式编辑对话框

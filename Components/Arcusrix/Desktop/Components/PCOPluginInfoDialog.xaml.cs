@@ -1,11 +1,12 @@
 using Phobos.Class.Database;
+using Phobos.Shared.Models;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace Phobos.Components.Arcusrix.Desktop
+namespace Phobos.Components.Arcusrix.Desktop.Components
 {
     /// <summary>
     /// PCOPluginInfoDialog.xaml 的交互逻辑

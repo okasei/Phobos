@@ -1,4 +1,5 @@
 ﻿using Hardcodet.Wpf.TaskbarNotification;
+using Phobos.Components.Arcusrix.Desktop.Components;
 using Phobos.Utils.Arcusrix;
 using System;
 using System.Collections.Generic;
@@ -156,7 +157,7 @@ namespace Phobos.Components.Arcusrix.Desktop
 
             var showMenuItem = new MenuItem
             {
-                Header = DesktopLocalization.Get(DesktopLocalization.Tray_Show),
+                Header = DesktopLocalization.Get(DesktopDicrtionary.Tray_Show),
                 FontWeight = FontWeights.Bold
             };
             showMenuItem.Click += (s, e) => ShowFromTray();
@@ -165,7 +166,7 @@ namespace Phobos.Components.Arcusrix.Desktop
 
             var exitMenuItem = new MenuItem
             {
-                Header = DesktopLocalization.Get(DesktopLocalization.Tray_Exit)
+                Header = DesktopLocalization.Get(DesktopDicrtionary.Tray_Exit)
             };
             exitMenuItem.Click += (s, e) => ExitFromTray();
 
@@ -685,7 +686,7 @@ namespace Phobos.Components.Arcusrix.Desktop
     /// <summary>
     /// DesktopLocalization 扩展 - 添加托盘图标相关的本地化字符串
     /// </summary>
-    public static partial class DesktopLocalization
+    public static partial class DesktopDicrtionary
     {
         // 托盘图标相关
         public const string Tray_Show = "Tray_Show";

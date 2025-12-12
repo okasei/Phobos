@@ -7,7 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace Phobos.Components.Arcusrix.Desktop
+namespace Phobos.Components.Arcusrix.Desktop.Components
 {
     /// <summary>
     /// 菜单项数据

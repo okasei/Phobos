@@ -1,13 +1,9 @@
 using Phobos.Class.Database;
 using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Manager.Plugin;
-using Phobos.Utils.Media;
-using System;
-using System.Collections.Generic;
+using Phobos.Shared.Interface;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,6 +11,9 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
+using Phobos.Shared.Models;
+using DesktopLocalization = Phobos.Components.Arcusrix.Desktop.Components.DesktopLocalization;
+using Phobos.Components.Arcusrix.Desktop.Components;
 
 namespace Phobos.Components.Arcusrix.Desktop
 {
@@ -1566,7 +1565,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                 System.Diagnostics.Debug.WriteLine($"[RunShortcut] Error: {ex.Message}");
                 Service.Arcusrix.PSDialogService.Warning(
                     ex.Message,
-                    DesktopLocalization.Get(DesktopLocalization.Dialog_LaunchError),
+                    Components.DesktopLocalization.Get(Components.DesktopLocalization.Dialog_LaunchError),
                     true,
                     this);
             }
@@ -1739,7 +1738,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                 }
             }
 
-            Class.Plugin.BuiltIn.PCLoggerPlugin.Info("PCOPhobosDesktop", $"[RegisterAllHotkeys] Registered hotkeys for {_layout.Items.Count(i => !string.IsNullOrEmpty(i.Hotkey))} items");
+            PCLoggerPlugin.Info("PCOPhobosDesktop", $"[RegisterAllHotkeys] Registered hotkeys for {_layout.Items.Count(i => !string.IsNullOrEmpty(i.Hotkey))} items");
         }
 
         /// <summary>
@@ -3687,6 +3686,93 @@ namespace Phobos.Components.Arcusrix.Desktop
             {
                 BackgroundImage.Source = null;
                 BackgroundImage.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        #endregion
+
+        #region IPhobosDesktop Helper Methods
+
+        /// <summary>
+        /// 获取所有桌面项
+        /// </summary>
+        public List<DesktopItem> GetAllDesktopItems()
+        {
+            return _layout.Items.ToList();
+        }
+
+        /// <summary>
+        /// 根据包名获取插件显示项
+        /// </summary>
+        public IPhobosPlugin? GetPluginByPackageName(string packageName)
+        {
+            return PMPlugin.Instance.GetPlugin(packageName);
+        }
+
+        /// <summary>
+        /// 根据 ID 获取桌面项
+        /// </summary>
+        public DesktopItem? GetDesktopItemById(string itemId)
+        {
+            return _layout.Items.FirstOrDefault(i => i.Id == itemId);
+        }
+
+        /// <summary>
+        /// 添加桌面项
+        /// </summary>
+        public void AddDesktopItem(DesktopItem item)
+        {
+            // 如果没有指定位置，找一个空位
+            if (item.GridX == 0 && item.GridY == 0)
+            {
+                var position = FindFirstEmptyPosition();
+                item.GridX = position.X;
+                item.GridY = position.Y;
+            }
+
+            _layout.Items.Add(item);
+            SaveLayout();
+        }
+
+        /// <summary>
+        /// 移除桌面项
+        /// </summary>
+        public void RemoveDesktopItem(DesktopItem item)
+        {
+            _layout.Items.Remove(item);
+
+            // 如果是文件夹，也从 Folders 列表移除
+            if (item is FolderDesktopItem folder)
+            {
+                _layout.Folders.Remove(folder);
+            }
+
+            SaveLayout();
+        }
+
+        /// <summary>
+        /// 启动桌面项
+        /// </summary>
+        public async Task LaunchDesktopItem(DesktopItem item, params object[] args)
+        {
+            switch (item)
+            {
+                case PluginDesktopItem pluginItem:
+                    if (_allPlugins.TryGetValue(pluginItem.PackageName, out var plugin))
+                    {
+                        await PMPlugin.Instance.Launch(pluginItem.PackageName, args);
+                    }
+                    break;
+
+                case ShortcutDesktopItem shortcut:
+                    var shortcutArgs = shortcut.ParseArguments();
+                    var allArgs = shortcutArgs.Concat(args.Select(a => a?.ToString() ?? string.Empty)).ToArray();
+                    await PMPlugin.Instance.Launch(shortcut.TargetPackageName, allArgs);
+                    break;
+
+                case FolderDesktopItem folder:
+                    OpenFolder(folder);
+                    break;
             }
         }
 

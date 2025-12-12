@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using IWshRuntimeLibrary;
 using Phobos.Class.Database;
 using Phobos.Components.Arcusrix.Runner;
+using Phobos.Manager.Arcusrix;
 using Phobos.Manager.Plugin;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
@@ -327,8 +328,9 @@ namespace Phobos.Class.Plugin.BuiltIn
     /// Phobos Runner 插件 - 协议/文件类型运行器
     /// 负责解析和执行协议链接、文件类型关联
     /// 提供居中输入框 GUI 用于快速启动
+    /// 实现 IPhobosRunner 接口
     /// </summary>
-    public class PCRunnerPlugin : PCPluginBase
+    public class PCRunnerPlugin : PCPluginBase, IPhobosRunner
     {
         private PCORunner? _runnerWindow;
 
@@ -860,104 +862,76 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// </summary>
         private async Task<RunResult> ExecuteProtocol(RunRequest request, bool skipShortcutScan = false)
         {
-            if (Database == null)
-            {
-                PCLoggerPlugin.Warning("Runner", "ExecuteProtocol: Database is null, falling back to system");
-                return await FallbackToSystem(request, skipShortcutScan);
-            }
-
-            // 协议使用 DbKey (带冒号，如 "seq:")，与数据库中注册的格式一致
             var protocol = request.DbKey;
             PCLoggerPlugin.Info("Runner", $"ExecuteProtocol: protocol='{protocol}', RawInput='{request.RawInput}'");
 
-            // 1. 查找 Phobos_Shell 中是否有绑定 (AssociatedItem 存储的是 Phobos_Protocol.UUID)
-            var shellResult = await Database.ExecuteQuery(
-                "SELECT AssociatedItem, UpdateTime FROM Phobos_Shell WHERE Protocol = @protocol COLLATE NOCASE",
-                new Dictionary<string, object> { { "@protocol", protocol } });
+            // 1. 使用 PMProtocol 获取当前绑定信息
+            var associationInfo = await PMProtocol.Instance.GetProtocolAssociationInfo(protocol);
 
-            if (shellResult != null && shellResult.Count > 0)
+            if (associationInfo != null)
             {
-                var protocolUUID = shellResult[0]["AssociatedItem"]?.ToString();
-                var shellUpdateTime = DateTime.TryParse(shellResult[0]["UpdateTime"]?.ToString(), out var dt) ? dt : DateTime.MinValue;
-
-                if (!string.IsNullOrEmpty(protocolUUID))
+                // 检查是否是系统处理器
+                if (associationInfo.PackageName == SystemHandlers.Windows)
                 {
-                    // 通过 Phobos_Protocol.UUID 查找关联项详情
-                    var associatedResult = await Database.ExecuteQuery(
-                        @"SELECT p.AssociatedItem, ai.PackageName, ai.Command
-                          FROM Phobos_Protocol p
-                          INNER JOIN Phobos_AssociatedItem ai ON p.AssociatedItem = ai.Name
-                          WHERE p.UUID = @uuid",
-                        new Dictionary<string, object> { { "@uuid", protocolUUID } });
+                    return await FallbackToSystem(request, skipShortcutScan);
+                }
 
-                    if (associatedResult != null && associatedResult.Count > 0)
+                // 2. 检查是否有更新的处理器出现
+                var (hasNew, newHandlers) = await PMProtocol.Instance.CheckForNewHandlers(protocol, associationInfo.ShellUpdateTime);
+
+                if (hasNew)
+                {
+                    // 检查是否只是当前绑定的插件自身更新了（UUID 相同）
+                    var reallyNewHandlers = newHandlers
+                        .Where(h => h.UUID != associationInfo.UUID)
+                        .ToList();
+
+                    if (reallyNewHandlers.Count > 0)
                     {
-                        var packageName = associatedResult[0]["PackageName"]?.ToString();
-                        var command = associatedResult[0]["Command"]?.ToString();
-
-                        // 检查是否是系统处理器
-                        if (packageName == SystemHandlers.Windows)
+                        // 有真正的新处理器，需要让用户重新选择
+                        var existingHandlers = await PMProtocol.Instance.FindAllAssociatedItems(protocol, new ProtocolQueryOptions
                         {
-                            return await FallbackToSystem(request, skipShortcutScan);
-                        }
+                            ReferenceTime = associationInfo.ShellUpdateTime,
+                            OnlyBeforeReferenceTime = true
+                        });
 
-                        if (!string.IsNullOrEmpty(packageName))
+                        return new RunResult
                         {
-                            // 2. 检查是否有更新的处理器出现
-                            var checkResult = await CheckForNewHandlers(protocol, shellUpdateTime);
-
-                            // 如果有新的处理器出现
-                            if (checkResult.hasNew)
-                            {
-                                // 检查是否只是当前绑定的插件自身更新了（UUID 相同）
-                                // 如果 newHandlers 中只有当前绑定的项，则只需更新时间戳
-                                var reallyNewHandlers = checkResult.newHandlers
-                                    .Where(h => h.UUID != protocolUUID)
-                                    .ToList();
-
-                                if (reallyNewHandlers.Count > 0)
-                                {
-                                    // 有真正的新处理器，需要让用户重新选择
-                                    return new RunResult
-                                    {
-                                        Success = false,
-                                        Message = "New handlers available, please select one",
-                                        NeedsUserSelection = true,
-                                        HasNewHandlers = true,
-                                        NewHandlers = checkResult.newHandlers,
-                                        ExistingHandlers = checkResult.existingHandlers,
-                                        OriginalRequest = request,
-                                        ProtocolKey = protocol
-                                    };
-                                }
-                                else
-                                {
-                                    // 只是当前绑定的插件更新了，更新 Shell 的时间戳
-                                    await UpdateShellTimestamp(protocol);
-                                    PCLoggerPlugin.Info("Runner", $"ExecuteProtocol: Same handler updated, refreshed shell timestamp for '{protocol}'");
-                                }
-                            }
-
-                            // 3. 没有新处理器（或只是同一插件更新），直接启动关联的插件
-                            var launchResult = await LaunchPluginHandler(packageName, request, command);
-
-                            return new RunResult
-                            {
-                                Success = launchResult.Success,
-                                Message = launchResult.Message,
-                                UsedHandlerPackage = packageName,
-                                HasNewHandlers = false,
-                                NewHandlers = checkResult.newHandlers,
-                                ExistingHandlers = checkResult.existingHandlers
-                            };
-                        }
+                            Success = false,
+                            Message = "New handlers available, please select one",
+                            NeedsUserSelection = true,
+                            HasNewHandlers = true,
+                            NewHandlers = newHandlers,
+                            ExistingHandlers = existingHandlers,
+                            OriginalRequest = request,
+                            ProtocolKey = protocol
+                        };
+                    }
+                    else
+                    {
+                        // 只是当前绑定的插件更新了，更新 Shell 的时间戳
+                        await PMProtocol.Instance.UpdateShellTimestamp(protocol);
+                        PCLoggerPlugin.Info("Runner", $"ExecuteProtocol: Same handler updated, refreshed shell timestamp for '{protocol}'");
                     }
                 }
+
+                // 3. 没有新处理器（或只是同一插件更新），直接启动关联的插件
+                var launchResult = await LaunchPluginHandler(associationInfo.PackageName, request, associationInfo.Command);
+
+                return new RunResult
+                {
+                    Success = launchResult.Success,
+                    Message = launchResult.Message,
+                    UsedHandlerPackage = associationInfo.PackageName,
+                    HasNewHandlers = false,
+                    NewHandlers = newHandlers,
+                    ExistingHandlers = new List<ProtocolHandlerOption>()
+                };
             }
 
             // 没有绑定, 查找支持此协议的插件
             PCLoggerPlugin.Info("Runner", $"ExecuteProtocol: No shell binding, searching for handlers...");
-            var handlers = await GetProtocolHandlers(protocol);
+            var handlers = await PMProtocol.Instance.FindAllAssociatedItems(protocol);
             PCLoggerPlugin.Info("Runner", $"ExecuteProtocol: Found {handlers.Count} handlers for '{protocol}'");
 
             if (handlers.Count == 0)
@@ -970,7 +944,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             {
                 // 只有一个插件支持, 自动绑定并启动
                 var handler = handlers[0];
-                await AutoBindProtocol(protocol, handler.UUID, handler.PackageName);
+                await PMProtocol.Instance.BindDefaultHandler(protocol, handler.UUID, handler.PackageName);
 
                 var launchResult = await LaunchPluginHandler(handler.PackageName, request, handler.Command);
                 return new RunResult
@@ -1042,95 +1016,72 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// </summary>
         private async Task<RunResult> ExecuteTypeAssociation(string typeKey, RunRequest request)
         {
-            if (Database == null)
+            // 1. 使用 PMProtocol 获取当前绑定信息
+            var associationInfo = await PMProtocol.Instance.GetProtocolAssociationInfo(typeKey);
+
+            if (associationInfo != null)
             {
-                return new RunResult { Success = false, Message = "Database not initialized" };
-            }
-
-            // 查找 Phobos_Shell 中的绑定 (AssociatedItem 存储的是 Phobos_Protocol.UUID)
-            var shellResult = await Database.ExecuteQuery(
-                "SELECT AssociatedItem, UpdateTime FROM Phobos_Shell WHERE Protocol = @protocol COLLATE NOCASE",
-                new Dictionary<string, object> { { "@protocol", typeKey } });
-
-            if (shellResult != null && shellResult.Count > 0)
-            {
-                var protocolUUID = shellResult[0]["AssociatedItem"]?.ToString();
-                var shellUpdateTime = DateTime.TryParse(shellResult[0]["UpdateTime"]?.ToString(), out var dt) ? dt : DateTime.MinValue;
-
-                if (!string.IsNullOrEmpty(protocolUUID))
+                // 检查是否是系统处理器
+                if (associationInfo.PackageName == SystemHandlers.Windows)
                 {
-                    // 通过 Phobos_Protocol.UUID 查找关联项详情
-                    var associatedResult = await Database.ExecuteQuery(
-                        @"SELECT p.AssociatedItem, ai.PackageName, ai.Command
-                          FROM Phobos_Protocol p
-                          INNER JOIN Phobos_AssociatedItem ai ON p.AssociatedItem = ai.Name
-                          WHERE p.UUID = @uuid",
-                        new Dictionary<string, object> { { "@uuid", protocolUUID } });
+                    return await FallbackToSystem(request);
+                }
 
-                    if (associatedResult != null && associatedResult.Count > 0)
+                // 2. 检查是否有更新的处理器出现
+                var (hasNew, newHandlers) = await PMProtocol.Instance.CheckForNewHandlers(typeKey, associationInfo.ShellUpdateTime);
+
+                if (hasNew)
+                {
+                    // 检查是否只是当前绑定的插件自身更新了（UUID 相同）
+                    var reallyNewHandlers = newHandlers
+                        .Where(h => h.UUID != associationInfo.UUID)
+                        .ToList();
+
+                    if (reallyNewHandlers.Count > 0)
                     {
-                        var packageName = associatedResult[0]["PackageName"]?.ToString();
-                        var command = associatedResult[0]["Command"]?.ToString();
-
-                        if (packageName == SystemHandlers.Windows)
+                        // 有真正的新处理器，需要让用户重新选择
+                        var existingHandlers = await PMProtocol.Instance.FindAllAssociatedItems(typeKey, new ProtocolQueryOptions
                         {
-                            return await FallbackToSystem(request);
-                        }
+                            ReferenceTime = associationInfo.ShellUpdateTime,
+                            OnlyBeforeReferenceTime = true
+                        });
 
-                        if (!string.IsNullOrEmpty(packageName))
+                        return new RunResult
                         {
-                            var checkResult = await CheckForNewHandlers(typeKey, shellUpdateTime);
-
-                            // 如果有新的处理器出现
-                            if (checkResult.hasNew)
-                            {
-                                // 检查是否只是当前绑定的插件自身更新了（UUID 相同）
-                                var reallyNewHandlers = checkResult.newHandlers
-                                    .Where(h => h.UUID != protocolUUID)
-                                    .ToList();
-
-                                if (reallyNewHandlers.Count > 0)
-                                {
-                                    // 有真正的新处理器，需要让用户重新选择
-                                    return new RunResult
-                                    {
-                                        Success = false,
-                                        Message = "New handlers available, please select one",
-                                        NeedsUserSelection = true,
-                                        HasNewHandlers = true,
-                                        NewHandlers = checkResult.newHandlers,
-                                        ExistingHandlers = checkResult.existingHandlers,
-                                        OriginalRequest = request,
-                                        ProtocolKey = typeKey
-                                    };
-                                }
-                                else
-                                {
-                                    // 只是当前绑定的插件更新了，更新 Shell 的时间戳
-                                    await UpdateShellTimestamp(typeKey);
-                                    PCLoggerPlugin.Info("Runner", $"ExecuteByType: Same handler updated, refreshed shell timestamp for '{typeKey}'");
-                                }
-                            }
-
-                            // 没有新处理器（或只是同一插件更新），直接启动
-                            var launchResult = await LaunchPluginHandler(packageName, request, command);
-
-                            return new RunResult
-                            {
-                                Success = launchResult.Success,
-                                Message = launchResult.Message,
-                                UsedHandlerPackage = packageName,
-                                HasNewHandlers = false,
-                                NewHandlers = checkResult.newHandlers,
-                                ExistingHandlers = checkResult.existingHandlers
-                            };
-                        }
+                            Success = false,
+                            Message = "New handlers available, please select one",
+                            NeedsUserSelection = true,
+                            HasNewHandlers = true,
+                            NewHandlers = newHandlers,
+                            ExistingHandlers = existingHandlers,
+                            OriginalRequest = request,
+                            ProtocolKey = typeKey
+                        };
+                    }
+                    else
+                    {
+                        // 只是当前绑定的插件更新了，更新 Shell 的时间戳
+                        await PMProtocol.Instance.UpdateShellTimestamp(typeKey);
+                        PCLoggerPlugin.Info("Runner", $"ExecuteTypeAssociation: Same handler updated, refreshed shell timestamp for '{typeKey}'");
                     }
                 }
+
+                // 3. 没有新处理器（或只是同一插件更新），直接启动
+                var launchResult = await LaunchPluginHandler(associationInfo.PackageName, request, associationInfo.Command);
+
+                return new RunResult
+                {
+                    Success = launchResult.Success,
+                    Message = launchResult.Message,
+                    UsedHandlerPackage = associationInfo.PackageName,
+                    HasNewHandlers = false,
+                    NewHandlers = newHandlers,
+                    ExistingHandlers = []
+                };
             }
 
             // 没有绑定, 查找支持此类型的插件
-            var handlers = await GetProtocolHandlers(typeKey);
+            var handlers = await PMProtocol.Instance.FindAllAssociatedItems(typeKey);
 
             if (handlers.Count == 0)
             {
@@ -1140,7 +1091,7 @@ namespace Phobos.Class.Plugin.BuiltIn
             {
                 // 只有一个处理器，自动绑定并启动
                 var handler = handlers[0];
-                await AutoBindProtocol(typeKey, handler.UUID, handler.PackageName);
+                await PMProtocol.Instance.BindDefaultHandler(typeKey, handler.UUID, handler.PackageName);
 
                 var launchResult = await LaunchPluginHandler(handler.PackageName, request, handler.Command);
                 return new RunResult
@@ -1163,199 +1114,6 @@ namespace Phobos.Class.Plugin.BuiltIn
                     OriginalRequest = request,
                     ProtocolKey = typeKey
                 };
-            }
-        }
-
-        /// <summary>
-        /// 检查是否有新的处理器出现
-        /// </summary>
-        private async Task<(bool hasNew, List<ProtocolHandlerOption> newHandlers, List<ProtocolHandlerOption> existingHandlers)>
-            CheckForNewHandlers(string protocol, DateTime lastCheckTime)
-        {
-            var newHandlers = new List<ProtocolHandlerOption>();
-            var existingHandlers = new List<ProtocolHandlerOption>();
-
-            if (Database == null)
-            {
-                return (false, newHandlers, existingHandlers);
-            }
-
-            var handlers = await Database.ExecuteQuery(
-                @"SELECT p.UUID, p.Protocol, p.AssociatedItem, p.UpdateTime, 
-                         ai.PackageName, ai.Description, ai.Command
-                  FROM Phobos_Protocol p
-                  INNER JOIN Phobos_AssociatedItem ai ON p.AssociatedItem = ai.Name
-                  WHERE p.Protocol = @protocol COLLATE NOCASE
-                  ORDER BY p.UpdateTime DESC",
-                new Dictionary<string, object> { { "@protocol", protocol } });
-
-            foreach (var handler in handlers ?? new List<Dictionary<string, object>>())
-            {
-                var updateTime = DateTime.TryParse(handler["UpdateTime"]?.ToString(), out var dt) ? dt : DateTime.MinValue;
-                var option = new ProtocolHandlerOption
-                {
-                    UUID = handler["UUID"]?.ToString() ?? string.Empty,
-                    Protocol = handler["Protocol"]?.ToString() ?? string.Empty,
-                    AssociatedItem = handler["AssociatedItem"]?.ToString() ?? string.Empty,
-                    PackageName = handler["PackageName"]?.ToString() ?? string.Empty,
-                    Description = handler["Description"]?.ToString() ?? string.Empty,
-                    Command = handler["Command"]?.ToString() ?? string.Empty,
-                    UpdateTime = updateTime,
-                    IsUpdated = updateTime > lastCheckTime
-                };
-
-                if (option.IsUpdated)
-                {
-                    newHandlers.Add(option);
-                }
-                else
-                {
-                    existingHandlers.Add(option);
-                }
-            }
-
-            return (newHandlers.Count > 0, newHandlers, existingHandlers);
-        }
-
-        /// <summary>
-        /// 获取协议/类型的所有处理器
-        /// </summary>
-        private async Task<List<ProtocolHandlerOption>> GetProtocolHandlers(string protocol)
-        {
-            var result = new List<ProtocolHandlerOption>();
-
-            if (Database == null)
-            {
-                return result;
-            }
-
-            var handlers = await Database.ExecuteQuery(
-                @"SELECT p.UUID, p.Protocol, p.AssociatedItem, p.UpdateTime, 
-                         ai.PackageName, ai.Description, ai.Command
-                  FROM Phobos_Protocol p
-                  INNER JOIN Phobos_AssociatedItem ai ON p.AssociatedItem = ai.Name
-                  WHERE p.Protocol = @protocol COLLATE NOCASE
-                  ORDER BY p.UpdateTime DESC",
-                new Dictionary<string, object> { { "@protocol", protocol } });
-
-            foreach (var handler in handlers ?? new List<Dictionary<string, object>>())
-            {
-                result.Add(new ProtocolHandlerOption
-                {
-                    UUID = handler["UUID"]?.ToString() ?? string.Empty,
-                    Protocol = handler["Protocol"]?.ToString() ?? string.Empty,
-                    AssociatedItem = handler["AssociatedItem"]?.ToString() ?? string.Empty,
-                    PackageName = handler["PackageName"]?.ToString() ?? string.Empty,
-                    Description = handler["Description"]?.ToString() ?? string.Empty,
-                    Command = handler["Command"]?.ToString() ?? string.Empty,
-                    UpdateTime = DateTime.TryParse(handler["UpdateTime"]?.ToString(), out var dt) ? dt : DateTime.MinValue
-                });
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 自动绑定协议/类型到插件 (存储 Phobos_Protocol.UUID)
-        /// </summary>
-        /// <param name="protocol">协议名/文件类型</param>
-        /// <param name="protocolUUID">Phobos_Protocol 表中的 UUID</param>
-        /// <param name="packageName">插件包名</param>
-        private async Task AutoBindProtocol(string protocol, string protocolUUID, string packageName)
-        {
-            if (Database == null)
-            {
-                return;
-            }
-
-            try
-            {
-                // 检查是否已存在绑定
-                var existing = await Database.ExecuteQuery(
-                    "SELECT AssociatedItem FROM Phobos_Shell WHERE Protocol = @protocol COLLATE NOCASE",
-                    new Dictionary<string, object> { { "@protocol", protocol } });
-
-                if (existing != null && existing.Count > 0)
-                {
-                    // 更新现有绑定 - AssociatedItem 存储的是 Phobos_Protocol.UUID
-                    var oldItem = existing[0]["AssociatedItem"]?.ToString() ?? string.Empty;
-                    await Database.ExecuteNonQuery(
-                        @"UPDATE Phobos_Shell SET
-                            AssociatedItem = @newItem,
-                            UpdateUID = @uid,
-                            UpdateTime = datetime('now'),
-                            LastValue = @lastValue
-                          WHERE Protocol = @protocol COLLATE NOCASE",
-                        new Dictionary<string, object>
-                        {
-                            { "@protocol", protocol },
-                            { "@newItem", protocolUUID },
-                            { "@uid", packageName },
-                            { "@lastValue", oldItem }
-                        });
-                }
-                else
-                {
-                    // 插入新绑定 - AssociatedItem 存储的是 Phobos_Protocol.UUID
-                    await Database.ExecuteNonQuery(
-                        @"INSERT INTO Phobos_Shell (Protocol, AssociatedItem, UpdateUID, UpdateTime, LastValue)
-                          VALUES (@protocol, @protocolUUID, @uid, datetime('now'), '')",
-                        new Dictionary<string, object>
-                        {
-                            { "@protocol", protocol },
-                            { "@protocolUUID", protocolUUID },
-                            { "@uid", packageName }
-                        });
-                }
-
-                PCLoggerPlugin.Info("Runner", $"Auto-bound {protocol} to {packageName} (UUID: {protocolUUID})");
-            }
-            catch (Exception ex)
-            {
-                PCLoggerPlugin.Error("Runner", $"Failed to auto-bind: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 更新 Shell 绑定的时间戳（用于同一插件更新时刷新检查时间）
-        /// </summary>
-        private async Task UpdateShellTimestamp(string protocol)
-        {
-            if (Database == null) return;
-
-            try
-            {
-                await Database.ExecuteNonQuery(
-                    "UPDATE Phobos_Shell SET UpdateTime = datetime('now') WHERE Protocol = @protocol COLLATE NOCASE",
-                    new Dictionary<string, object> { { "@protocol", protocol } });
-            }
-            catch (Exception ex)
-            {
-                PCLoggerPlugin.Error("Runner", $"Failed to update shell timestamp: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 删除协议/类型的默认绑定 (用于"仅一次"选择后取消默认关联)
-        /// </summary>
-        public async Task RemoveDefaultBinding(string protocol)
-        {
-            if (Database == null)
-            {
-                return;
-            }
-
-            try
-            {
-                await Database.ExecuteNonQuery(
-                    "DELETE FROM Phobos_Shell WHERE Protocol = @protocol COLLATE NOCASE",
-                    new Dictionary<string, object> { { "@protocol", protocol } });
-
-                PCLoggerPlugin.Info("Runner", $"Removed default binding for {protocol}");
-            }
-            catch (Exception ex)
-            {
-                PCLoggerPlugin.Error("Runner", $"Failed to remove default binding: {ex.Message}");
             }
         }
 
@@ -2051,20 +1809,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// <param name="packageName">插件包名</param>
         public async Task<RequestResult> SetDefaultHandler(string protocolOrType, string protocolUUID, string packageName)
         {
-            if (Database == null)
-            {
-                return new RequestResult { Success = false, Message = "Database not initialized" };
-            }
-
-            try
-            {
-                await AutoBindProtocol(protocolOrType, protocolUUID, packageName);
-                return new RequestResult { Success = true, Message = $"Set {packageName} as default for {protocolOrType}" };
-            }
-            catch (Exception ex)
-            {
-                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
-            }
+            return await PMProtocol.Instance.BindDefaultHandler(protocolOrType, protocolUUID, packageName);
         }
 
         /// <summary>
@@ -2072,7 +1817,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// </summary>
         public async Task<List<ProtocolHandlerOption>> GetAvailableHandlers(string protocolOrType)
         {
-            return await GetProtocolHandlers(protocolOrType);
+            return await PMProtocol.Instance.FindAllAssociatedItems(protocolOrType);
         }
 
         /// <summary>
@@ -2080,9 +1825,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// </summary>
         public async Task<RequestResult> BindToSystem(string protocolOrType)
         {
-            // 对于系统处理器，我们创建一个特殊的 UUID
-            var systemUUID = $"system_{protocolOrType}";
-            return await SetDefaultHandler(protocolOrType, systemUUID, SystemHandlers.Windows);
+            return await PMProtocol.Instance.BindToSystemHandler(protocolOrType);
         }
 
         /// <summary>
@@ -2101,12 +1844,12 @@ namespace Phobos.Class.Plugin.BuiltIn
             {
                 if (setAsDefault)
                 {
-                    await BindToSystem(protocol);
+                    await PMProtocol.Instance.BindToSystemHandler(protocol);
                 }
                 else
                 {
                     // 仅一次，删除现有绑定
-                    await RemoveDefaultBinding(protocol);
+                    await PMProtocol.Instance.RemoveDefaultBinding(protocol);
                 }
                 return await FallbackToSystem(request, skipShortcutScan: true);
             }
@@ -2114,12 +1857,12 @@ namespace Phobos.Class.Plugin.BuiltIn
             // 如果选择"总是"，设为默认
             if (setAsDefault)
             {
-                await AutoBindProtocol(protocol, handler.UUID, handler.PackageName);
+                await PMProtocol.Instance.BindDefaultHandler(protocol, handler.UUID, handler.PackageName);
             }
             else
             {
                 // 选择"仅一次"，删除现有绑定（取消默认关联）
-                await RemoveDefaultBinding(protocol);
+                await PMProtocol.Instance.RemoveDefaultBinding(protocol);
             }
 
             // 启动选择的处理器
@@ -2187,6 +1930,194 @@ namespace Phobos.Class.Plugin.BuiltIn
 
             return await ExecuteWithSelectedHandler(selectedHandler, runResult.OriginalRequest, setAsDefault);
         }
+
+        #endregion
+
+        #region IPhobosRunner Implementation
+
+        /// <summary>
+        /// 向主程序请求搜索可用项目
+        /// 主程序会调用默认桌面的 SearchDesktop 方法，并整合其他来源的建议
+        /// </summary>
+        public async Task<SearchAvailableItemsResult> SearchAvailableItems(SearchAvailableItemsRequest request)
+        {
+            var result = new SearchAvailableItemsResult { Success = true };
+
+            try
+            {
+                // 1. 首先搜索桌面项（通过 RequestPhobos 调用默认桌面）
+                if (request.IncludeDesktopItems)
+                {
+                    var desktopResult = await RequestPhobos("SearchDesktop", request.Keyword, request.MaxResults);
+                    if (desktopResult != null)
+                    {
+                        foreach (var item in desktopResult)
+                        {
+                            if (item is PhobosSuggestionItem suggestion)
+                            {
+                                result.Items.Add(suggestion);
+                            }
+                        }
+                    }
+                }
+
+                // 2. 搜索系统快捷方式
+                if (request.IncludeSystemShortcuts)
+                {
+                    var shortcuts = await FindAllMatchingShortcuts(request.Keyword, request.MaxResults);
+                    foreach (var shortcut in shortcuts)
+                    {
+                        result.Items.Add(new PhobosSuggestionItem
+                        {
+                            Id = shortcut.FullPath,
+                            Name = shortcut.Name,
+                            Description = shortcut.TargetPath,
+                            IconPath = shortcut.CachedIconPath ?? shortcut.IconPath,
+                            Type = shortcut.ShortcutType == ShortcutType.Url ? SuggestionType.Web : SuggestionType.System,
+                            Command = shortcut.FullPath,
+                            SourcePackageName = Metadata.PackageName
+                        });
+                    }
+                }
+
+                // 3. 按得分排序并限制数量
+                result.TotalCount = result.Items.Count;
+                result.Items = result.Items
+                    .OrderByDescending(i => i.Score)
+                    .Take(request.MaxResults)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = ex.Message;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 获取建议项（供主程序调用，获取此 Runner 能提供的建议）
+        /// </summary>
+        public async Task<List<PhobosSuggestionItem>> GetSuggestions(string keyword, int maxResults = 10)
+        {
+            var suggestions = new List<PhobosSuggestionItem>();
+
+            // 搜索系统快捷方式
+            var shortcuts = await FindAllMatchingShortcuts(keyword, maxResults);
+            foreach (var shortcut in shortcuts)
+            {
+                suggestions.Add(new PhobosSuggestionItem
+                {
+                    Id = shortcut.FullPath,
+                    Name = shortcut.Name,
+                    Description = shortcut.TargetPath,
+                    IconPath = shortcut.CachedIconPath ?? shortcut.IconPath,
+                    Type = shortcut.ShortcutType == ShortcutType.Url ? SuggestionType.Web : SuggestionType.System,
+                    Command = shortcut.FullPath,
+                    SourcePackageName = Metadata.PackageName
+                });
+            }
+
+            return suggestions;
+        }
+
+        /// <summary>
+        /// 执行建议项
+        /// </summary>
+        public async Task<RequestResult> ExecuteSuggestion(PhobosSuggestionItem suggestion)
+        {
+            try
+            {
+                // 根据类型执行不同的操作
+                switch (suggestion.Type)
+                {
+                    case SuggestionType.Plugin:
+                        if (!string.IsNullOrEmpty(suggestion.PackageName))
+                        {
+                            return await PMPlugin.Instance.Launch(suggestion.PackageName, suggestion.Arguments ?? Array.Empty<string>());
+                        }
+                        break;
+
+                    case SuggestionType.Shortcut:
+                    case SuggestionType.System:
+                        if (!string.IsNullOrEmpty(suggestion.Command))
+                        {
+                            var request = ParseInput(suggestion.Command);
+                            var runResult = await ExecuteRequest(request, skipShortcutScan: true);
+                            return new RequestResult
+                            {
+                                Success = runResult.Success,
+                                Message = runResult.Message
+                            };
+                        }
+                        break;
+
+                    case SuggestionType.Web:
+                        if (!string.IsNullOrEmpty(suggestion.Command))
+                        {
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = suggestion.Command,
+                                UseShellExecute = true
+                            });
+                            return new RequestResult { Success = true, Message = "Opened URL" };
+                        }
+                        break;
+
+                    default:
+                        if (!string.IsNullOrEmpty(suggestion.Command))
+                        {
+                            var request = ParseInput(suggestion.Command);
+                            var runResult = await ExecuteRequest(request);
+                            return new RequestResult
+                            {
+                                Success = runResult.Success,
+                                Message = runResult.Message
+                            };
+                        }
+                        break;
+                }
+
+                return new RequestResult { Success = false, Message = "No executable command found" };
+            }
+            catch (Exception ex)
+            {
+                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+            }
+        }
+
+        /// <summary>
+        /// 显示 Runner 窗口
+        /// </summary>
+        async Task<RequestResult> IPhobosRunner.ShowRunner()
+        {
+            return await ShowRunnerWindow();
+        }
+
+        /// <summary>
+        /// 隐藏 Runner 窗口
+        /// </summary>
+        public async Task<RequestResult> HideRunner()
+        {
+            try
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _runnerWindow?.Hide();
+                });
+                return new RequestResult { Success = true, Message = "Runner hidden" };
+            }
+            catch (Exception ex)
+            {
+                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+            }
+        }
+
+        /// <summary>
+        /// 是否正在显示
+        /// </summary>
+        public bool IsVisible => _runnerWindow?.IsVisible ?? false;
 
         #endregion
     }

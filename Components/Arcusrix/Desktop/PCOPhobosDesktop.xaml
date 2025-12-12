@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Phobos.Components.Arcusrix.Desktop"
+        xmlns:localc="clr-namespace:Phobos.Components.Arcusrix.Desktop.Components"
         xmlns:PhobosClipBorder="clr-namespace:Phobos.UI.PIBorder"
         mc:Ignorable="d"
         Title="Phobos Desktop"
@@ -497,7 +498,7 @@
             </Grid>
 
             <!-- 自定义菜单 -->
-            <local:PCODesktopMenu x:Name="DesktopMenu" Grid.RowSpan="2"/>
+                <localc:PCODesktopMenu x:Name="DesktopMenu" Grid.RowSpan="2"/>
 
         </Grid>
         </PhobosClipBorder:ClippingBorder>

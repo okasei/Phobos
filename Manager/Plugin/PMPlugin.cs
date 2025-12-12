@@ -221,6 +221,13 @@ namespace Phobos.Manager.Plugin
                     }
                     return App.Current?.Resources; // 回退
                 },
+                SetDefaultHandler = HandleSetDefaultHandler,
+                GetDefaultHandler = HandleGetDefaultHandler,
+                SendNotification = HandleSendNotification,
+                SendNotificationObject = HandleSendNotificationObject,
+                // 插件间通信
+                RequestPlugin = HandleRequestPlugin,
+                RequestProtocolHandler = HandleRequestProtocolHandler,
             };
         }
 
@@ -1677,7 +1684,7 @@ namespace Phobos.Manager.Plugin
             return result;
         }
 
-        private async Task<RequestResult> HandleLog(PluginCallerContext context, LogLevel level, string arg3, Exception? exception, object[]? arg5)
+        internal async Task<RequestResult> HandleLog(PluginCallerContext context, LogLevel level, string arg3, Exception? exception, object[]? arg5)
         {
             var appName = "";
             if (!context.Name.TryGetValue(PCSysConfig.Instance.langCode, out appName))
@@ -1705,6 +1712,413 @@ namespace Phobos.Manager.Plugin
             }
             return new RequestResult { Success = true, Message = $"Logged" };
         }
+
+        /// <summary>
+        /// 设置指定协议/扩展名的默认处理插件
+        /// </summary>
+        internal async Task<RequestResult> HandleSetDefaultHandler(PluginCallerContext caller, string protocolOrExtension, string? protocolUUID)
+        {
+            if (_database == null)
+                return new RequestResult { Success = false, Message = "Database not initialized" };
+
+            try
+            {
+                var protocolLower = protocolOrExtension.ToLowerInvariant();
+
+                // 如果没有指定 UUID，查找调用者自己注册的 UUID
+                if (string.IsNullOrEmpty(protocolUUID))
+                {
+                    var callerProtocol = await _database.ExecuteQuery(
+                        @"SELECT p.UUID FROM Phobos_Protocol p
+                          INNER JOIN Phobos_AssociatedItem ai ON p.AssociatedItem = ai.Name
+                          WHERE p.Protocol = @protocol COLLATE NOCASE AND ai.PackageName = @packageName COLLATE NOCASE
+                          LIMIT 1",
+                        new Dictionary<string, object>
+                        {
+                            { "@protocol", protocolLower },
+                            { "@packageName", caller.PackageName }
+                        });
+
+                    if (callerProtocol == null || callerProtocol.Count == 0)
+                    {
+                        return new RequestResult { Success = false, Message = "No handler registered for this protocol by this plugin" };
+                    }
+
+                    protocolUUID = callerProtocol[0]["UUID"]?.ToString() ?? string.Empty;
+                }
+
+                // 绑定默认处理器
+                return await PMProtocol.Instance.BindDefaultHandler(protocolLower, protocolUUID, caller.PackageName);
+            }
+            catch (Exception ex)
+            {
+                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+            }
+        }
+
+        /// <summary>
+        /// 获取指定协议/扩展名的当前默认处理插件信息
+        /// </summary>
+        internal async Task<ProtocolHandlerOption?> HandleGetDefaultHandler(PluginCallerContext caller, string protocolOrExtension)
+        {
+            if (_database == null)
+                return null;
+
+            try
+            {
+                var protocolLower = protocolOrExtension.ToLowerInvariant();
+                var info = await PMProtocol.Instance.GetProtocolAssociationInfo(protocolLower);
+
+                if (info == null)
+                    return null;
+
+                return new ProtocolHandlerOption
+                {
+                    UUID = info.UUID,
+                    Protocol = info.Protocol,
+                    AssociatedItem = info.AssociatedItemName,
+                    PackageName = info.PackageName,
+                    Description = info.Description,
+                    Command = info.Command,
+                    UpdateTime = info.ProtocolUpdateTime,
+                    IsDefault = true,
+                    IsUpdated = false
+                };
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PMPlugin", $"HandleGetDefaultHandler failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 发送简单通知
+        /// </summary>
+        internal async Task<NotifyResult> HandleSendNotification(PluginCallerContext caller, string title, string content, int duration)
+        {
+            try
+            {
+                // 查找默认的 notifier 插件
+                var notifierInfo = await PMProtocol.Instance.GetProtocolAssociationInfo("notifier");
+                if (notifierInfo == null)
+                {
+                    return new NotifyResult { Success = false, Message = "No notifier plugin bound" };
+                }
+
+                // 获取 notifier 插件实例
+                var notifierPlugin = GetPlugin(notifierInfo.PackageName);
+                if (notifierPlugin == null)
+                {
+                    // 尝试加载
+                    var loadResult = await Load(notifierInfo.PackageName);
+                    if (!loadResult.Success)
+                    {
+                        return new NotifyResult { Success = false, Message = $"Failed to load notifier plugin: {loadResult.Message}" };
+                    }
+                    notifierPlugin = GetPlugin(notifierInfo.PackageName);
+                }
+
+                if (notifierPlugin is IPhobosNotifier notifier)
+                {
+                    return await notifier.Notify(title, content, duration);
+                }
+
+                return new NotifyResult { Success = false, Message = "Notifier plugin does not implement IPhobosNotifier" };
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PMPlugin", $"HandleSendNotification failed: {ex.Message}");
+                return new NotifyResult { Success = false, Message = ex.Message };
+            }
+        }
+
+        /// <summary>
+        /// 发送通知对象
+        /// </summary>
+        internal async Task<NotifyResult> HandleSendNotificationObject(PluginCallerContext caller, IPhobosNotification notification)
+        {
+            try
+            {
+                // 设置发送者包名
+                notification.PackageName = caller.PackageName;
+
+                // 查找默认的 notifier 插件
+                var notifierInfo = await PMProtocol.Instance.GetProtocolAssociationInfo("notifier");
+                if (notifierInfo == null)
+                {
+                    return new NotifyResult { Success = false, Message = "No notifier plugin bound" };
+                }
+
+                // 获取 notifier 插件实例
+                var notifierPlugin = GetPlugin(notifierInfo.PackageName);
+                if (notifierPlugin == null)
+                {
+                    // 尝试加载
+                    var loadResult = await Load(notifierInfo.PackageName);
+                    if (!loadResult.Success)
+                    {
+                        return new NotifyResult { Success = false, Message = $"Failed to load notifier plugin: {loadResult.Message}" };
+                    }
+                    notifierPlugin = GetPlugin(notifierInfo.PackageName);
+                }
+
+                if (notifierPlugin is IPhobosNotifier notifier)
+                {
+                    return await notifier.Notify(notification);
+                }
+
+                return new NotifyResult { Success = false, Message = "Notifier plugin does not implement IPhobosNotifier" };
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PMPlugin", $"HandleSendNotificationObject failed: {ex.Message}");
+                return new NotifyResult { Success = false, Message = ex.Message };
+            }
+        }
+
+        #region 插件间通信处理器
+
+        /// <summary>
+        /// 处理插件间请求 - 向指定插件发送请求
+        /// </summary>
+        internal async Task<PluginRequestResult> HandleRequestPlugin(
+            PluginCallerContext caller,
+            string targetPackageName,
+            string command,
+            PluginRequestOptions? options,
+            object[] args)
+        {
+            options ??= new PluginRequestOptions();
+
+            try
+            {
+                // 检查目标插件是否已加载
+                var targetPlugin = GetPlugin(targetPackageName);
+                bool wasAutoLaunched = false;
+
+                if (targetPlugin == null)
+                {
+                    // 插件未加载，检查是否需要自动启动
+                    if (!options.AutoLaunchIfNotLoaded)
+                    {
+                        return new PluginRequestResult
+                        {
+                            Success = false,
+                            Message = $"Target plugin '{targetPackageName}' is not loaded and AutoLaunchIfNotLoaded is false",
+                            TargetPackageName = targetPackageName
+                        };
+                    }
+
+                    // 检查插件是否已安装
+                    if (_database == null)
+                    {
+                        return new PluginRequestResult
+                        {
+                            Success = false,
+                            Message = "Database not initialized",
+                            TargetPackageName = targetPackageName
+                        };
+                    }
+
+                    var pluginInfo = await _database.ExecuteQuery(
+                        "SELECT IsEnabled FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
+                        new Dictionary<string, object> { { "@packageName", targetPackageName } });
+
+                    if (pluginInfo == null || pluginInfo.Count == 0)
+                    {
+                        return new PluginRequestResult
+                        {
+                            Success = false,
+                            Message = $"Target plugin '{targetPackageName}' is not installed",
+                            TargetPackageName = targetPackageName
+                        };
+                    }
+
+                    // 尝试加载并启动插件
+                    PCLoggerPlugin.Info("PMPlugin", $"Auto-launching plugin '{targetPackageName}' for request from '{caller.PackageName}'");
+
+                    var loadResult = await Load(targetPackageName);
+                    if (!loadResult.Success)
+                    {
+                        return new PluginRequestResult
+                        {
+                            Success = false,
+                            Message = $"Failed to load target plugin '{targetPackageName}': {loadResult.Message}",
+                            TargetPackageName = targetPackageName
+                        };
+                    }
+
+                    targetPlugin = GetPlugin(targetPackageName);
+                    if (targetPlugin == null)
+                    {
+                        return new PluginRequestResult
+                        {
+                            Success = false,
+                            Message = $"Failed to get plugin instance after loading '{targetPackageName}'",
+                            TargetPackageName = targetPackageName
+                        };
+                    }
+
+                    wasAutoLaunched = true;
+                }
+
+                // 执行请求（带超时）
+                var runTask = targetPlugin.OnRequestReceived(caller.PackageName, command, args);
+
+                if (options.WaitForResponse)
+                {
+                    var timeoutTask = Task.Delay(options.TimeoutMs);
+                    var completedTask = await Task.WhenAny(runTask, timeoutTask);
+
+                    if (completedTask == timeoutTask)
+                    {
+                        return new PluginRequestResult
+                        {
+                            Success = false,
+                            Message = $"Request to '{targetPackageName}' timed out after {options.TimeoutMs}ms",
+                            TargetPackageName = targetPackageName,
+                            WasAutoLaunched = wasAutoLaunched
+                        };
+                    }
+
+                    var result = await runTask;
+                    return new PluginRequestResult
+                    {
+                        Success = result.Success,
+                        Message = result.Message,
+                        Data = result.Data,
+                        Error = result.Error,
+                        TargetPackageName = targetPackageName,
+                        WasAutoLaunched = wasAutoLaunched,
+                        ResponseData = result.Data.Count > 0 ? result.Data[0] : null
+                    };
+                }
+                else
+                {
+                    // 不等待响应，立即返回
+                    _ = runTask; // Fire and forget
+                    return new PluginRequestResult
+                    {
+                        Success = true,
+                        Message = $"Request sent to '{targetPackageName}' (not waiting for response)",
+                        TargetPackageName = targetPackageName,
+                        WasAutoLaunched = wasAutoLaunched
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PMPlugin", $"HandleRequestPlugin failed: {ex.Message}");
+                return new PluginRequestResult
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Error = ex,
+                    TargetPackageName = targetPackageName
+                };
+            }
+        }
+
+        /// <summary>
+        /// 处理协议/扩展名请求 - 向指定协议/扩展名的默认处理插件发送请求
+        /// </summary>
+        internal async Task<PluginRequestResult> HandleRequestProtocolHandler(
+            PluginCallerContext caller,
+            string protocolOrExtension,
+            string command,
+            PluginRequestOptions? options,
+            object[] args)
+        {
+            options ??= new PluginRequestOptions();
+
+            try
+            {
+                var protocolLower = protocolOrExtension.ToLowerInvariant();
+
+                if (_database == null)
+                {
+                    return new PluginRequestResult
+                    {
+                        Success = false,
+                        Message = "Database not initialized"
+                    };
+                }
+
+                // 1. 首先查找 Phobos_Shell 中的默认绑定
+                var shellResult = await _database.ExecuteQuery(
+                    "SELECT AssociatedItem FROM Phobos_Shell WHERE Protocol = @protocol COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@protocol", protocolLower } });
+
+                string? targetPackageName = null;
+
+                if (shellResult != null && shellResult.Count > 0)
+                {
+                    // 有默认绑定，通过 UUID 查找包名
+                    var protocolUUID = shellResult[0]["AssociatedItem"]?.ToString();
+                    if (!string.IsNullOrEmpty(protocolUUID))
+                    {
+                        var packageResult = await _database.ExecuteQuery(
+                            @"SELECT ai.PackageName FROM Phobos_Protocol p
+                              INNER JOIN Phobos_AssociatedItem ai ON p.AssociatedItem = ai.Name
+                              WHERE p.UUID = @uuid",
+                            new Dictionary<string, object> { { "@uuid", protocolUUID } });
+
+                        if (packageResult != null && packageResult.Count > 0)
+                        {
+                            targetPackageName = packageResult[0]["PackageName"]?.ToString();
+                        }
+                    }
+                }
+
+                // 2. 如果没有默认绑定，查找所有可用的处理器
+                if (string.IsNullOrEmpty(targetPackageName))
+                {
+                    var allHandlers = await PMProtocol.Instance.FindAllAssociatedItems(protocolLower);
+
+                    if (allHandlers.Count == 0)
+                    {
+                        return new PluginRequestResult
+                        {
+                            Success = false,
+                            Message = $"No handler found for '{protocolOrExtension}'"
+                        };
+                    }
+
+                    if (allHandlers.Count == 1)
+                    {
+                        // 只有一个处理器，直接使用
+                        targetPackageName = allHandlers[0].PackageName;
+                        PCLoggerPlugin.Info("PMPlugin", $"Auto-selected single handler '{targetPackageName}' for '{protocolOrExtension}'");
+                    }
+                    else
+                    {
+                        // 有多个处理器但没有默认绑定，返回失败
+                        var handlerNames = string.Join(", ", allHandlers.Select(h => h.PackageName));
+                        return new PluginRequestResult
+                        {
+                            Success = false,
+                            Message = $"Multiple handlers available for '{protocolOrExtension}' but no default is set. Available handlers: {handlerNames}. Please set a default handler first."
+                        };
+                    }
+                }
+
+                // 3. 调用目标插件
+                return await HandleRequestPlugin(caller, targetPackageName, command, options, args);
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PMPlugin", $"HandleRequestProtocolHandler failed: {ex.Message}");
+                return new PluginRequestResult
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Error = ex
+                };
+            }
+        }
+
+        #endregion
 
         #endregion
     }

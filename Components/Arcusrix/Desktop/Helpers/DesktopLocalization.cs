@@ -1,6 +1,6 @@
 using Phobos.Shared.Class;
 
-namespace Phobos.Components.Arcusrix.Desktop
+namespace Phobos.Components.Arcusrix.Desktop.Components
 {
     /// <summary>
     /// 桌面本地化资源

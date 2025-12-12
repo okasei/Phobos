@@ -265,7 +265,7 @@ namespace Phobos
                 {
                     await InitializeTheme();
                     await PMTheme.Instance.Initialize();
-                    await PMTheme.Instance.LoadTheme("com.phobos.theme.dark-orange");
+                    await PMTheme.Instance.LoadTheme("com.phobos.theme.dark-blue");
                     await InitializeThemeManager();
                 }
                 catch (Exception ex)
@@ -460,9 +460,6 @@ namespace Phobos
                 { "zh-CN", "插件加载失败" }
             }));
 
-            // 注册桌面本地化资源
-            DesktopLocalization.RegisterAll();
-
             // 从数据库读取语言设置
             Task.Run(async () =>
             {
@@ -520,7 +517,8 @@ namespace Phobos
                 new PCDialogPlugin(),
                 new PCPluginInstaller(),
                 new PCDesktopPlugin(),
-                new PCRunnerPlugin()
+                new PCRunnerPlugin(),
+                new PCNotifierPlugin()
             };
             // 创建处理器
 
@@ -654,8 +652,14 @@ namespace Phobos
                 {
                     await PMEvent.Instance.TriggerFromPluginAsync(caller.PackageName, eventId, eventName, args);
                     return new RequestResult { Success = true, Message = $"Event {eventId}.{eventName} triggered" };
-                }
-
+                },
+                SetDefaultHandler = PMPlugin.Instance.HandleSetDefaultHandler,
+                GetDefaultHandler = PMPlugin.Instance.HandleGetDefaultHandler,
+                SendNotification = PMPlugin.Instance.HandleSendNotification,
+                SendNotificationObject = PMPlugin.Instance.HandleSendNotificationObject,
+                Log = PMPlugin.Instance.HandleLog,
+                RequestPlugin = PMPlugin.Instance.HandleRequestPlugin,
+                RequestProtocolHandler = PMPlugin.Instance.HandleRequestProtocolHandler
             };
 
 
@@ -765,11 +769,32 @@ namespace Phobos
 
             if (Database != null)
             {
-                var result = await Database.ExecuteQuery(
-                    "SELECT Content FROM Phobos_Main WHERE Key = 'StartupPlugin'");
-                if (result?.Count > 0)
+                // 首先查找关联了 launcher 特殊项的插件（优先使用）
+                var launcherResult = await Database.ExecuteQuery(
+                    @"SELECT ai.PackageName FROM Phobos_AssociatedItem ai
+                      INNER JOIN Phobos_Protocol p ON ai.Name = p.AssociatedItem
+                      WHERE p.Protocol = 'launcher'
+                      ORDER BY p.UpdateTime DESC
+                      LIMIT 1");
+
+                if (launcherResult?.Count > 0)
                 {
-                    startupPlugin = result[0]["Content"]?.ToString() ?? startupPlugin;
+                    var launcherPlugin = launcherResult[0]["PackageName"]?.ToString();
+                    if (!string.IsNullOrEmpty(launcherPlugin))
+                    {
+                        startupPlugin = launcherPlugin;
+                        PCLoggerPlugin.Info("Phobos", $"Using launcher-associated plugin: {startupPlugin}");
+                    }
+                }
+                else
+                {
+                    // 如果没有 launcher 关联，回退到数据库中的 StartupPlugin 设置
+                    var result = await Database.ExecuteQuery(
+                        "SELECT Content FROM Phobos_Main WHERE Key = 'StartupPlugin'");
+                    if (result?.Count > 0)
+                    {
+                        startupPlugin = result[0]["Content"]?.ToString() ?? startupPlugin;
+                    }
                 }
             }
 

@@ -1,8 +1,10 @@
 using Phobos.Components.Arcusrix.Desktop;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
+using Phobos.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -11,8 +13,9 @@ namespace Phobos.Class.Plugin.BuiltIn
     /// <summary>
     /// Phobos 桌面插件
     /// 提供桌面启动器功能，支持托盘图标和自动隐藏
+    /// 实现 IPhobosDesktop 接口
     /// </summary>
-    public class PCDesktopPlugin : PCPluginBase
+    public class PCDesktopPlugin : PCPluginBase, IPhobosDesktop
     {
         private static PCDesktopPlugin? _instance;
         private PCOPhobosDesktop? _desktopWindow;
@@ -83,6 +86,15 @@ namespace Phobos.Class.Plugin.BuiltIn
 
         public override async Task<RequestResult> OnInstall(params object[] args)
         {
+            // 注册 launcher 特殊项（用于标识默认启动插件）
+            await Link(new LinkAssociation
+            {
+                Protocol = "launcher",
+                Name = "PhobosLauncher",
+                Description = "Phobos Default Launcher (Desktop)",
+                Command = "phobos://plugin/com.phobos.desktop"
+            });
+
             // 注册协议
             await Link(new LinkAssociation
             {
@@ -312,5 +324,286 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// 获取桌面窗口实例
         /// </summary>
         public PCOPhobosDesktop? GetDesktopWindow() => _desktopWindow;
+
+        #region IPhobosDesktop Implementation
+
+        /// <summary>
+        /// 搜索桌面项
+        /// </summary>
+        public async Task<List<PhobosSuggestionItem>> SearchDesktop(string keyword, int maxResults = 20)
+        {
+            var suggestions = new List<PhobosSuggestionItem>();
+
+            if (_desktopWindow == null || string.IsNullOrWhiteSpace(keyword))
+                return suggestions;
+
+            return await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                var items = _desktopWindow.GetAllDesktopItems();
+                var lowerKeyword = keyword.ToLowerInvariant();
+
+                foreach (var item in items)
+                {
+                    string name = string.Empty;
+                    string description = string.Empty;
+                    string? iconPath = null;
+                    string? packageName = null;
+
+                    if (item is PluginDesktopItem pluginItem)
+                    {
+                        var plugin = _desktopWindow.GetPluginByPackageName(pluginItem.PackageName);
+                        if (plugin == null) continue;
+
+                        name = plugin.Metadata.GetLocalizedName("zh-CN");
+                        description = plugin.Metadata.GetLocalizedDescription("zh-CN");
+                        iconPath = plugin.Metadata.Icon;
+                        packageName = pluginItem.PackageName;
+                    }
+                    else if (item is FolderDesktopItem folderItem)
+                    {
+                        name = folderItem.Name;
+                        description = $"文件夹 ({folderItem.PluginPackageNames.Count} 个项目)";
+                    }
+                    else if (item is ShortcutDesktopItem shortcutItem)
+                    {
+                        name = shortcutItem.Name;
+                        description = $"快捷方式 -> {shortcutItem.TargetPackageName}";
+                        iconPath = shortcutItem.CustomIconPath;
+                        packageName = shortcutItem.TargetPackageName;
+                    }
+
+                    // 匹配检测
+                    var lowerName = name.ToLowerInvariant();
+                    var lowerDesc = description.ToLowerInvariant();
+                    var lowerPkg = (packageName ?? string.Empty).ToLowerInvariant();
+
+                    if (lowerName.Contains(lowerKeyword) || lowerDesc.Contains(lowerKeyword) || lowerPkg.Contains(lowerKeyword))
+                    {
+                        // 计算匹配得分
+                        int score = 0;
+                        if (lowerName.StartsWith(lowerKeyword)) score += 100;
+                        else if (lowerName.Contains(lowerKeyword)) score += 50;
+                        if (lowerPkg.Contains(lowerKeyword)) score += 30;
+                        if (lowerDesc.Contains(lowerKeyword)) score += 10;
+
+                        suggestions.Add(new PhobosSuggestionItem
+                        {
+                            Id = item.Id,
+                            Name = name,
+                            Description = description,
+                            Info = item.Info,
+                            IconPath = iconPath,
+                            PackageName = packageName,
+                            Type = item.Type switch
+                            {
+                                DesktopItemType.Plugin => SuggestionType.Plugin,
+                                DesktopItemType.Shortcut => SuggestionType.Shortcut,
+                                _ => SuggestionType.Other
+                            },
+                            Score = score,
+                            SourcePackageName = Metadata.PackageName
+                        });
+                    }
+
+                    if (suggestions.Count >= maxResults)
+                        break;
+                }
+
+                return suggestions.OrderByDescending(s => s.Score).Take(maxResults).ToList();
+            });
+        }
+
+        /// <summary>
+        /// 创建快捷方式
+        /// </summary>
+        public async Task<RequestResult> CreateShortcut(CreateShortcutRequest request)
+        {
+            if (_desktopWindow == null)
+                return new RequestResult { Success = false, Message = "Desktop window not initialized" };
+
+            if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.TargetPackageName))
+                return new RequestResult { Success = false, Message = "Name and TargetPackageName are required" };
+
+            return await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                try
+                {
+                    var shortcut = new ShortcutDesktopItem
+                    {
+                        Name = request.Name,
+                        TargetPackageName = request.TargetPackageName,
+                        Arguments = request.Arguments,
+                        CustomIconPath = request.CustomIconPath ?? string.Empty,
+                        Info = request.Info ?? string.Empty,
+                        Hotkey = request.Hotkey ?? string.Empty
+                    };
+
+                    // 如果指定了位置，使用指定位置
+                    if (request.GridX.HasValue && request.GridY.HasValue)
+                    {
+                        shortcut.GridX = request.GridX.Value;
+                        shortcut.GridY = request.GridY.Value;
+                    }
+
+                    _desktopWindow.AddDesktopItem(shortcut);
+                    _desktopWindow.RenderDesktop();
+
+                    return new RequestResult
+                    {
+                        Success = true,
+                        Message = "Shortcut created",
+                        Data = new List<object> { shortcut.Id }
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+                }
+            });
+        }
+
+        /// <summary>
+        /// 启动桌面项
+        /// </summary>
+        public async Task<RequestResult> LaunchDesktopItem(string itemId, params object[] args)
+        {
+            if (_desktopWindow == null)
+                return new RequestResult { Success = false, Message = "Desktop window not initialized" };
+
+            if (string.IsNullOrWhiteSpace(itemId))
+                return new RequestResult { Success = false, Message = "Item ID is required" };
+
+            try
+            {
+                var item = await Application.Current.Dispatcher.InvokeAsync(() =>
+                    _desktopWindow.GetDesktopItemById(itemId));
+
+                if (item == null)
+                    return new RequestResult { Success = false, Message = $"Item not found: {itemId}" };
+
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    await _desktopWindow.LaunchDesktopItem(item, args);
+                });
+
+                return new RequestResult { Success = true, Message = "Item launched" };
+            }
+            catch (Exception ex)
+            {
+                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+            }
+        }
+
+        /// <summary>
+        /// 获取所有桌面项
+        /// </summary>
+        public async Task<List<DesktopItem>> GetAllDesktopItems()
+        {
+            if (_desktopWindow == null)
+                return new List<DesktopItem>();
+
+            return await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                var items = _desktopWindow.GetAllDesktopItems();
+                return items.Select(item =>
+                {
+                    DesktopItem result = item switch
+                    {
+                        PluginDesktopItem pluginItem => new PluginDesktopItem
+                        {
+                            Id = pluginItem.Id,
+                            PackageName = pluginItem.PackageName,
+                            GridX = pluginItem.GridX,
+                            GridY = pluginItem.GridY,
+                            Hotkey = pluginItem.Hotkey,
+                            Info = pluginItem.Info,
+                            Name = _desktopWindow.GetPluginByPackageName(pluginItem.PackageName)?.Metadata.GetLocalizedName("zh-CN") ?? pluginItem.PackageName
+                        },
+                        FolderDesktopItem folderItem => new FolderDesktopItem
+                        {
+                            Id = folderItem.Id,
+                            Name = folderItem.Name,
+                            PluginPackageNames = folderItem.PluginPackageNames,
+                            GridX = folderItem.GridX,
+                            GridY = folderItem.GridY,
+                            Hotkey = folderItem.Hotkey,
+                            Info = folderItem.Info
+                        },
+                        ShortcutDesktopItem shortcutItem => new ShortcutDesktopItem
+                        {
+                            Id = shortcutItem.Id,
+                            Name = shortcutItem.Name,
+                            TargetPackageName = shortcutItem.TargetPackageName,
+                            Arguments = shortcutItem.Arguments,
+                            CustomIconPath = shortcutItem.CustomIconPath,
+                            GridX = shortcutItem.GridX,
+                            GridY = shortcutItem.GridY,
+                            Hotkey = shortcutItem.Hotkey,
+                            Info = shortcutItem.Info
+                        },
+                        _ => new DesktopItem
+                        {
+                            Id = item.Id,
+                            Type = (Shared.Models.DesktopItemType)(int)item.Type,
+                            GridX = item.GridX,
+                            GridY = item.GridY,
+                            Hotkey = item.Hotkey,
+                            Info = item.Info
+                        }
+                    };
+                    return result;
+                }).ToList();
+            });
+        }
+
+        /// <summary>
+        /// 根据 ID 获取桌面项
+        /// </summary>
+        public async Task<DesktopItem?> GetDesktopItem(string itemId)
+        {
+            var items = await GetAllDesktopItems();
+            return items.FirstOrDefault(i => i.Id == itemId);
+        }
+
+        /// <summary>
+        /// 删除桌面项
+        /// </summary>
+        public async Task<RequestResult> RemoveDesktopItem(string itemId)
+        {
+            if (_desktopWindow == null)
+                return new RequestResult { Success = false, Message = "Desktop window not initialized" };
+
+            return await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                try
+                {
+                    var item = _desktopWindow.GetDesktopItemById(itemId);
+                    if (item == null)
+                        return new RequestResult { Success = false, Message = $"Item not found: {itemId}" };
+
+                    _desktopWindow.RemoveDesktopItem(item);
+                    _desktopWindow.RenderDesktop();
+                    return new RequestResult { Success = true, Message = "Item removed" };
+                }
+                catch (Exception ex)
+                {
+                    return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+                }
+            });
+        }
+
+        /// <summary>
+        /// 刷新桌面显示
+        /// </summary>
+        void IPhobosDesktop.RefreshDesktop()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _desktopWindow?.RefreshPlugins();
+                _desktopWindow?.RenderDesktop();
+            });
+        }
+
+        #endregion
     }
 }
