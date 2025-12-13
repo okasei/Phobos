@@ -10,6 +10,9 @@ using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using System.Windows.Media.Animation;
 using System.Windows.Shell;
+using System.IO;
+using Phobos.Class.Plugin.BuiltIn;
+using Phobos.Components.Arcusrix.Desktop;
 
 namespace Phobos.Class.Arcusrix
 {
@@ -98,6 +101,7 @@ namespace Phobos.Class.Arcusrix
         private readonly IPhobosPlugin _plugin;
         private WindowState _lastState = WindowState.Normal;
         private bool _isClosing = false;
+        private Image? _wallpaperImage;
 
         // 布局元素
         public Grid PhobosPluginArea { get; private set; }
@@ -114,10 +118,23 @@ namespace Phobos.Class.Arcusrix
         public Label OpacityLabel { get; private set; }
         public Grid ContentArea { get; private set; }
 
+        /// <summary>
+        /// 自定义控制按钮区域（在窗口控制按钮左侧）
+        /// </summary>
+        public StackPanel CustomControlArea { get; private set; }
+
+        /// <summary>
+        /// 关闭窗口的委托（供插件调用）
+        /// </summary>
+        public Action? CloseWindowAction { get; private set; }
+
         public PCPluginWindow(IPhobosPlugin plugin, string? title = null)
         {
             _plugin = plugin;
             var metadata = plugin.Metadata;
+
+            // 设置关闭窗口的委托
+            CloseWindowAction = () => CloseWithAnimation();
 
             // 基础窗口设置
             // 使用 SingleBorderWindow 而非 None，以保留原生窗口动画
@@ -183,6 +200,168 @@ namespace Phobos.Class.Arcusrix
 
             // 窗口初始化完成后应用 DWM 设置
             SourceInitialized += OnSourceInitialized;
+
+            // 如果插件元数据中启用了 ShowWallpaper，请求壁纸和透明度
+            if (metadata.ShowWallpaper)
+            {
+                Loaded += async (s, e) => await LoadWallpaperAndSubscribeEvents();
+            }
+        }
+
+        /// <summary>
+        /// 加载壁纸并订阅事件
+        /// </summary>
+        private async System.Threading.Tasks.Task LoadWallpaperAndSubscribeEvents()
+        {
+            try
+            {
+                // 请求壁纸信息
+                var wallpaperResult = await _plugin.RequestProtocolHandler("home:", "wallpaper");
+                if (wallpaperResult.Success && wallpaperResult.Data != null && wallpaperResult.Data.Count >= 2)
+                {
+                    var wallpaperPath = wallpaperResult.Data[0]?.ToString();
+                    var stretchStr = wallpaperResult.Data[1]?.ToString() ?? "UniformToFill";
+                    if (Enum.TryParse<Stretch>(stretchStr, out var stretch))
+                    {
+                        ApplyWallpaper(wallpaperPath, stretch);
+                    }
+                }
+
+                // 请求透明度信息
+                var opacityResult = await _plugin.RequestProtocolHandler("home:", "opacity");
+                if (opacityResult.Success && opacityResult.Data != null && opacityResult.Data.Count >= 1)
+                {
+                    if (double.TryParse(opacityResult.Data[0]?.ToString(), out var opacity))
+                    {
+                        ApplyWallpaperOpacity(opacity);
+                    }
+                }
+
+                // 订阅桌面事件
+                SubscribeToDesktopEvents();
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PCPluginWindow", $"Failed to load wallpaper: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 订阅桌面壁纸和透明度变化事件
+        /// </summary>
+        private void SubscribeToDesktopEvents()
+        {
+            try
+            {
+                var desktopWindow = PCDesktopPlugin.Instance?.GetDesktopWindow();
+                if (desktopWindow != null)
+                {
+                    desktopWindow.WallpaperChanged += OnWallpaperChanged;
+                    desktopWindow.OpacityChanged += OnOpacityChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PCPluginWindow", $"Failed to subscribe to desktop events: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 取消订阅桌面事件
+        /// </summary>
+        private void UnsubscribeFromDesktopEvents()
+        {
+            try
+            {
+                var desktopWindow = PCDesktopPlugin.Instance?.GetDesktopWindow();
+                if (desktopWindow != null)
+                {
+                    desktopWindow.WallpaperChanged -= OnWallpaperChanged;
+                    desktopWindow.OpacityChanged -= OnOpacityChanged;
+                }
+            }
+            catch
+            {
+                // 忽略取消订阅时的错误
+            }
+        }
+
+        /// <summary>
+        /// 壁纸变化事件处理
+        /// </summary>
+        private void OnWallpaperChanged(object? sender, WallpaperChangedEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ApplyWallpaper(e.WallpaperPath, e.Stretch);
+            });
+        }
+
+        /// <summary>
+        /// 透明度变化事件处理
+        /// </summary>
+        private void OnOpacityChanged(object? sender, OpacityChangedEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ApplyWallpaperOpacity(e.Opacity);
+            });
+        }
+
+        /// <summary>
+        /// 应用壁纸
+        /// </summary>
+        private void ApplyWallpaper(string? wallpaperPath, Stretch stretch)
+        {
+            if (string.IsNullOrEmpty(wallpaperPath) || !File.Exists(wallpaperPath))
+            {
+                // 移除壁纸
+                if (_wallpaperImage != null)
+                {
+                    BackgroundArea.Children.Remove(_wallpaperImage);
+                    _wallpaperImage = null;
+                }
+                return;
+            }
+
+            try
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(wallpaperPath, UriKind.Absolute);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+
+                if (_wallpaperImage == null)
+                {
+                    _wallpaperImage = new Image
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        VerticalAlignment = VerticalAlignment.Stretch
+                    };
+                    // 将壁纸图片插入到 BackLabel 之后、BackBorder 之前
+                    var backLabelIndex = BackgroundArea.Children.IndexOf(BackLabel);
+                    BackgroundArea.Children.Insert(backLabelIndex + 1, _wallpaperImage);
+                }
+
+                _wallpaperImage.Source = bitmap;
+                _wallpaperImage.Stretch = stretch;
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PCPluginWindow", $"Failed to apply wallpaper: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 应用壁纸透明度
+        /// </summary>
+        private void ApplyWallpaperOpacity(double opacity)
+        {
+            if (_wallpaperImage != null)
+            {
+                _wallpaperImage.Opacity = opacity;
+            }
         }
 
         /// <summary>
@@ -694,6 +873,12 @@ namespace Phobos.Class.Arcusrix
             if (_isClosing) return;
             _isClosing = true;
 
+            // 取消订阅桌面事件
+            if (_plugin.Metadata.ShowWallpaper)
+            {
+                UnsubscribeFromDesktopEvents();
+            }
+
             await _plugin.OnClosing();
             PlayCloseAnimation(() => Close());
         }
@@ -781,13 +966,30 @@ namespace Phobos.Class.Arcusrix
             };
             TitleText.SetResourceReference(TextBlock.ForegroundProperty, "Foreground1Brush");
 
-            // 窗口控制按钮
-            var buttonPanel = new StackPanel
+            // 右侧控制区域容器（包含自定义按钮和窗口控制按钮）
+            var rightControlContainer = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Top
             };
+
+            // CustomControlArea - 自定义控制按钮区域（在窗口控制按钮左侧）
+            CustomControlArea = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            rightControlContainer.Children.Add(CustomControlArea);
+
+            // 窗口控制按钮
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Top
+            };
+            rightControlContainer.Children.Add(buttonPanel);
 
             // MinBtn - 最小化按钮
             if (metadata.ShowMinimizeButton)
@@ -829,7 +1031,7 @@ namespace Phobos.Class.Arcusrix
             TitleArea.Children.Add(FakeTitle);
             TitleArea.Children.Add(IconImage);
             TitleArea.Children.Add(TitleText);
-            TitleArea.Children.Add(buttonPanel);
+            TitleArea.Children.Add(rightControlContainer);
 
             // ContentArea - 内容区域
             ContentArea = new Grid
@@ -951,29 +1153,49 @@ namespace Phobos.Class.Arcusrix
             // Segoe MDL2 Assets 图标: E922 = ChromeMaximize, E923 = ChromeRestore
             if (WindowState == WindowState.Maximized)
             {
-                ResBtn?.Content = "\uE923"; // ChromeRestore 图标
+                SetResBtnIcon("\uE923"); // ChromeRestore 图标
                 // 最大化时动画过渡到无圆角
                 PlayMaximizeAnimation();
             }
             else if (_lastState == WindowState.Maximized && WindowState == WindowState.Normal)
             {
-                ResBtn?.Content = "\uE922"; // ChromeMaximize 图标
+                SetResBtnIcon("\uE922"); // ChromeMaximize 图标
                 // 从最大化恢复到正常
                 PlayRestoreFromMaximizeAnimation();
             }
             else if (_lastState == WindowState.Minimized && WindowState != WindowState.Minimized)
             {
-                ResBtn?.Content = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+                SetResBtnIcon(WindowState == WindowState.Maximized ? "\uE923" : "\uE922");
                 // 从最小化恢复
                 PlayRestoreFromMinimizeAnimation();
             }
             else
             {
-                ResBtn?.Content = "\uE922"; // ChromeMaximize 图标
+                SetResBtnIcon("\uE922"); // ChromeMaximize 图标
                 BackBorder.CornerRadius = new CornerRadius(8);
             }
 
             _lastState = WindowState;
+        }
+
+        /// <summary>
+        /// 设置最大化/还原按钮图标（使用 TextBlock 防止 LabelStyle 覆盖字体）
+        /// </summary>
+        private void SetResBtnIcon(string icon)
+        {
+            if (ResBtn == null) return;
+
+            // 创建新的 TextBlock 来设置图标，防止全局 LabelStyle 覆盖字体
+            var iconText = new TextBlock
+            {
+                Text = icon,
+                FontFamily = _symbolFont,
+                FontSize = 10,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            iconText.SetResourceReference(TextBlock.ForegroundProperty, "Foreground1Brush");
+            ResBtn.Content = iconText;
         }
 
         /// <summary>

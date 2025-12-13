@@ -136,10 +136,13 @@ namespace Phobos.Class.Plugin.BuiltIn
                 await Subscribe(PhobosEventIds.App, "Installed");
                 await Subscribe(PhobosEventIds.App, "Uninstalled");
 
-                // 如果窗口已存在且可见，激活它
-                if (_desktopWindow != null && _desktopWindow.IsVisible)
+                // 单例检查：如果窗口已存在，激活它而不是创建新实例
+                if (_desktopWindow != null)
                 {
-                    _desktopWindow.ShowFromTray();
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        _desktopWindow.ShowFromTray();
+                    });
                     return new RequestResult { Success = true, Message = "Desktop activated" };
                 }
 
@@ -743,6 +746,95 @@ namespace Phobos.Class.Plugin.BuiltIn
                 SystemNotificationType.DeviceDisconnected => "pack://application:,,,/Assets/Icons/notification-device.png",
                 _ => null
             };
+        }
+
+        #endregion
+
+        #region OnRequestReceived - 处理来自其他插件的请求
+
+        /// <summary>
+        /// 处理来自其他插件的请求
+        /// </summary>
+        public override async Task<RequestResult> OnRequestReceived(string sourcePackageName, string command, params object[] args)
+        {
+            try
+            {
+                switch (command.ToLowerInvariant())
+                {
+                    case "wallpaper":
+                        return await GetWallpaperInfo();
+
+                    case "opacity":
+                        return await GetOpacityInfo();
+
+                    default:
+                        return await base.OnRequestReceived(sourcePackageName, command, args);
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Desktop", $"OnRequestReceived failed: {ex.Message}");
+                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+            }
+        }
+
+        /// <summary>
+        /// 获取壁纸信息
+        /// </summary>
+        private async Task<RequestResult> GetWallpaperInfo()
+        {
+            if (_desktopWindow == null)
+            {
+                return new RequestResult
+                {
+                    Success = false,
+                    Message = "Desktop window not initialized"
+                };
+            }
+
+            return await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                var wallpaperPath = _desktopWindow.GetWallpaperPath();
+                var stretch = _desktopWindow.GetWallpaperStretch();
+
+                return new RequestResult
+                {
+                    Success = true,
+                    Message = "Wallpaper info retrieved",
+                    Data = new List<object>
+                    {
+                        wallpaperPath ?? string.Empty,
+                        stretch.ToString()
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// 获取透明度信息
+        /// </summary>
+        private async Task<RequestResult> GetOpacityInfo()
+        {
+            if (_desktopWindow == null)
+            {
+                return new RequestResult
+                {
+                    Success = false,
+                    Message = "Desktop window not initialized"
+                };
+            }
+
+            return await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                var opacity = _desktopWindow.GetWallpaperOpacity();
+
+                return new RequestResult
+                {
+                    Success = true,
+                    Message = "Opacity info retrieved",
+                    Data = new List<object> { opacity }
+                };
+            });
         }
 
         #endregion

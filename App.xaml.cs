@@ -397,7 +397,8 @@ namespace Phobos
                 new PCDesktopPlugin(),
                 new PCThemePlugin(),
                 new PCRunnerPlugin(),
-                new PCNotifierPlugin()
+                new PCNotifierPlugin(),
+                new PCTaskManagerPlugin()
             };
             // 创建处理器
 
@@ -557,7 +558,7 @@ namespace Phobos
                 if (Database != null)
                 {
                     var existing = await Database.ExecuteQuery(
-                        "SELECT PackageName FROM Phobos_Plugin WHERE PackageName = @packageName",
+                        "SELECT PackageName, Version FROM Phobos_Plugin WHERE PackageName = @packageName",
                         new System.Collections.Generic.Dictionary<string, object>
                         {
                             { "@packageName", plugin.Metadata.PackageName }
@@ -566,7 +567,7 @@ namespace Phobos
                     var mainAssembly = plugin.Metadata.GetMainAssemblyFileName() ?? string.Empty;
                     if (existing?.Count == 0)
                     {
-                        // 注册到数据库
+                        // 首次注册到数据库
                         await Database.ExecuteNonQuery(
                             @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory, MainAssembly,
                                 Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime, Entry, LaunchFlag)
@@ -590,32 +591,44 @@ namespace Phobos
                             });
                         // 首次安装时调用 OnInstall
                         await plugin.OnInstall();
+                        PCLoggerPlugin.Debug("Phobos", $"Registered new built-in plugin: {plugin.Metadata.PackageName}");
                     }
-                    else
+                    else if (existing?.Count > 0)
                     {
-                        // 更新现有记录
-                        await Database.ExecuteNonQuery(
-                            @"UPDATE Phobos_Plugin SET
-                                Name = @name, Manufacturer = @manufacturer, Description = @description,
-                                Version = @version, MainAssembly = @mainAssembly, Icon = @icon, IsSystemPlugin = @isSystemPlugin,
-                                SettingUri = @settingUri, UninstallInfo = @uninstallInfo, Entry = @entry,
-                                LaunchFlag = @launchFlag, UpdateTime = datetime('now')
-                              WHERE PackageName = @packageName",
-                            new System.Collections.Generic.Dictionary<string, object>
-                            {
-                                { "@packageName", plugin.Metadata.PackageName },
-                                { "@name", plugin.Metadata.Name },
-                                { "@manufacturer", plugin.Metadata.Manufacturer },
-                                { "@description", plugin.Metadata.GetLocalizedDescription("en-US") },
-                                { "@version", plugin.Metadata.Version },
-                                { "@mainAssembly", mainAssembly },
-                                { "@icon", plugin.Metadata.Icon ?? string.Empty },
-                                { "@isSystemPlugin", plugin.Metadata.IsSystemPlugin ? 1 : 0 },
-                                { "@settingUri", plugin.Metadata.SettingUri ?? string.Empty },
-                                { "@uninstallInfo", uninstallInfoJson },
-                                { "@entry", plugin.Metadata.Entry ?? string.Empty },
-                                { "@launchFlag", plugin.Metadata.LaunchFlag == true ? 1 : 0 }
-                            });
+                        // 检查版本是否有变化，只有版本更新时才更新数据库
+                        var existingVersion = existing[0]["Version"]?.ToString() ?? "0.0.0";
+                        var compareResult = Utils.Version.PUVersion.Compare(plugin.Metadata.Version, existingVersion);
+
+                        if (compareResult == Utils.Version.VersionCompareResult.Greater)
+                        {
+                            // 版本更新，更新数据库记录
+                            await Database.ExecuteNonQuery(
+                                @"UPDATE Phobos_Plugin SET
+                                    Name = @name, Manufacturer = @manufacturer, Description = @description,
+                                    Version = @version, MainAssembly = @mainAssembly, Icon = @icon, IsSystemPlugin = @isSystemPlugin,
+                                    SettingUri = @settingUri, UninstallInfo = @uninstallInfo, Entry = @entry,
+                                    LaunchFlag = @launchFlag, UpdateTime = datetime('now')
+                                  WHERE PackageName = @packageName",
+                                new System.Collections.Generic.Dictionary<string, object>
+                                {
+                                    { "@packageName", plugin.Metadata.PackageName },
+                                    { "@name", plugin.Metadata.Name },
+                                    { "@manufacturer", plugin.Metadata.Manufacturer },
+                                    { "@description", plugin.Metadata.GetLocalizedDescription("en-US") },
+                                    { "@version", plugin.Metadata.Version },
+                                    { "@mainAssembly", mainAssembly },
+                                    { "@icon", plugin.Metadata.Icon ?? string.Empty },
+                                    { "@isSystemPlugin", plugin.Metadata.IsSystemPlugin ? 1 : 0 },
+                                    { "@settingUri", plugin.Metadata.SettingUri ?? string.Empty },
+                                    { "@uninstallInfo", uninstallInfoJson },
+                                    { "@entry", plugin.Metadata.Entry ?? string.Empty },
+                                    { "@launchFlag", plugin.Metadata.LaunchFlag == true ? 1 : 0 }
+                                });
+                            // 调用 OnUpdate
+                            await plugin.OnUpdate(existingVersion, plugin.Metadata.Version);
+                            PCLoggerPlugin.Info("Phobos", $"Updated built-in plugin: {plugin.Metadata.PackageName} ({existingVersion} -> {plugin.Metadata.Version})");
+                        }
+                        // 版本相同或更低时，跳过更新（静默加载）
                     }
                 }
 

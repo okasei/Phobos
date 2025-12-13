@@ -1,0 +1,51 @@
+{
+  "name": "任务管理器",
+  "langCode": "zh-CN",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "任务管理器",
+
+    "Tab.RunningPlugins": "运行中的插件",
+    "Tab.StartupItems": "启动项",
+
+    "Button.Refresh": "刷新",
+    "Button.EndTask": "结束任务",
+    "Button.Add": "添加",
+    "Button.Edit": "编辑",
+    "Button.Delete": "删除",
+    "Button.Cancel": "取消",
+    "Button.Save": "保存",
+    "Button.Enable": "启用",
+    "Button.Disable": "禁用",
+
+    "Header.PluginName": "插件名称",
+    "Header.PackageName": "包名",
+    "Header.Status": "状态",
+    "Header.Memory": "内存",
+    "Header.Enabled": "启用",
+    "Header.Command": "命令",
+    "Header.Priority": "优先级",
+    "Header.Actions": "操作",
+
+    "Status.Running": "运行中",
+    "Status.Suspended": "已暂停",
+    "Status.Stopped": "已停止",
+
+    "Empty.NoRunningPlugins": "没有运行中的插件",
+    "Empty.NoStartupItems": "没有启动项",
+
+    "Dialog.AddTitle": "添加启动项",
+    "Dialog.EditTitle": "编辑启动项",
+    "Dialog.PackageName": "包名",
+    "Dialog.Command": "命令",
+    "Dialog.Priority": "优先级（数值越小越先启动）",
+    "Dialog.PriorityHint": "优先级数值越小，启动时越先执行",
+
+    "Message.EndTaskConfirm": "确定要结束此任务吗？\n\n插件：{0}",
+    "Message.DeleteConfirm": "确定要删除此启动项吗？\n\n包名：{0}",
+    "Message.CannotEndSystemPlugin": "无法结束系统插件。系统插件是 Phobos 正常运行所必需的。",
+
+    "Tooltip.ToggleMenu": "切换菜单",
+    "Tooltip.Toggle": "切换"
+  }
+}

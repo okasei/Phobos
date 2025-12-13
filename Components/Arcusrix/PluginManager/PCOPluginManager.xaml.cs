@@ -848,13 +848,13 @@ namespace Phobos.Components.Arcusrix.PluginManager
 
         #region Language Tab
 
-        private void LoadLanguageSettings()
+        private async void LoadLanguageSettings()
         {
-            LoadSystemLanguage();
-            LoadPluginLanguages();
+            await LoadSystemLanguageAsync();
+            await LoadPluginLanguagesAsync();
         }
 
-        private void LoadSystemLanguage()
+        private async Task LoadSystemLanguageAsync()
         {
             SystemLanguageCombo.Items.Clear();
 
@@ -874,18 +874,18 @@ namespace Phobos.Components.Arcusrix.PluginManager
             }
         }
 
-        private void LoadPluginLanguages()
+        private async Task LoadPluginLanguagesAsync()
         {
             PluginLanguageList.Items.Clear();
 
             foreach (var plugin in _allPlugins)
             {
-                var card = CreatePluginLanguageCard(plugin);
+                var card = await CreatePluginLanguageCardAsync(plugin);
                 PluginLanguageList.Items.Add(card);
             }
         }
 
-        private Border CreatePluginLanguageCard(PluginMetadata plugin)
+        private async Task<Border> CreatePluginLanguageCardAsync(PluginMetadata plugin)
         {
             var lang = LocalizationManager.Instance.CurrentLanguage;
 
@@ -938,7 +938,7 @@ namespace Phobos.Components.Arcusrix.PluginManager
             };
             langCombo.Items.Add(followSystemItem);
 
-            var currentPluginLang = GetPluginLanguageSetting(plugin.PackageName);
+            var currentPluginLang = await GetPluginLanguageSettingAsync(plugin.PackageName);
 
             foreach (var langCode in SupportedLanguages.Languages)
             {
@@ -969,10 +969,23 @@ namespace Phobos.Components.Arcusrix.PluginManager
             return card;
         }
 
-        private string GetPluginLanguageSetting(string packageName)
+        private async Task<string> GetPluginLanguageSettingAsync(string packageName)
         {
             try
             {
+                // First try to read from database
+                if (_pm != null)
+                {
+                    var result = await _pm.ReadConfig($"PluginLang_{packageName}");
+                    if (result.Success && !string.IsNullOrEmpty(result.Value))
+                    {
+                        // Update in-memory setting to match database
+                        LocalizationManager.Instance.SetPluginLanguage(packageName, result.Value);
+                        return result.Value;
+                    }
+                }
+
+                // Fallback to in-memory setting
                 var context = LocalizationManager.Instance.GetPluginContext(packageName);
                 return context.LanguageSetting;
             }
@@ -987,14 +1000,27 @@ namespace Phobos.Components.Arcusrix.PluginManager
             // Handle in ApplyLanguageButton_Click
         }
 
-        private void PluginLanguageCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void PluginLanguageCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox combo && combo.Tag is string packageName && combo.SelectedItem is ComboBoxItem item)
             {
                 var selectedLang = item.Tag?.ToString() ?? "system";
                 try
                 {
+                    // Update in-memory setting
                     LocalizationManager.Instance.SetPluginLanguage(packageName, selectedLang);
+
+                    // Persist to database via PMPlugin WriteConfig
+                    // Use a special key format: PluginLang_{packageName}
+                    if (_pm != null)
+                    {
+                        var result = await _pm.WriteConfig($"PluginLang_{packageName}", selectedLang);
+                        if (!result.Success)
+                        {
+                            PCLoggerPlugin.Warning("PluginManager", $"Failed to save plugin language for {packageName}: {result.Message}");
+                        }
+                    }
+
                     SetStatus(PMLocalization.Get("language.saved"));
                 }
                 catch (Exception ex)
@@ -1013,17 +1039,21 @@ namespace Phobos.Components.Arcusrix.PluginManager
                     // Set the current language
                     LocalizationManager.Instance.CurrentLanguage = langCode;
 
-                    // Save to system config via PCPluginManager (which is a built-in plugin)
+                    // Save to system config (Phobos_Main table) via WriteSysConfig
                     if (_pm != null)
                     {
-                        await _pm.WriteConfig("system.language", langCode);
+                        var result = await _pm.WriteSysConfig("Language", langCode);
+                        if (!result.Success)
+                        {
+                            PCLoggerPlugin.Warning("PluginManager", $"Failed to save language to database: {result.Message}");
+                        }
                     }
 
                     // Refresh UI
                     PMLocalization.Initialize();
                     UpdateLocalizedText();
                     await RefreshPluginList();
-                    LoadPluginLanguages();
+                    await LoadPluginLanguagesAsync();
 
                     SetStatus(PMLocalization.Get("language.saved"));
 

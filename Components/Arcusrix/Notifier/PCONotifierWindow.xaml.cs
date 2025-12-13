@@ -129,6 +129,9 @@ namespace Phobos.Components.Arcusrix.Notifier
 
             _notification = notification;
 
+            // 设置关闭回调，供 HTML/UserControl 提供者调用
+            notification.CloseAction = CloseNotification;
+
             // 设置图标
             SetIcon(notification);
 

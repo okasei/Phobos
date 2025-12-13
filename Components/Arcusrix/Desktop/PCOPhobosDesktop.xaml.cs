@@ -19,6 +19,23 @@ using Phobos.Components.Arcusrix.Desktop.Components;
 namespace Phobos.Components.Arcusrix.Desktop
 {
     /// <summary>
+    /// 壁纸变化事件参数
+    /// </summary>
+    public class WallpaperChangedEventArgs : EventArgs
+    {
+        public string WallpaperPath { get; set; } = string.Empty;
+        public Stretch Stretch { get; set; } = Stretch.UniformToFill;
+    }
+
+    /// <summary>
+    /// 透明度变化事件参数
+    /// </summary>
+    public class OpacityChangedEventArgs : EventArgs
+    {
+        public double Opacity { get; set; } = 1.0;
+    }
+
+    /// <summary>
     /// 插件显示项（用于桌面图标）
     /// </summary>
     public class PluginDisplayItem : INotifyPropertyChanged
@@ -3152,6 +3169,58 @@ namespace Phobos.Components.Arcusrix.Desktop
 
         #endregion
 
+        #region 壁纸和透明度公共访问方法
+
+        /// <summary>
+        /// 获取壁纸路径
+        /// </summary>
+        public string? GetWallpaperPath() => string.IsNullOrEmpty(_backgroundImagePath) ? null : _backgroundImagePath;
+
+        /// <summary>
+        /// 获取壁纸伸展方式
+        /// </summary>
+        public Stretch GetWallpaperStretch() => _backgroundStretch;
+
+        /// <summary>
+        /// 获取壁纸透明度
+        /// </summary>
+        public double GetWallpaperOpacity() => _backgroundOpacity;
+
+        /// <summary>
+        /// 壁纸变化事件
+        /// </summary>
+        public event EventHandler<WallpaperChangedEventArgs>? WallpaperChanged;
+
+        /// <summary>
+        /// 透明度变化事件
+        /// </summary>
+        public event EventHandler<OpacityChangedEventArgs>? OpacityChanged;
+
+        /// <summary>
+        /// 触发壁纸变化事件
+        /// </summary>
+        private void OnWallpaperChanged()
+        {
+            WallpaperChanged?.Invoke(this, new WallpaperChangedEventArgs
+            {
+                WallpaperPath = _backgroundImagePath,
+                Stretch = _backgroundStretch
+            });
+        }
+
+        /// <summary>
+        /// 触发透明度变化事件
+        /// </summary>
+        private void OnOpacityChanged()
+        {
+            OpacityChanged?.Invoke(this, new OpacityChangedEventArgs
+            {
+                Opacity = _backgroundOpacity
+            });
+        }
+
+        #endregion
+
         #region 设置面板
 
         private string _backgroundImagePath = string.Empty;
@@ -3364,6 +3433,11 @@ namespace Phobos.Components.Arcusrix.Desktop
 
         private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
         {
+            // 记录旧值用于检测变化
+            var oldWallpaperPath = _backgroundImagePath;
+            var oldStretch = _backgroundStretch;
+            var oldOpacity = _backgroundOpacity;
+
             // 保存设置
             _backgroundImagePath = BackgroundPathTextBox.Text;
             _backgroundOpacity = BackgroundOpacitySlider.Value / 100.0;
@@ -3382,6 +3456,16 @@ namespace Phobos.Components.Arcusrix.Desktop
 
             // 保存到布局JSON
             SaveLayout();
+
+            // 触发事件通知订阅者
+            if (oldWallpaperPath != _backgroundImagePath || oldStretch != _backgroundStretch)
+            {
+                OnWallpaperChanged();
+            }
+            if (Math.Abs(oldOpacity - _backgroundOpacity) > 0.001)
+            {
+                OnOpacityChanged();
+            }
 
             // 关闭设置面板
             HideSettingsPanel();

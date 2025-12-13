@@ -1,0 +1,51 @@
+{
+  "name": "Task Manager",
+  "langCode": "en-US",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "Task Manager",
+
+    "Tab.RunningPlugins": "Running Plugins",
+    "Tab.StartupItems": "Startup Items",
+
+    "Button.Refresh": "Refresh",
+    "Button.EndTask": "End Task",
+    "Button.Add": "Add",
+    "Button.Edit": "Edit",
+    "Button.Delete": "Delete",
+    "Button.Cancel": "Cancel",
+    "Button.Save": "Save",
+    "Button.Enable": "Enable",
+    "Button.Disable": "Disable",
+
+    "Header.PluginName": "Plugin Name",
+    "Header.PackageName": "Package Name",
+    "Header.Status": "Status",
+    "Header.Memory": "Memory",
+    "Header.Enabled": "Enable",
+    "Header.Command": "Command",
+    "Header.Priority": "Priority",
+    "Header.Actions": "Actions",
+
+    "Status.Running": "Running",
+    "Status.Suspended": "Suspended",
+    "Status.Stopped": "Stopped",
+
+    "Empty.NoRunningPlugins": "No running plugins",
+    "Empty.NoStartupItems": "No startup items",
+
+    "Dialog.AddTitle": "Add Startup Item",
+    "Dialog.EditTitle": "Edit Startup Item",
+    "Dialog.PackageName": "Package Name",
+    "Dialog.Command": "Command",
+    "Dialog.Priority": "Priority (lower = earlier)",
+    "Dialog.PriorityHint": "Lower priority values are executed earlier during boot",
+
+    "Message.EndTaskConfirm": "Are you sure you want to end this task?\n\nPlugin: {0}",
+    "Message.DeleteConfirm": "Are you sure you want to delete this startup item?\n\nPackage: {0}",
+    "Message.CannotEndSystemPlugin": "Cannot end system plugins. System plugins are essential for Phobos to function properly.",
+
+    "Tooltip.ToggleMenu": "Toggle Menu",
+    "Tooltip.Toggle": "Toggle"
+  }
+}

@@ -7,6 +7,7 @@ using Phobos.Manager.Database;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 using Phobos.Utils.General;
+using Phobos.Utils.Version;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -369,7 +370,44 @@ namespace Phobos.Manager.Plugin
                         };
                     }
 
-                    if (!options.ForceReinstall)
+                    // 版本比较检查
+                    if (existing?.Count > 0)
+                    {
+                        var existingVersion = existing[0]["Version"]?.ToString() ?? "0.0.0";
+                        var compareResult = PUVersion.Compare(metadata.Version, existingVersion);
+
+                        // 如果版本不兼容（pre-release tag 不同），拒绝安装
+                        if (compareResult == VersionCompareResult.Incompatible)
+                        {
+                            tempContext.Unload();
+                            PCLoggerPlugin.Warning("PMPlugin", $"Version incompatible for plugin {metadata.PackageName}: {metadata.Version} vs {existingVersion}");
+                            return new RequestResult
+                            {
+                                Success = false,
+                                Message = PUVersion.GetComparisonDescription(metadata.Version, existingVersion, PCSysConfig.Instance.langCode)
+                            };
+                        }
+
+                        // 如果新版本低于现有版本，且不是强制重装，拒绝安装
+                        if (compareResult == VersionCompareResult.Less && !options.ForceReinstall)
+                        {
+                            tempContext.Unload();
+                            PCLoggerPlugin.Warning("PMPlugin", $"Cannot downgrade plugin {metadata.PackageName}: {metadata.Version} < {existingVersion}");
+                            return new RequestResult
+                            {
+                                Success = false,
+                                Message = PUVersion.GetComparisonDescription(metadata.Version, existingVersion, PCSysConfig.Instance.langCode)
+                            };
+                        }
+
+                        // 如果版本相同，且不是强制重装，拒绝安装
+                        if (compareResult == VersionCompareResult.Equal && !options.ForceReinstall)
+                        {
+                            tempContext.Unload();
+                            return new RequestResult { Success = false, Message = PMPluginMessages.Get("error.already_installed") };
+                        }
+                    }
+                    else if (!options.ForceReinstall)
                     {
                         tempContext.Unload();
                         return new RequestResult { Success = false, Message = PMPluginMessages.Get("error.already_installed") };
@@ -736,13 +774,45 @@ namespace Phobos.Manager.Plugin
 
                 var context = new PluginAssemblyLoadContext(mainDll);
                 var assembly = context.LoadFromAssemblyPath(mainDll);
-                var pluginType = assembly.GetTypes().FirstOrDefault(t => typeof(IPhobosPlugin).IsAssignableFrom(t) && !t.IsAbstract);
 
-                if (pluginType == null)
+                // 查找所有实现 IPhobosPlugin 的类型
+                var pluginTypes = assembly.GetTypes()
+                    .Where(t => typeof(IPhobosPlugin).IsAssignableFrom(t) && !t.IsAbstract)
+                    .ToList();
+
+                if (pluginTypes.Count == 0)
                 {
                     context.Unload();
                     PCLoggerPlugin.Error("PMPlugin", $"Load plugin '{packageName}' failed: No valid plugin type found in assembly");
                     return new RequestResult { Success = false, Message = "No valid plugin type found" };
+                }
+
+                // 查找匹配指定包名的插件类型
+                Type? pluginType = null;
+                foreach (var type in pluginTypes)
+                {
+                    try
+                    {
+                        // 临时创建实例来检查 PackageName
+                        var tempInstance = Activator.CreateInstance(type) as IPhobosPlugin;
+                        if (tempInstance?.Metadata.PackageName == packageName)
+                        {
+                            pluginType = type;
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略创建失败的类型
+                        continue;
+                    }
+                }
+
+                // 如果没有找到匹配的包名，回退到第一个插件类型（兼容旧逻辑）
+                if (pluginType == null)
+                {
+                    pluginType = pluginTypes.First();
+                    PCLoggerPlugin.Warning("PMPlugin", $"Load plugin '{packageName}': No exact package name match found, using first plugin type '{pluginType.Name}'");
                 }
 
                 var instance = Activator.CreateInstance(pluginType) as IPhobosPlugin;
