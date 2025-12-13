@@ -19,6 +19,32 @@ namespace Phobos.Interface.Plugin
     }
 
     /// <summary>
+    /// 插件文件类型
+    /// </summary>
+    public enum PluginFileType
+    {
+        /// <summary>
+        /// 普通插件 - 安装到 Plugins/{PackageName}/ 目录
+        /// </summary>
+        Plugin,
+
+        /// <summary>
+        /// 共享插件 - 安装到 Shared/ 目录，可被多个插件引用
+        /// </summary>
+        SharedPlugin,
+
+        /// <summary>
+        /// 主题插件 - 安装到 Themes/ 目录
+        /// </summary>
+        Theme,
+
+        /// <summary>
+        /// 扩展包 - 包含多个插件的集合
+        /// </summary>
+        ExtensionPack
+    }
+
+    /// <summary>
     /// 插件加载上下文
     /// </summary>
     public class PluginLoadContext

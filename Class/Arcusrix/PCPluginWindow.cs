@@ -140,7 +140,8 @@ namespace Phobos.Class.Arcusrix
             // 使用 SingleBorderWindow 而非 None，以保留原生窗口动画
             WindowStyle = WindowStyle.SingleBorderWindow;
             AllowsTransparency = false;
-            Background = new SolidColorBrush(Color.FromRgb(30, 30, 30));
+            // 背景将通过主题资源设置
+            SetResourceReference(BackgroundProperty, "Background1Brush");
 
             // 应用窗口大小设置
             ApplyWindowSize(metadata);
@@ -907,20 +908,20 @@ namespace Phobos.Class.Arcusrix
             // BackBorder - 边框
             BackBorder = new Border
             {
-                BorderBrush = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
+            BackBorder.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
 
             // BackLabel - 背景
             BackLabel = new Label
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                Background = new SolidColorBrush(Color.FromRgb(30, 30, 30))
+                VerticalAlignment = VerticalAlignment.Stretch
             };
+            BackLabel.SetResourceReference(Label.BackgroundProperty, "Background1Brush");
 
             // OpacityLabel - 遮罩
             OpacityLabel = new Label
@@ -1082,22 +1083,23 @@ namespace Phobos.Class.Arcusrix
             // 使用主题的 Foreground1Brush
             iconText.SetResourceReference(TextBlock.ForegroundProperty, "Foreground1Brush");
 
-            // 悬停颜色
-            var hoverColor = isCloseButton
-                ? Color.FromRgb(232, 17, 35)    // Windows 11 关闭按钮红色 (#E81123)
-                : Color.FromRgb(255, 255, 255); // 普通按钮悬停白色
-            var hoverOpacity = isCloseButton ? 1.0 : 0.1;
+            // 悬停颜色 - 关闭按钮使用红色，其他按钮使用主题前景色的半透明版本
+            var closeHoverColor = Color.FromRgb(232, 17, 35);    // Windows 11 关闭按钮红色 (#E81123)
+            var closePressedColor = Color.FromRgb(241, 112, 122); // 按下时较亮的红色
 
             button.MouseEnter += (s, e) =>
             {
                 if (isCloseButton)
                 {
-                    button.Background = new SolidColorBrush(hoverColor);
+                    button.Background = new SolidColorBrush(closeHoverColor);
                     iconText.Foreground = Brushes.White;
                 }
                 else
                 {
-                    button.Background = new SolidColorBrush(Color.FromArgb((byte)(hoverOpacity * 255), hoverColor.R, hoverColor.G, hoverColor.B));
+                    // 使用主题前景色的半透明版本
+                    var fgBrush = FindResource("Foreground1Brush") as SolidColorBrush;
+                    var fgColor = fgBrush?.Color ?? Colors.White;
+                    button.Background = new SolidColorBrush(Color.FromArgb(25, fgColor.R, fgColor.G, fgColor.B));
                 }
             };
 
@@ -1113,11 +1115,14 @@ namespace Phobos.Class.Arcusrix
             {
                 if (isCloseButton)
                 {
-                    button.Background = new SolidColorBrush(Color.FromRgb(241, 112, 122)); // 按下时较亮的红色
+                    button.Background = new SolidColorBrush(closePressedColor);
                 }
                 else
                 {
-                    button.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                    // 使用主题前景色的半透明版本（更不透明）
+                    var fgBrush = FindResource("Foreground1Brush") as SolidColorBrush;
+                    var fgColor = fgBrush?.Color ?? Colors.White;
+                    button.Background = new SolidColorBrush(Color.FromArgb(40, fgColor.R, fgColor.G, fgColor.B));
                 }
             };
 

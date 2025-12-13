@@ -1,0 +1,54 @@
+{
+  "name": "Administrador de tareas",
+  "langCode": "es-ES",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "Administrador de tareas",
+
+    "Tab.RunningPlugins": "Plugins en ejecución",
+    "Tab.StartupItems": "Elementos de inicio",
+    "Startup.Subtitle": "Administrar plugins que se ejecutan al iniciar Phobos",
+
+    "Running.Count": "{0} plugins en ejecución",
+
+    "Button.Refresh": "Actualizar",
+    "Button.EndTask": "Finalizar tarea",
+    "Button.Add": "Agregar",
+    "Button.Edit": "Editar",
+    "Button.Delete": "Eliminar",
+    "Button.Cancel": "Cancelar",
+    "Button.Save": "Guardar",
+    "Button.Enable": "Habilitar",
+    "Button.Disable": "Deshabilitar",
+
+    "Header.PluginName": "Nombre del plugin",
+    "Header.PackageName": "Nombre del paquete",
+    "Header.Status": "Estado",
+    "Header.Memory": "Memoria",
+    "Header.Enabled": "Habilitado",
+    "Header.Command": "Comando",
+    "Header.Priority": "Prioridad",
+    "Header.Actions": "Acciones",
+
+    "Status.Running": "En ejecución",
+    "Status.Suspended": "Suspendido",
+    "Status.Stopped": "Detenido",
+
+    "Empty.NoRunningPlugins": "No hay plugins en ejecución",
+    "Empty.NoStartupItems": "No hay elementos de inicio",
+
+    "Dialog.AddTitle": "Agregar elemento de inicio",
+    "Dialog.EditTitle": "Editar elemento de inicio",
+    "Dialog.PackageName": "Nombre del paquete",
+    "Dialog.Command": "Comando",
+    "Dialog.Priority": "Prioridad (menor = antes)",
+    "Dialog.PriorityHint": "Los valores de prioridad más bajos se ejecutan antes durante el arranque",
+
+    "Message.EndTaskConfirm": "¿Está seguro de que desea finalizar esta tarea?\n\nPlugin: {0}",
+    "Message.DeleteConfirm": "¿Está seguro de que desea eliminar este elemento de inicio?\n\nPaquete: {0}",
+    "Message.CannotEndSystemPlugin": "No se pueden finalizar los plugins del sistema. Los plugins del sistema son esenciales para que Phobos funcione correctamente.",
+
+    "Tooltip.ToggleMenu": "Alternar menú",
+    "Tooltip.Toggle": "Alternar"
+  }
+}

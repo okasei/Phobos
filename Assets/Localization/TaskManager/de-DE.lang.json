@@ -1,0 +1,54 @@
+{
+  "name": "Task-Manager",
+  "langCode": "de-DE",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "Task-Manager",
+
+    "Tab.RunningPlugins": "Laufende Plugins",
+    "Tab.StartupItems": "Startelemente",
+    "Startup.Subtitle": "Plugins verwalten, die beim Start von Phobos ausgeführt werden",
+
+    "Running.Count": "{0} Plugins werden ausgeführt",
+
+    "Button.Refresh": "Aktualisieren",
+    "Button.EndTask": "Task beenden",
+    "Button.Add": "Hinzufügen",
+    "Button.Edit": "Bearbeiten",
+    "Button.Delete": "Löschen",
+    "Button.Cancel": "Abbrechen",
+    "Button.Save": "Speichern",
+    "Button.Enable": "Aktivieren",
+    "Button.Disable": "Deaktivieren",
+
+    "Header.PluginName": "Plugin-Name",
+    "Header.PackageName": "Paketname",
+    "Header.Status": "Status",
+    "Header.Memory": "Speicher",
+    "Header.Enabled": "Aktiviert",
+    "Header.Command": "Befehl",
+    "Header.Priority": "Priorität",
+    "Header.Actions": "Aktionen",
+
+    "Status.Running": "Wird ausgeführt",
+    "Status.Suspended": "Angehalten",
+    "Status.Stopped": "Gestoppt",
+
+    "Empty.NoRunningPlugins": "Keine laufenden Plugins",
+    "Empty.NoStartupItems": "Keine Startelemente",
+
+    "Dialog.AddTitle": "Startelement hinzufügen",
+    "Dialog.EditTitle": "Startelement bearbeiten",
+    "Dialog.PackageName": "Paketname",
+    "Dialog.Command": "Befehl",
+    "Dialog.Priority": "Priorität (niedriger = früher)",
+    "Dialog.PriorityHint": "Niedrigere Prioritätswerte werden beim Start früher ausgeführt",
+
+    "Message.EndTaskConfirm": "Möchten Sie diese Aufgabe wirklich beenden?\n\nPlugin: {0}",
+    "Message.DeleteConfirm": "Möchten Sie dieses Startelement wirklich löschen?\n\nPaket: {0}",
+    "Message.CannotEndSystemPlugin": "System-Plugins können nicht beendet werden. System-Plugins sind für die ordnungsgemäße Funktion von Phobos unerlässlich.",
+
+    "Tooltip.ToggleMenu": "Menü umschalten",
+    "Tooltip.Toggle": "Umschalten"
+  }
+}

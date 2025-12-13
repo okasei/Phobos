@@ -1,0 +1,66 @@
+{
+  "name": "テーママネージャー",
+  "langCode": "ja-JP",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "テーママネージャー",
+    "tm.subtitle": "テーマの選択、プレビュー、カスタマイズ",
+
+    "button.refresh": "更新",
+    "button.import": "インポート",
+    "button.create": "新規作成",
+    "button.apply": "適用",
+    "button.preview": "プレビュー",
+    "button.export": "エクスポート",
+    "button.save": "変更を保存",
+
+    "list.search": "テーマを検索...",
+    "list.current": "現在",
+    "list.select": "テーマを選択",
+
+    "preview.title": "プレビュー",
+    "preview.buttons": "ボタン",
+    "preview.input": "入力",
+    "preview.selection": "選択",
+    "preview.toggle": "トグルスイッチ",
+    "preview.progress": "進捗",
+    "preview.list": "リスト",
+
+    "editor.title": "カラーエディター",
+    "editor.primary": "プライマリカラー",
+    "editor.background": "背景色",
+    "editor.foreground": "前景色",
+    "editor.status": "ステータスカラー",
+    "editor.border": "ボーダーカラー",
+    "editor.readonly": "これは組み込みテーマです。\n色は編集できません。",
+
+    "status.ready": "準備完了",
+    "status.loading": "テーマを読み込み中...",
+    "status.found": "{0} 個のテーマが見つかりました",
+    "status.selected": "選択中：{0}",
+    "status.applied": "テーマを適用しました：{0}",
+    "status.exported": "エクスポート先：{0}",
+    "status.saved": "テーマを保存しました：{0}",
+    "status.created": "作成しました：{0}",
+    "status.imported": "インポートしました：{0}",
+    "status.importing": "テーマをインポート中...",
+    "status.apply_restart": "次回起動時に適用されます...",
+    "status.no_changes": "保存する変更はありません",
+    "status.import_cancelled": "インポートがキャンセルされました",
+    "status.import_failed": "インポートに失敗しました",
+    "status.apply_failed": "テーマの適用に失敗しました",
+
+    "dialog.select_theme": "先にテーマを選択してください",
+    "dialog.export_only_file": "ファイルベースのテーマのみエクスポートできます",
+    "dialog.no_editable": "編集可能なテーマが選択されていません",
+    "dialog.file_exists": "ファイルが存在します。上書きしますか？",
+    "dialog.load_failed": "テーマファイルを読み込めませんでした。",
+    "dialog.duplicate": "ID '{0}' のテーマは既に存在します。上書きしますか？",
+    "dialog.export_failed": "テーマのエクスポートに失敗しました",
+    "dialog.import_failed": "テーマのインポートに失敗しました",
+    "dialog.save_failed": "テーマの保存に失敗しました",
+
+    "menu.expand": "メニューを展開",
+    "menu.collapse": "メニューを折りたたむ"
+  }
+}

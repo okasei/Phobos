@@ -53,8 +53,8 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Vertical" Grid.Column="0">
-                <TextBlock Text="Theme Manager" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource Foreground1Brush}"/>
-                <TextBlock Text="Select, preview and customize your themes" FontSize="13" Foreground="{DynamicResource Foreground3Brush}" Margin="0,4,0,0"/>
+                <TextBlock x:Name="TitleText" Text="Theme Manager" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource Foreground1Brush}"/>
+                <TextBlock x:Name="SubtitleText" Text="Select, preview and customize your themes" FontSize="13" Foreground="{DynamicResource Foreground3Brush}" Margin="0,4,0,0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center">
                 <Button x:Name="RefreshButton" Content="Refresh" Style="{DynamicResource PhobosButtonSecondary}" Click="RefreshButton_Click"/>
@@ -78,7 +78,7 @@
                          TextChanged="FilterBox_TextChanged"/>
 
                 <!-- Theme list -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{DynamicResource {x:Type ScrollViewer}}">
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{DynamicResource PhobosScrollViewer}">
                     <ItemsControl x:Name="ThemeList">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -109,7 +109,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="ThemeTitle" Text="Select a theme" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Foreground1Brush}"/>
                             <Border x:Name="CurrentBadge" Visibility="Collapsed" Style="{StaticResource CurrentBadgeStyle}">
-                                <TextBlock Text="Current" FontSize="11" Foreground="{DynamicResource Background1Brush}"/>
+                                <TextBlock x:Name="CurrentBadgeText" Text="Current" FontSize="11" Foreground="{DynamicResource Background1Brush}"/>
                             </Border>
                         </StackPanel>
                         <TextBlock x:Name="ThemeInfo" Text="" FontSize="12" Foreground="{DynamicResource Foreground3Brush}" Margin="0,4,0,0"/>
@@ -192,7 +192,7 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Text="Color Editor" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Foreground1Brush}" Margin="0,0,0,12"/>
+                            <TextBlock x:Name="ColorEditorTitle" Grid.Row="0" Text="Color Editor" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Foreground1Brush}" Margin="0,0,0,12"/>
 
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                 <StackPanel x:Name="ColorEditorPanel"/>

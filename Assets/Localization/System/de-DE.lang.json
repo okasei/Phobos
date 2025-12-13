@@ -1,0 +1,31 @@
+{
+  "name": "Phobos System",
+  "langCode": "de-DE",
+  "version": "1.0.0",
+  "items": {
+    "app.name": "Phobos",
+    "app.error.database": "Datenbankverbindung fehlgeschlagen",
+    "app.error.plugin": "Plugin-Laden fehlgeschlagen",
+
+    "error.title": "Fehler - Phobos",
+    "error.fatal.title": "Schwerwiegender Fehler",
+    "error.startup.failed": "Phobos konnte nicht gestartet werden",
+    "error.paths.failed": "Initialisierung der Anwendungspfade fehlgeschlagen",
+    "error.database.failed": "Datenbankverbindung fehlgeschlagen",
+    "error.database.init.failed": "Datenbank-Initialisierung fehlgeschlagen",
+    "error.theme.failed": "Theme-Laden fehlgeschlagen",
+    "error.plugin.manager.failed": "Plugin-Manager-Initialisierung fehlgeschlagen",
+    "error.plugin.register.failed": "Registrierung der integrierten Plugins fehlgeschlagen",
+    "error.plugin.launch.failed": "Start des Standard-Plugins fehlgeschlagen",
+    "error.boot.failed": "Ausführung der Startelemente fehlgeschlagen",
+    "error.details": "Fehlerdetails:",
+
+    "button.ok": "OK",
+    "button.cancel": "Abbrechen",
+    "button.yes": "Ja",
+    "button.no": "Nein",
+    "button.exit": "Beenden",
+    "button.retry": "Wiederholen",
+    "button.close": "Schließen"
+  }
+}

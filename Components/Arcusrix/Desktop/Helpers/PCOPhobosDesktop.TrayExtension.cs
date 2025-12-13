@@ -155,19 +155,66 @@ namespace Phobos.Components.Arcusrix.Desktop
             // 创建右键菜单
             var contextMenu = new ContextMenu();
 
+            // 尝试应用 Phobos 样式
+            try
+            {
+                if (Application.Current.TryFindResource("PhobosContextMenu") is Style contextMenuStyle)
+                {
+                    contextMenu.Style = contextMenuStyle;
+                }
+            }
+            catch { }
+
+            // 尝试获取 MenuItem 样式
+            Style? menuItemStyle = null;
+            try
+            {
+                if (Application.Current.TryFindResource("PhobosMenuItem") is Style style)
+                {
+                    menuItemStyle = style;
+                }
+            }
+            catch { }
+
             var showMenuItem = new MenuItem
             {
                 Header = DesktopLocalization.Get(DesktopDicrtionary.Tray_Show),
                 FontWeight = FontWeights.Bold
             };
+            if (menuItemStyle != null) showMenuItem.Style = menuItemStyle;
             showMenuItem.Click += (s, e) => ShowFromTray();
 
             var separatorItem = new Separator();
+            // 尝试应用分隔符样式
+            try
+            {
+                if (Application.Current.TryFindResource("PhobosMenuSeparator") is Style sepStyle)
+                {
+                    separatorItem.Style = sepStyle;
+                }
+            }
+            catch { }
 
             var exitMenuItem = new MenuItem
             {
                 Header = DesktopLocalization.Get(DesktopDicrtionary.Tray_Exit)
             };
+            // 使用危险样式
+            try
+            {
+                if (Application.Current.TryFindResource("PhobosMenuItemDanger") is Style dangerStyle)
+                {
+                    exitMenuItem.Style = dangerStyle;
+                }
+                else if (menuItemStyle != null)
+                {
+                    exitMenuItem.Style = menuItemStyle;
+                }
+            }
+            catch
+            {
+                if (menuItemStyle != null) exitMenuItem.Style = menuItemStyle;
+            }
             exitMenuItem.Click += (s, e) => ExitFromTray();
 
             contextMenu.Items.Add(showMenuItem);

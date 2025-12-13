@@ -7,6 +7,9 @@
 
     "Tab.RunningPlugins": "Running Plugins",
     "Tab.StartupItems": "Startup Items",
+    "Startup.Subtitle": "Manage plugins that run on Phobos startup",
+
+    "Running.Count": "{0} plugins running",
 
     "Button.Refresh": "Refresh",
     "Button.EndTask": "End Task",

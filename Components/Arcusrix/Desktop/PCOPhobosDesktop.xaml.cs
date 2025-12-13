@@ -128,42 +128,61 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// </summary>
         public PCOPhobosDesktop()
         {
-            InitializeComponent();
-            EnableTrayIcon = true;
-            EnableAutoHide = true;
-            EnableTaskbarAwareAnimation = true;
-
-            // 设置布局文件路径
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var layoutDir = Path.Combine(appDataPath, "Phobos", "Plugins", "com.phobos.desktop", "Layout");
-            Utils.IO.PUFileSystem.Instance.CreateFullFolders(layoutDir);
-            _layoutPath = Path.Combine(layoutDir, "desktop_layout.json");
-
-            System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Layout path: {_layoutPath}");
-
-            StateChanged += (s, e) =>
+            try
             {
-                // 全屏/还原时保存状态
-                if (_isLayoutLoaded)
+                InitializeComponent();
+                EnableTrayIcon = true;
+                EnableAutoHide = true;
+                EnableTaskbarAwareAnimation = true;
+
+                // 设置布局文件路径
+                var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var layoutDir = Path.Combine(appDataPath, "Phobos", "Plugins", "com.phobos.desktop", "Layout");
+                Utils.IO.PUFileSystem.Instance.CreateFullFolders(layoutDir);
+                _layoutPath = Path.Combine(layoutDir, "desktop_layout.json");
+
+                System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Layout path: {_layoutPath}");
+
+                StateChanged += (s, e) =>
                 {
-                    SaveLayout();
-                }
-                // 全屏/还原时播放动画
-                AnimateWindowStateChange();
-            };
+                    try
+                    {
+                        // 全屏/还原时保存状态
+                        if (_isLayoutLoaded)
+                        {
+                            SaveLayout();
+                        }
+                        // 全屏/还原时播放动画
+                        AnimateWindowStateChange();
+                        // 延迟更新网格布局，等待布局完成
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            UpdateGridLayout();
+                        }), System.Windows.Threading.DispatcherPriority.Loaded);
+                    }
+                    catch (Exception stateEx)
+                    {
+                        PCLoggerPlugin.Error("PCOPhobosDesktop", $"Error in StateChanged handler: {stateEx.Message}");
+                    }
+                };
 
-            Loaded += PCOPhobosDesktop_Loaded;
-            SizeChanged += (s, e) => UpdateGridLayout();
-            Closing += PCOPhobosDesktop_Closing;
+                Loaded += PCOPhobosDesktop_Loaded;
+                Closing += PCOPhobosDesktop_Closing;
 
-            // 搜索框焦点事件
-            SearchBox.GotFocus += SearchBox_GotFocus;
-            SearchBox.LostFocus += SearchBox_LostFocus;
+                // 搜索框焦点事件
+                SearchBox.GotFocus += SearchBox_GotFocus;
+                SearchBox.LostFocus += SearchBox_LostFocus;
 
-            // 初始设置窗口为透明，准备入场动画
-            MainBorder.Opacity = 0;
-            MainBorder.RenderTransform = new ScaleTransform(0.95, 0.95);
-            MainBorder.RenderTransformOrigin = new Point(0.5, 0.5);
+                // 初始设置窗口为透明，准备入场动画
+                MainBorder.Opacity = 0;
+                MainBorder.RenderTransform = new ScaleTransform(0.95, 0.95);
+                MainBorder.RenderTransformOrigin = new Point(0.5, 0.5);
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PCOPhobosDesktop", $"Error in constructor: {ex.Message}\n{ex.StackTrace}");
+                throw; // 重新抛出以让调用者知道初始化失败
+            }
         }
 
         /// <summary>
@@ -195,31 +214,92 @@ namespace Phobos.Components.Arcusrix.Desktop
 
         private async void PCOPhobosDesktop_Loaded(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("[PCOPhobosDesktop] Window loaded, starting initialization...");
-
-            // 播放窗口入场动画
-            PlayWindowOpenAnimation();
-
-            // 尝试从 PMPlugin 获取数据库实例
-            if (_database == null)
+            try
             {
-                var field = typeof(PMPlugin).GetField("_database",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                _database = field?.GetValue(PMPlugin.Instance) as PCSqliteDatabase;
-                System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Database instance: {(_database != null ? "OK" : "NULL")}");
+                System.Diagnostics.Debug.WriteLine("[PCOPhobosDesktop] Window loaded, starting initialization...");
+
+                // 应用本地化文本
+                ApplyLocalization();
+
+                // 播放窗口入场动画
+                PlayWindowOpenAnimation();
+
+                // 尝试从 PMPlugin 获取数据库实例
+                if (_database == null)
+                {
+                    try
+                    {
+                        var field = typeof(PMPlugin).GetField("_database",
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        _database = field?.GetValue(PMPlugin.Instance) as PCSqliteDatabase;
+                        System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Database instance: {(_database != null ? "OK" : "NULL")}");
+                    }
+                    catch (Exception dbEx)
+                    {
+                        PCLoggerPlugin.Error("PCOPhobosDesktop", $"Failed to get database instance: {dbEx.Message}");
+                    }
+                }
+
+                await LoadPlugins();
+                System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Loaded {_allPlugins.Count} plugins");
+
+                await LoadLayout();
+                System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Layout loaded: {_layout.Items.Count} items");
+
+                RenderDesktop(playAnimation: true); // 窗口初次加载时播放动画
+
+                // 注册DesktopScrollViewer的SizeChanged事件来动态更新布局
+                DesktopScrollViewer.SizeChanged += (s, args) =>
+                {
+                    try
+                    {
+                        UpdateGridLayout();
+                    }
+                    catch (Exception sizeEx)
+                    {
+                        PCLoggerPlugin.Error("PCOPhobosDesktop", $"Error in ScrollViewer SizeChanged handler: {sizeEx.Message}");
+                    }
+                };
+
+                // 注册所有快捷键
+                try
+                {
+                    RegisterAllHotkeys();
+                }
+                catch (Exception hotkeyEx)
+                {
+                    PCLoggerPlugin.Error("PCOPhobosDesktop", $"Failed to register hotkeys: {hotkeyEx.Message}");
+                }
             }
-
-            await LoadPlugins();
-            System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Loaded {_allPlugins.Count} plugins");
-
-            await LoadLayout();
-            System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Layout loaded: {_layout.Items.Count} items");
-
-            RenderDesktop(playAnimation: true); // 窗口初次加载时播放动画
-
-            // 注册所有快捷键
-            RegisterAllHotkeys();
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PCOPhobosDesktop", $"Critical error during window initialization: {ex.Message}\n{ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Critical error: {ex.Message}");
+            }
         }
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 创建文字阴影效果，用于桌面图标文字
+        /// </summary>
+        private System.Windows.Media.Effects.DropShadowEffect CreateTextShadowEffect()
+        {
+            // 获取 Background1Brush 的颜色用于阴影
+            var bgBrush = FindResource("Background1Brush") as SolidColorBrush;
+            var shadowColor = bgBrush?.Color ?? Colors.Black;
+
+            return new System.Windows.Media.Effects.DropShadowEffect
+            {
+                Color = shadowColor,
+                BlurRadius = 4,
+                ShadowDepth = 0,
+                Opacity = 0.9,
+                Direction = 0
+            };
+        }
+
+        #endregion
 
         #region 窗口动画
 
@@ -280,6 +360,19 @@ namespace Phobos.Components.Arcusrix.Desktop
             {
                 AnimateIconsFlyIn(iconControls);
             }
+        }
+
+        #endregion
+
+        #region 本地化
+
+        /// <summary>
+        /// 应用本地化文本到控件
+        /// </summary>
+        private void ApplyLocalization()
+        {
+            // 搜索框占位符
+            SearchPlaceholder.Text = DesktopLocalization.Get(DesktopLocalization.Desktop_Search_Placeholder);
         }
 
         #endregion
@@ -668,9 +761,99 @@ namespace Phobos.Components.Arcusrix.Desktop
 
             if (_layout.Columns != columns)
             {
+                int oldColumns = _layout.Columns;
                 _layout.Columns = columns;
-                RenderDesktop();
+
+                // 列数变化时重新排列图标
+                if (columns < oldColumns)
+                {
+                    // 列数减少：重新排列超出范围的图标
+                    ReflowIconsForNewColumns(columns);
+                }
+                else
+                {
+                    // 列数增加：重新紧凑排列所有图标以利用新空间
+                    ReflowIconsCompact(columns);
+                }
+
+                RenderDesktop(playAnimation: true);
                 SaveLayout();
+            }
+        }
+
+        /// <summary>
+        /// 当列数减少时，重新排列超出范围的图标
+        /// </summary>
+        private void ReflowIconsForNewColumns(int newColumns)
+        {
+            // 收集所有需要重新放置的图标（GridX >= newColumns）
+            var itemsToReflow = _layout.Items.Where(item => item.GridX >= newColumns).ToList();
+
+            if (itemsToReflow.Count == 0)
+                return;
+
+            // 构建已占用位置的集合
+            var occupiedPositions = new HashSet<(int x, int y)>();
+            foreach (var item in _layout.Items)
+            {
+                if (item.GridX < newColumns)
+                {
+                    occupiedPositions.Add((item.GridX, item.GridY));
+                }
+            }
+
+            // 为每个需要重新放置的图标找到新位置
+            foreach (var item in itemsToReflow)
+            {
+                var newPos = FindNextAvailablePosition(occupiedPositions, newColumns);
+                item.GridX = newPos.x;
+                item.GridY = newPos.y;
+                occupiedPositions.Add(newPos);
+            }
+        }
+
+        /// <summary>
+        /// 当列数增加时，重新紧凑排列所有图标以利用新空间
+        /// </summary>
+        private void ReflowIconsCompact(int newColumns)
+        {
+            // 按照当前位置排序所有图标（先按行，再按列）
+            var sortedItems = _layout.Items.OrderBy(item => item.GridY).ThenBy(item => item.GridX).ToList();
+
+            // 重新分配位置，紧凑排列
+            int currentRow = 0;
+            int currentCol = 0;
+
+            foreach (var item in sortedItems)
+            {
+                item.GridX = currentCol;
+                item.GridY = currentRow;
+
+                currentCol++;
+                if (currentCol >= newColumns)
+                {
+                    currentCol = 0;
+                    currentRow++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 查找下一个可用的网格位置
+        /// </summary>
+        private (int x, int y) FindNextAvailablePosition(HashSet<(int x, int y)> occupiedPositions, int columns)
+        {
+            int row = 0;
+            while (true)
+            {
+                for (int col = 0; col < columns; col++)
+                {
+                    if (!occupiedPositions.Contains((col, row)))
+                    {
+                        return (col, row);
+                    }
+                }
+                row++;
             }
         }
 
@@ -861,7 +1044,8 @@ namespace Phobos.Components.Arcusrix.Desktop
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 Margin = new Thickness(0, 4, 0, 0),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top
+                VerticalAlignment = VerticalAlignment.Top,
+                Effect = CreateTextShadowEffect()
             };
 
             Grid.SetRow(nameText, 1);
@@ -1064,7 +1248,8 @@ namespace Phobos.Components.Arcusrix.Desktop
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 Margin = new Thickness(0, 4, 0, 0),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top
+                VerticalAlignment = VerticalAlignment.Top,
+                Effect = CreateTextShadowEffect()
             };
 
             Grid.SetRow(nameText, 1);
@@ -1330,7 +1515,8 @@ namespace Phobos.Components.Arcusrix.Desktop
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 Margin = new Thickness(0, 4, 0, 0),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top
+                VerticalAlignment = VerticalAlignment.Top,
+                Effect = CreateTextShadowEffect()
             };
 
             Grid.SetRow(nameText, 1);
@@ -1624,25 +1810,33 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             Dispatcher.Invoke(() =>
             {
-                switch (item)
+                try
                 {
-                    case PluginDesktopItem pluginItem:
-                        if (_allPlugins.TryGetValue(pluginItem.PackageName, out var plugin))
-                        {
-                            LaunchPlugin(plugin);
-                        }
-                        break;
+                    switch (item)
+                    {
+                        case PluginDesktopItem pluginItem:
+                            if (_allPlugins.TryGetValue(pluginItem.PackageName, out var plugin))
+                            {
+                                LaunchPlugin(plugin);
+                            }
+                            break;
 
-                    case ShortcutDesktopItem shortcut:
-                        RunShortcut(shortcut);
-                        break;
+                        case ShortcutDesktopItem shortcut:
+                            RunShortcut(shortcut);
+                            break;
 
-                    case FolderDesktopItem folder:
-                        // 显示桌面并打开文件夹
-                        ShowFromTray();
-                        OpenFolder(folder);
-                        break;
+                        case FolderDesktopItem folder:
+                            // 显示桌面并打开文件夹
+                            ShowFromTray();
+                            OpenFolder(folder);
+                            break;
+                    }
                 }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("Desktop", ex.Message);
+                }
+
             });
         }
 
@@ -2171,6 +2365,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                     Width = 80,
                     Height = 80, // 只包含图标高度
                     Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
                     IsHitTestVisible = false
                 };
 
@@ -2188,7 +2383,8 @@ namespace Phobos.Components.Arcusrix.Desktop
                     Background = isFolder
                         ? (SolidColorBrush)FindResource("PrimaryBrush")
                         : (SolidColorBrush)FindResource("Background3Brush"),
-                    CornerRadius = new CornerRadius(12)
+                    CornerRadius = new CornerRadius(12),
+                    BorderThickness = new Thickness(0)
                 };
 
                 // 居中图标
@@ -3566,24 +3762,36 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// </summary>
         public async Task LaunchDesktopItem(DesktopItem item, params object[] args)
         {
-            switch (item)
+            try
             {
-                case PluginDesktopItem pluginItem:
-                    if (_allPlugins.TryGetValue(pluginItem.PackageName, out var plugin))
-                    {
-                        await PMPlugin.Instance.Launch(pluginItem.PackageName, args);
-                    }
-                    break;
+                switch (item)
+                {
+                    case PluginDesktopItem pluginItem:
+                        if (_allPlugins.TryGetValue(pluginItem.PackageName, out var plugin))
+                        {
+                            await PMPlugin.Instance.Launch(pluginItem.PackageName, args);
+                        }
+                        break;
 
-                case ShortcutDesktopItem shortcut:
-                    var shortcutArgs = shortcut.ParseArguments();
-                    var allArgs = shortcutArgs.Concat(args.Select(a => a?.ToString() ?? string.Empty)).ToArray();
-                    await PMPlugin.Instance.Launch(shortcut.TargetPackageName, allArgs);
-                    break;
+                    case ShortcutDesktopItem shortcut:
+                        var shortcutArgs = shortcut.ParseArguments();
+                        var allArgs = shortcutArgs.Concat(args.Select(a => a?.ToString() ?? string.Empty)).ToArray();
+                        await PMPlugin.Instance.Launch(shortcut.TargetPackageName, allArgs);
+                        break;
 
-                case FolderDesktopItem folder:
-                    OpenFolder(folder);
-                    break;
+                    case FolderDesktopItem folder:
+                        OpenFolder(folder);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Service.Arcusrix.PSDialogService.Warning(
+                    $"Failed to launch plugin: {ex.Message}",
+                    DesktopLocalization.Get(DesktopLocalization.Dialog_LaunchError),
+                    true,
+                    this);
+
             }
         }
 

@@ -1,0 +1,31 @@
+{
+  "name": "Phobos System",
+  "langCode": "es-ES",
+  "version": "1.0.0",
+  "items": {
+    "app.name": "Phobos",
+    "app.error.database": "Error de conexión a la base de datos",
+    "app.error.plugin": "Error al cargar el plugin",
+
+    "error.title": "Error - Phobos",
+    "error.fatal.title": "Error fatal",
+    "error.startup.failed": "No se pudo iniciar Phobos",
+    "error.paths.failed": "No se pudieron inicializar las rutas de la aplicación",
+    "error.database.failed": "No se pudo conectar a la base de datos",
+    "error.database.init.failed": "No se pudo inicializar la base de datos",
+    "error.theme.failed": "No se pudo cargar el tema",
+    "error.plugin.manager.failed": "No se pudo inicializar el gestor de plugins",
+    "error.plugin.register.failed": "No se pudieron registrar los plugins integrados",
+    "error.plugin.launch.failed": "No se pudo iniciar el plugin predeterminado",
+    "error.boot.failed": "No se pudieron ejecutar los elementos de arranque",
+    "error.details": "Detalles del error:",
+
+    "button.ok": "Aceptar",
+    "button.cancel": "Cancelar",
+    "button.yes": "Sí",
+    "button.no": "No",
+    "button.exit": "Salir",
+    "button.retry": "Reintentar",
+    "button.close": "Cerrar"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "Менеджер тем",
+  "langCode": "ru-RU",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "Менеджер тем",
+    "tm.subtitle": "Выбор, предпросмотр и настройка тем",
+
+    "button.refresh": "Обновить",
+    "button.import": "Импорт",
+    "button.create": "Создать",
+    "button.apply": "Применить",
+    "button.preview": "Предпросмотр",
+    "button.export": "Экспорт",
+    "button.save": "Сохранить изменения",
+
+    "list.search": "Поиск тем...",
+    "list.current": "Текущая",
+    "list.select": "Выберите тему",
+
+    "preview.title": "Предпросмотр",
+    "preview.buttons": "Кнопки",
+    "preview.input": "Ввод",
+    "preview.selection": "Выбор",
+    "preview.toggle": "Переключатель",
+    "preview.progress": "Прогресс",
+    "preview.list": "Список",
+
+    "editor.title": "Редактор цветов",
+    "editor.primary": "Основные цвета",
+    "editor.background": "Цвета фона",
+    "editor.foreground": "Цвета переднего плана",
+    "editor.status": "Цвета статуса",
+    "editor.border": "Цвета границ",
+    "editor.readonly": "Это встроенная тема.\nЦвета нельзя редактировать.",
+
+    "status.ready": "Готово",
+    "status.loading": "Загрузка тем...",
+    "status.found": "Найдено тем: {0}",
+    "status.selected": "Выбрано: {0}",
+    "status.applied": "Тема применена: {0}",
+    "status.exported": "Экспортировано в: {0}",
+    "status.saved": "Тема сохранена: {0}",
+    "status.created": "Создано: {0}",
+    "status.imported": "Импортировано: {0}",
+    "status.importing": "Импорт темы...",
+    "status.apply_restart": "Будет применено при следующем запуске...",
+    "status.no_changes": "Нет изменений для сохранения",
+    "status.import_cancelled": "Импорт отменен",
+    "status.import_failed": "Ошибка импорта",
+    "status.apply_failed": "Не удалось применить тему",
+
+    "dialog.select_theme": "Сначала выберите тему",
+    "dialog.export_only_file": "Можно экспортировать только файловые темы",
+    "dialog.no_editable": "Редактируемая тема не выбрана",
+    "dialog.file_exists": "Файл существует. Перезаписать?",
+    "dialog.load_failed": "Не удалось загрузить файл темы.",
+    "dialog.duplicate": "Тема с ID '{0}' уже существует. Перезаписать?",
+    "dialog.export_failed": "Не удалось экспортировать тему",
+    "dialog.import_failed": "Не удалось импортировать тему",
+    "dialog.save_failed": "Не удалось сохранить тему",
+
+    "menu.expand": "Развернуть меню",
+    "menu.collapse": "Свернуть меню"
+  }
+}

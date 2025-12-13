@@ -83,7 +83,7 @@ namespace Phobos.Manager.Arcusrix
         /// <param name="themesDirectory">主题目录路径</param>
         public async Task Initialize(string? themesDirectory = null)
         {
-            // 设置主题目录
+            // 设置主题目录（Assets/Themes）
             if (string.IsNullOrEmpty(themesDirectory))
             {
                 _themesDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Themes");
@@ -93,67 +93,55 @@ namespace Phobos.Manager.Arcusrix
                 _themesDirectory = themesDirectory;
             }
 
-            await LoadExternalThemes(_themesDirectory);
-
-            // 加载内置主题
-            await RegisterDefaultThemes();
-
-            // 加载外部主题
-            await LoadExternalThemes();
-        }
-
-        /// <summary>
-        /// 注册默认主题（从 Assets/Themes 加载 JSON）
-        /// </summary>
-        private async Task RegisterDefaultThemes()
-        {
-            var darkThemePath = Path.Combine(_themesDirectory, "dark.phobos-theme.json");
-            var lightThemePath = Path.Combine(_themesDirectory, "light.phobos-theme.json");
-
-            // 尝试加载 JSON 主题文件
-            if (File.Exists(darkThemePath))
-            {
-                var theme = await LoadThemeFromFileInternal(darkThemePath);
-                if (theme != null)
-                {
-                    _themes[theme.ThemeId] = theme;
-                }
-            }
-
-            if (File.Exists(lightThemePath))
-            {
-                var theme = await LoadThemeFromFileInternal(lightThemePath);
-                if (theme != null)
-                {
-                    _themes[theme.ThemeId] = theme;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 加载外部主题（用户自定义主题）
-        /// </summary>
-        private async Task LoadExternalThemes(string? DirectoryPath = null)
-        {
-            // 用户主题目录
-            var userThemesDir = DirectoryPath ?? Path.Combine(
+            // 用户主题目录（%AppData%\Phobos\Themes）
+            var userThemesDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Phobos", "Themes");
-            if (!Directory.Exists(userThemesDir))
+
+            // 加载顺序：
+            // 1. 代码定义的主题（已在构造函数中注册，作为回退）
+            // 2. Assets/Themes 目录（程序内置，优先级最高）
+            // 3. AppData/Phobos/Themes 目录（用户自定义，优先级较低）
+            // 相同 ID 的主题，先注册的优先
+
+            // 加载 Assets/Themes 目录的主题
+            await LoadThemesFromDirectory(_themesDirectory, overwrite: true);
+
+            // 加载用户主题目录（不覆盖已存在的）
+            await LoadThemesFromDirectory(userThemesDir, overwrite: false);
+        }
+
+        /// <summary>
+        /// 从指定目录加载主题
+        /// </summary>
+        /// <param name="directory">目录路径</param>
+        /// <param name="overwrite">是否覆盖已存在的主题</param>
+        private async Task LoadThemesFromDirectory(string directory, bool overwrite = false)
+        {
+            if (!Directory.Exists(directory))
             {
-                Utils.IO.PUFileSystem.Instance.CreateFullFolders(userThemesDir);
+                Utils.IO.PUFileSystem.Instance.CreateFullFolders(directory);
                 return;
             }
 
             // 扫描 *.phobos-theme.json 文件
-            var themeFiles = Directory.GetFiles(userThemesDir, "*.phobos-theme.json");
+            var themeFiles = Directory.GetFiles(directory, "*.phobos-theme.json");
             foreach (var file in themeFiles)
             {
                 try
                 {
                     var theme = await LoadThemeFromFileInternal(file);
-                    if (theme != null && !_themes.ContainsKey(theme.ThemeId))
+                    if (theme != null)
                     {
-                        _themes[theme.ThemeId] = theme;
+                        // 根据 overwrite 参数决定是否覆盖
+                        if (overwrite || !_themes.ContainsKey(theme.ThemeId))
+                        {
+                            _themes[theme.ThemeId] = theme;
+                            PCLoggerPlugin.Debug("Phobos.Theme.Loader", $"Loaded theme: {theme.ThemeId} from {file}");
+                        }
+                        else
+                        {
+                            PCLoggerPlugin.Debug("Phobos.Theme.Loader", $"Skipped duplicate theme: {theme.ThemeId} from {file}");
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -161,6 +149,28 @@ namespace Phobos.Manager.Arcusrix
                     PCLoggerPlugin.Error("Phobos.Theme.Loader", $"Failed to load theme from {file}: {ex.Message}");
                 }
             }
+        }
+
+        /// <summary>
+        /// 注册默认主题（从 Assets/Themes 加载 JSON）
+        /// 已被 LoadThemesFromDirectory 替代，保留此方法以兼容
+        /// </summary>
+        [Obsolete("Use LoadThemesFromDirectory instead")]
+        private async Task RegisterDefaultThemes()
+        {
+            await LoadThemesFromDirectory(_themesDirectory, overwrite: true);
+        }
+
+        /// <summary>
+        /// 加载外部主题（用户自定义主题）
+        /// 已被 LoadThemesFromDirectory 替代，保留此方法以兼容
+        /// </summary>
+        [Obsolete("Use LoadThemesFromDirectory instead")]
+        private async Task LoadExternalThemes(string? DirectoryPath = null)
+        {
+            var userThemesDir = DirectoryPath ?? Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Phobos", "Themes");
+            await LoadThemesFromDirectory(userThemesDir, overwrite: false);
         }
 
         /// <summary>
@@ -180,9 +190,13 @@ namespace Phobos.Manager.Arcusrix
                 _themes[theme.ThemeId] = theme;
             }
 
-            // 重新加载文件主题
-            await RegisterDefaultThemes();
-            await LoadExternalThemes();
+            // 用户主题目录
+            var userThemesDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Phobos", "Themes");
+
+            // 重新加载（按优先级顺序）
+            await LoadThemesFromDirectory(_themesDirectory, overwrite: true);
+            await LoadThemesFromDirectory(userThemesDir, overwrite: false);
         }
 
         #endregion
@@ -236,6 +250,63 @@ namespace Phobos.Manager.Arcusrix
                 await SaveThemeSettingAsync(themeId);
             }
             return success;
+        }
+
+        /// <summary>
+        /// 仅保存主题设置，不立即应用
+        /// 用于需要重启后才能应用的场景
+        /// </summary>
+        /// <param name="themeId">要设置的主题 ID</param>
+        /// <returns>操作结果：Success=true 表示保存成功，NeedsRestart=true 表示需要重启才能生效</returns>
+        public async Task<ThemeSetResult> SetThemeForNextStartupAsync(string themeId)
+        {
+            var result = new ThemeSetResult();
+
+            // 检查主题是否存在
+            if (!_themes.ContainsKey(themeId))
+            {
+                result.Success = false;
+                result.Message = $"Theme '{themeId}' not found";
+                return result;
+            }
+
+            // 保存到数据库
+            var saved = await SaveThemeSettingAsync(themeId);
+            if (!saved)
+            {
+                result.Success = false;
+                result.Message = "Failed to save theme setting to database";
+                return result;
+            }
+
+            // 检查是否与当前主题相同
+            if (string.Equals(CurrentThemeId, themeId, StringComparison.OrdinalIgnoreCase))
+            {
+                result.Success = true;
+                result.NeedsRestart = false;
+                result.Message = "Theme is already applied";
+                return result;
+            }
+
+            result.Success = true;
+            result.NeedsRestart = true;
+            result.Message = "Theme will be applied on next startup";
+            return result;
+        }
+
+        /// <summary>
+        /// 获取待应用的主题 ID（如果与当前主题不同）
+        /// </summary>
+        /// <returns>待应用的主题 ID，如果没有待应用的主题则返回 null</returns>
+        public async Task<string?> GetPendingThemeIdAsync()
+        {
+            var savedId = await GetSavedThemeIdAsync();
+            if (!string.IsNullOrEmpty(savedId) &&
+                !string.Equals(savedId, CurrentThemeId, StringComparison.OrdinalIgnoreCase))
+            {
+                return savedId;
+            }
+            return null;
         }
 
         /// <summary>
@@ -685,5 +756,26 @@ namespace Phobos.Manager.Arcusrix
         public string Author { get; set; } = string.Empty;
         public bool IsCurrent { get; set; }
         public bool IsFromFile { get; set; }
+    }
+
+    /// <summary>
+    /// 主题设置操作结果
+    /// </summary>
+    public class ThemeSetResult
+    {
+        /// <summary>
+        /// 操作是否成功
+        /// </summary>
+        public bool Success { get; set; }
+
+        /// <summary>
+        /// 是否需要重启才能生效
+        /// </summary>
+        public bool NeedsRestart { get; set; }
+
+        /// <summary>
+        /// 结果消息
+        /// </summary>
+        public string Message { get; set; } = string.Empty;
     }
 }

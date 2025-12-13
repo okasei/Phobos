@@ -47,11 +47,13 @@ namespace Phobos.Components.Arcusrix.Notifier
         #region 尺寸常量
 
         // 最小状态尺寸
-        private const double MinState_BaseHeight = 28;     // 最小状态的基础高度
-        private const double MaxWidth_ScreenRatio = 0.3;   // 最小状态最大宽度为屏幕宽度的30%
+        private const double MinState_BaseHeight = 28;      // 最小状态的基础高度
+        private const double MinState_ScreenRatio = 0.18;   // 最小状态宽度为屏幕宽度的18%
+        private const double MinState_MinWidth = 210;       // 最小状态最小宽度
 
         // 默认（展开）状态尺寸
-        private const double DefaultState_MinWidth = 380;  // 展开状态最小宽度
+        private const double DefaultState_ScreenRatio = 0.26; // 展开状态宽度为屏幕宽度的26%
+        private const double DefaultState_MinWidth = 380;     // 展开状态最小宽度
         private const double DefaultState_MaxLines = 3;    // 纯文本最多显示3行（含自动换行）
         private const double LineHeight = 20;              // 行高
 
@@ -74,7 +76,7 @@ namespace Phobos.Components.Arcusrix.Notifier
 
         // 默认（展开）状态尺寸
         private double _defaultStateWidth = DefaultState_MinWidth;
-        private double _defaultStateHeight = 200;
+        private double _defaultStateHeight = 300;
 
         #endregion
 
@@ -230,7 +232,9 @@ namespace Phobos.Components.Arcusrix.Notifier
             try
             {
                 var screen = SystemParameters.WorkArea;
-                double maxMinStateWidth = screen.Width * MaxWidth_ScreenRatio;
+
+                // 最小状态宽度 = max(屏幕宽度的18%, 210)
+                _minStateWidth = Math.Max(screen.Width * MinState_ScreenRatio, MinState_MinWidth);
 
                 // 直接从控件获取字体
                 var typeface = new Typeface(
@@ -243,16 +247,26 @@ namespace Phobos.Components.Arcusrix.Notifier
 
                 // 最小状态只显示标题一行
                 string title = notification.Title ?? "通知";
-                var titleMeasure = MeasureText(title, typeface, MinTitle.FontSize, maxMinStateWidth - 80);
 
-                // 最小状态宽度 = 图标(28) + 间距(8) + 标题宽度 + 间距(8) + 右侧图片(如果有,28) + 边距(28)
-                double minContentWidth = 28 + 8 + titleMeasure.width + 28;
-                if (notification.Image != null || !string.IsNullOrEmpty(notification.ImagePath))
+                // 计算不限宽度时标题的实际宽度（用于日志）
+                var (titleActualWidth, titleHeight) = MeasureText(title, typeface, MinTitle.FontSize, double.MaxValue);
+
+                bool hasImage = notification.Image != null || !string.IsNullOrEmpty(notification.ImagePath);
+
+                // 计算标题可用的最大宽度
+                double titleMaxWidth = _minStateWidth - 28 - 8 - 28; // 减去图标、间距和边距
+                if (hasImage)
                 {
-                    minContentWidth += 8 + 28;
+                    titleMaxWidth -= 8 + 28; // 减去右侧图片
                 }
 
-                _minStateWidth = Math.Min(Math.Max(minContentWidth, 160), maxMinStateWidth);
+                // 如果标题超过可用宽度，记录截断信息
+                if (titleActualWidth > titleMaxWidth)
+                {
+                    var (truncatedWidth, _) = MeasureText(title, typeface, MinTitle.FontSize, titleMaxWidth);
+                    PCLoggerPlugin.Debug("Notifier", $"Title truncated: original={titleActualWidth:F0}, max={titleMaxWidth:F0}, result={truncatedWidth:F0}");
+                }
+
                 _minStateHeight = MinState_BaseHeight;
 
                 #endregion
@@ -293,14 +307,29 @@ namespace Phobos.Components.Arcusrix.Notifier
             string content = notification.Content?.ToString() ?? string.Empty;
             double maxContentWidth = screen.Width * 0.5;  // 展开状态最大宽度为屏幕50%
 
+            // 展开状态宽度 = max(屏幕宽度的26%, 380)
+            double defaultWidth = Math.Max(screen.Width * DefaultState_ScreenRatio, DefaultState_MinWidth);
+
+            // 获取字体 - FindResource 返回 FontFamily 对象，不是字符串
+            FontFamily fontFamily;
+            try
+            {
+                var resource = FindResource("FontPrimary");
+                fontFamily = resource is FontFamily ff ? ff : new FontFamily("Segoe UI");
+            }
+            catch
+            {
+                fontFamily = new FontFamily("Segoe UI");
+            }
+
             var typeface = new Typeface(
-                new FontFamily((string)FindResource("FontPrimary") ?? "Segoe UI"),
+                fontFamily,
                 FontStyles.Normal,
                 FontWeights.Normal,
                 FontStretches.Normal);
 
             // 先用默认宽度测量，确定需要多宽
-            double testWidth = DefaultState_MinWidth - 60; // 减去边距
+            double testWidth = defaultWidth - 60; // 减去边距
             var (measuredWidth, measuredHeight, lineCount) = MeasureTextWithLineCount(content, typeface, 14, testWidth, LineHeight);
 
             // 如果行数过多，尝试增加宽度
@@ -310,19 +339,19 @@ namespace Phobos.Components.Arcusrix.Notifier
                 (measuredWidth, measuredHeight, lineCount) = MeasureTextWithLineCount(content, typeface, 14, testWidth, LineHeight);
             }
 
-            // 限制最多3行
+            // 限制最多3行 - 内容高度不包含ContentArea的内边距
             double maxContentHeight = DefaultState_MaxLines * LineHeight;
             double contentHeight = Math.Min(measuredHeight, maxContentHeight);
 
-            // 计算最终尺寸
-            _defaultStateWidth = Math.Max(testWidth + 60, DefaultState_MinWidth);
+            // 计算最终宽度
+            _defaultStateWidth = Math.Max(testWidth + 60, defaultWidth);
             _defaultStateWidth = Math.Min(_defaultStateWidth, maxContentWidth);
 
-            // 展开高度计算:
-            // - 标题行: 图标44 + 上边距2 + 下边距10 = 56
+            // 展开高度计算 - 固定结构:
+            // - 标题行: 图标44高 + 上边距2 + 下边距10 = 56
             // - 内容区域: 内容高度 + ContentArea的Padding(8*2=16) + 下边距10 = contentHeight + 26
-            // - ContentGrid的Margin: 上下各10 = 20 (但这是外部的，不计入MaxHeight)
-            // 注意: ContentGrid.MaxHeight 控制的是内部内容高度
+            // - 操作按钮(如有): 按钮高度约32 + 上边距4 = 36
+            // 确保按钮始终可见
             _defaultStateHeight = 56 + contentHeight + 26;
 
             // 如果有Hero图片，增加高度
@@ -331,11 +360,13 @@ namespace Phobos.Components.Arcusrix.Notifier
                 _defaultStateHeight += 158; // 150高度 + 8边距
             }
 
-            // 如果有操作按钮，增加高度 (按钮高度约32 + 上边距)
+            // 如果有操作按钮，增加按钮行高度
             if (notification.Actions != null && notification.Actions.Count > 0)
             {
-                _defaultStateHeight += 36;
+                _defaultStateHeight += 40; // 按钮高度32 + 上边距8
             }
+
+            PCLoggerPlugin.Debug("Notifier", $"PlainText size: lines={lineCount}, contentH={contentHeight:F0}, totalH={_defaultStateHeight:F0}, hasActions={notification.Actions?.Count > 0}");
         }
 
         /// <summary>
@@ -347,10 +378,13 @@ namespace Phobos.Components.Arcusrix.Notifier
             double maxContentWidth = screen.Width * 0.6;
             double maxContentHeight = screen.Height * 0.5;
 
+            // 展开状态宽度 = max(屏幕宽度的26%, 380)
+            double defaultWidth = Math.Max(screen.Width * DefaultState_ScreenRatio, DefaultState_MinWidth);
+
             // 使用通知提供的尺寸，或使用默认值
             _defaultStateWidth = notification.ExpandedWidth.HasValue
                 ? Math.Min(notification.ExpandedWidth.Value, maxContentWidth)
-                : Math.Min(540, maxContentWidth);
+                : Math.Min(Math.Max(540, defaultWidth), maxContentWidth);
 
             // 基础高度: 标题行56 + 内容区域边距26
             double baseHeight = 56 + 26;
@@ -372,7 +406,7 @@ namespace Phobos.Components.Arcusrix.Notifier
                 : Math.Min(200 + baseHeight, maxContentHeight);
 
             // 确保展开宽度不小于最小值
-            _defaultStateWidth = Math.Max(_defaultStateWidth, DefaultState_MinWidth);
+            _defaultStateWidth = Math.Max(_defaultStateWidth, defaultWidth);
         }
 
         /// <summary>
@@ -380,6 +414,10 @@ namespace Phobos.Components.Arcusrix.Notifier
         /// </summary>
         private (double width, double height) MeasureText(string text, Typeface typeface, double fontSize, double maxWidth)
         {
+            // WPF FormattedText has a maximum width limit, cap at a reasonable value
+            const double MaxFormattedTextWidth = 1000000;
+            double safeMaxWidth = Math.Min(maxWidth, MaxFormattedTextWidth);
+
             double pixelsPerDip = 1.0;
             try
             {
@@ -400,7 +438,7 @@ namespace Phobos.Components.Arcusrix.Notifier
                 Brushes.Black,
                 pixelsPerDip)
             {
-                MaxTextWidth = maxWidth,
+                MaxTextWidth = safeMaxWidth,
                 Trimming = TextTrimming.CharacterEllipsis,
                 MaxLineCount = 1
             };
@@ -413,6 +451,10 @@ namespace Phobos.Components.Arcusrix.Notifier
         /// </summary>
         private (double width, double height, int lineCount) MeasureTextWithLineCount(string text, Typeface typeface, double fontSize, double maxWidth, double lineHeight)
         {
+            // WPF FormattedText has a maximum width limit, cap at a reasonable value
+            const double MaxFormattedTextWidth = 1000000;
+            double safeMaxWidth = Math.Min(maxWidth, MaxFormattedTextWidth);
+
             double pixelsPerDip = 1.0;
             try
             {
@@ -433,7 +475,7 @@ namespace Phobos.Components.Arcusrix.Notifier
                 Brushes.Black,
                 pixelsPerDip)
             {
-                MaxTextWidth = maxWidth,
+                MaxTextWidth = safeMaxWidth,
                 Trimming = TextTrimming.None
             };
 

@@ -1,0 +1,66 @@
+{
+  "name": "Theme-Manager",
+  "langCode": "de-DE",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "Theme-Manager",
+    "tm.subtitle": "Themes auswählen, Vorschau anzeigen und anpassen",
+
+    "button.refresh": "Aktualisieren",
+    "button.import": "Importieren",
+    "button.create": "Neu erstellen",
+    "button.apply": "Anwenden",
+    "button.preview": "Vorschau",
+    "button.export": "Exportieren",
+    "button.save": "Änderungen speichern",
+
+    "list.search": "Themes suchen...",
+    "list.current": "Aktuell",
+    "list.select": "Theme auswählen",
+
+    "preview.title": "Vorschau",
+    "preview.buttons": "Schaltflächen",
+    "preview.input": "Eingabe",
+    "preview.selection": "Auswahl",
+    "preview.toggle": "Umschalter",
+    "preview.progress": "Fortschritt",
+    "preview.list": "Liste",
+
+    "editor.title": "Farbeditor",
+    "editor.primary": "Primärfarben",
+    "editor.background": "Hintergrundfarben",
+    "editor.foreground": "Vordergrundfarben",
+    "editor.status": "Statusfarben",
+    "editor.border": "Rahmenfarben",
+    "editor.readonly": "Dies ist ein integriertes Theme.\nFarben können nicht bearbeitet werden.",
+
+    "status.ready": "Bereit",
+    "status.loading": "Themes werden geladen...",
+    "status.found": "{0} Themes gefunden",
+    "status.selected": "Ausgewählt: {0}",
+    "status.applied": "Theme angewendet: {0}",
+    "status.exported": "Exportiert nach: {0}",
+    "status.saved": "Theme gespeichert: {0}",
+    "status.created": "Erstellt: {0}",
+    "status.imported": "Importiert: {0}",
+    "status.importing": "Theme wird importiert...",
+    "status.apply_restart": "Wird beim nächsten Start angewendet...",
+    "status.no_changes": "Keine Änderungen zum Speichern",
+    "status.import_cancelled": "Import abgebrochen",
+    "status.import_failed": "Import fehlgeschlagen",
+    "status.apply_failed": "Anwendung des Themes fehlgeschlagen",
+
+    "dialog.select_theme": "Bitte wählen Sie zuerst ein Theme aus",
+    "dialog.export_only_file": "Nur dateibasierte Themes können exportiert werden",
+    "dialog.no_editable": "Kein bearbeitbares Theme ausgewählt",
+    "dialog.file_exists": "Datei existiert. Überschreiben?",
+    "dialog.load_failed": "Theme-Datei konnte nicht geladen werden.",
+    "dialog.duplicate": "Ein Theme mit der ID '{0}' existiert bereits. Überschreiben?",
+    "dialog.export_failed": "Export des Themes fehlgeschlagen",
+    "dialog.import_failed": "Import des Themes fehlgeschlagen",
+    "dialog.save_failed": "Speichern des Themes fehlgeschlagen",
+
+    "menu.expand": "Menü erweitern",
+    "menu.collapse": "Menü reduzieren"
+  }
+}

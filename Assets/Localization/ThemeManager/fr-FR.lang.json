@@ -1,0 +1,66 @@
+{
+  "name": "Gestionnaire de thèmes",
+  "langCode": "fr-FR",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "Gestionnaire de thèmes",
+    "tm.subtitle": "Sélectionner, prévisualiser et personnaliser vos thèmes",
+
+    "button.refresh": "Actualiser",
+    "button.import": "Importer",
+    "button.create": "Nouveau",
+    "button.apply": "Appliquer",
+    "button.preview": "Aperçu",
+    "button.export": "Exporter",
+    "button.save": "Enregistrer",
+
+    "list.search": "Rechercher des thèmes...",
+    "list.current": "Actuel",
+    "list.select": "Sélectionner un thème",
+
+    "preview.title": "Aperçu",
+    "preview.buttons": "Boutons",
+    "preview.input": "Entrée",
+    "preview.selection": "Sélection",
+    "preview.toggle": "Interrupteur",
+    "preview.progress": "Progression",
+    "preview.list": "Liste",
+
+    "editor.title": "Éditeur de couleurs",
+    "editor.primary": "Couleurs principales",
+    "editor.background": "Couleurs d'arrière-plan",
+    "editor.foreground": "Couleurs de premier plan",
+    "editor.status": "Couleurs d'état",
+    "editor.border": "Couleurs de bordure",
+    "editor.readonly": "Ceci est un thème intégré.\nLes couleurs ne peuvent pas être modifiées.",
+
+    "status.ready": "Prêt",
+    "status.loading": "Chargement des thèmes...",
+    "status.found": "{0} thèmes trouvés",
+    "status.selected": "Sélectionné : {0}",
+    "status.applied": "Thème appliqué : {0}",
+    "status.exported": "Exporté vers : {0}",
+    "status.saved": "Thème enregistré : {0}",
+    "status.created": "Créé : {0}",
+    "status.imported": "Importé : {0}",
+    "status.importing": "Importation du thème...",
+    "status.apply_restart": "Sera appliqué au prochain démarrage...",
+    "status.no_changes": "Aucune modification à enregistrer",
+    "status.import_cancelled": "Importation annulée",
+    "status.import_failed": "Échec de l'importation",
+    "status.apply_failed": "Échec de l'application du thème",
+
+    "dialog.select_theme": "Veuillez d'abord sélectionner un thème",
+    "dialog.export_only_file": "Seuls les thèmes basés sur des fichiers peuvent être exportés",
+    "dialog.no_editable": "Aucun thème modifiable sélectionné",
+    "dialog.file_exists": "Le fichier existe. Écraser ?",
+    "dialog.load_failed": "Impossible de charger le fichier de thème.",
+    "dialog.duplicate": "Un thème avec l'ID '{0}' existe déjà. Écraser ?",
+    "dialog.export_failed": "Échec de l'exportation du thème",
+    "dialog.import_failed": "Échec de l'importation du thème",
+    "dialog.save_failed": "Échec de l'enregistrement du thème",
+
+    "menu.expand": "Développer le menu",
+    "menu.collapse": "Réduire le menu"
+  }
+}

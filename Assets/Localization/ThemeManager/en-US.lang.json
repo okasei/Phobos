@@ -1,0 +1,66 @@
+{
+  "name": "Theme Manager",
+  "langCode": "en-US",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "Theme Manager",
+    "tm.subtitle": "Select, preview and customize your themes",
+
+    "button.refresh": "Refresh",
+    "button.import": "Import",
+    "button.create": "Create New",
+    "button.apply": "Apply",
+    "button.preview": "Preview",
+    "button.export": "Export",
+    "button.save": "Save Changes",
+
+    "list.search": "Search themes...",
+    "list.current": "Current",
+    "list.select": "Select a theme",
+
+    "preview.title": "Preview",
+    "preview.buttons": "Buttons",
+    "preview.input": "Input",
+    "preview.selection": "Selection",
+    "preview.toggle": "Toggle Switch",
+    "preview.progress": "Progress",
+    "preview.list": "List",
+
+    "editor.title": "Color Editor",
+    "editor.primary": "Primary Colors",
+    "editor.background": "Background Colors",
+    "editor.foreground": "Foreground Colors",
+    "editor.status": "Status Colors",
+    "editor.border": "Border Colors",
+    "editor.readonly": "This is a built-in theme.\nColors cannot be edited.",
+
+    "status.ready": "Ready",
+    "status.loading": "Loading themes...",
+    "status.found": "Found {0} themes",
+    "status.selected": "Selected: {0}",
+    "status.applied": "Theme applied: {0}",
+    "status.exported": "Exported to: {0}",
+    "status.saved": "Theme saved: {0}",
+    "status.created": "Created: {0}",
+    "status.imported": "Imported: {0}",
+    "status.importing": "Importing theme...",
+    "status.apply_restart": "Will be applied on next restart...",
+    "status.no_changes": "No changes to save",
+    "status.import_cancelled": "Import cancelled",
+    "status.import_failed": "Import failed",
+    "status.apply_failed": "Failed to apply theme",
+
+    "dialog.select_theme": "Please select a theme first",
+    "dialog.export_only_file": "Only file-based themes can be exported",
+    "dialog.no_editable": "No editable theme selected",
+    "dialog.file_exists": "File exists. Overwrite?",
+    "dialog.load_failed": "Failed to load theme file.",
+    "dialog.duplicate": "A theme with ID '{0}' already exists. Overwrite?",
+    "dialog.export_failed": "Failed to export theme",
+    "dialog.import_failed": "Failed to import theme",
+    "dialog.save_failed": "Failed to save theme",
+
+    "menu.expand": "Expand Menu",
+    "menu.collapse": "Collapse Menu"
+  }
+}

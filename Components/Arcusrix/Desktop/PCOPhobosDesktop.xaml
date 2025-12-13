@@ -118,6 +118,7 @@
 
     <!-- 主容器 -->
     <Border x:Name="MainBorder"
+            Background="{DynamicResource Background1Brush}"
             BorderBrush="{DynamicResource Background4Brush}"
             BorderThickness="1"
             CornerRadius="16"
@@ -347,15 +348,21 @@
                                            Margin="0,0,0,12"/>
 
                                 <!-- 当前背景预览 -->
-                                <Border Background="{DynamicResource Background3Brush}"
+                                <Border x:Name="BackgroundPreviewBorder"
+                                        Background="{DynamicResource Background3Brush}"
                                         BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="8"
                                         Height="120"
-                                        Margin="0,0,0,12">
-                                    <Grid>
-                                        <Image x:Name="BackgroundPreview"
-                                               Stretch="UniformToFill"/>
+                                        Margin="0,0,0,12"
+                                        ClipToBounds="True">
+                                    <Grid ClipToBounds="True">
+                                        <Canvas ClipToBounds="True">
+                                            <Image x:Name="BackgroundPreview"
+                                                   Stretch="UniformToFill"
+                                                   Width="{Binding ActualWidth, ElementName=BackgroundPreviewBorder}"
+                                                   Height="{Binding ActualHeight, ElementName=BackgroundPreviewBorder}"/>
+                                        </Canvas>
                                         <TextBlock x:Name="NoBackgroundText"
                                                    Text="No background image"
                                                    FontSize="{DynamicResource FontSizeSm}"

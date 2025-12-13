@@ -1,0 +1,66 @@
+{
+  "name": "主题管理器",
+  "langCode": "zh-CN",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "主题管理器",
+    "tm.subtitle": "选择、预览和自定义主题",
+
+    "button.refresh": "刷新",
+    "button.import": "导入",
+    "button.create": "新建",
+    "button.apply": "应用",
+    "button.preview": "预览",
+    "button.export": "导出",
+    "button.save": "保存更改",
+
+    "list.search": "搜索主题...",
+    "list.current": "当前",
+    "list.select": "选择一个主题",
+
+    "preview.title": "预览",
+    "preview.buttons": "按钮",
+    "preview.input": "输入框",
+    "preview.selection": "选择控件",
+    "preview.toggle": "开关",
+    "preview.progress": "进度",
+    "preview.list": "列表",
+
+    "editor.title": "颜色编辑器",
+    "editor.primary": "主要颜色",
+    "editor.background": "背景颜色",
+    "editor.foreground": "前景颜色",
+    "editor.status": "状态颜色",
+    "editor.border": "边框颜色",
+    "editor.readonly": "这是内置主题。\n无法编辑颜色。",
+
+    "status.ready": "就绪",
+    "status.loading": "正在加载主题...",
+    "status.found": "找到 {0} 个主题",
+    "status.selected": "已选择：{0}",
+    "status.applied": "主题已应用：{0}",
+    "status.exported": "已导出到：{0}",
+    "status.saved": "主题已保存：{0}",
+    "status.created": "已创建：{0}",
+    "status.imported": "已导入：{0}",
+    "status.importing": "正在导入主题...",
+    "status.apply_restart": "将在下次启动时应用...",
+    "status.no_changes": "没有需要保存的更改",
+    "status.import_cancelled": "导入已取消",
+    "status.import_failed": "导入失败",
+    "status.apply_failed": "应用主题失败",
+
+    "dialog.select_theme": "请先选择一个主题",
+    "dialog.export_only_file": "只有基于文件的主题可以导出",
+    "dialog.no_editable": "未选择可编辑的主题",
+    "dialog.file_exists": "文件已存在。是否覆盖？",
+    "dialog.load_failed": "无法加载主题文件。",
+    "dialog.duplicate": "ID 为 '{0}' 的主题已存在。是否覆盖？",
+    "dialog.export_failed": "导出主题失败",
+    "dialog.import_failed": "导入主题失败",
+    "dialog.save_failed": "保存主题失败",
+
+    "menu.expand": "展开菜单",
+    "menu.collapse": "收起菜单"
+  }
+}

@@ -324,6 +324,7 @@
 
                 <!-- Plugin List -->
                 <ScrollViewer Grid.Row="1"
+                              Style="{DynamicResource PhobosScrollViewer}"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="24,0">
@@ -360,6 +361,7 @@
 
                 <!-- Protocols Content -->
                 <ScrollViewer Grid.Row="1"
+                              Style="{DynamicResource PhobosScrollViewer}"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="24,0">
@@ -410,6 +412,7 @@
 
                 <!-- Language Content -->
                 <ScrollViewer Grid.Row="1"
+                              Style="{DynamicResource PhobosScrollViewer}"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="24,0">
@@ -507,6 +510,7 @@
 
                 <!-- Permissions Content -->
                 <ScrollViewer Grid.Row="1"
+                              Style="{DynamicResource PhobosScrollViewer}"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="24,0">

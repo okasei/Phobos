@@ -86,6 +86,9 @@
     "Dialog.LaunchError": "起動エラー",
     "Dialog.Error": "エラー",
     "Dialog.UninstallComplete": "アンインストール完了",
-    "Dialog.UninstallFailed": "アンインストール失敗"
+    "Dialog.UninstallFailed": "アンインストール失敗",
+
+    "Tray_Show": "表示",
+    "Tray_Exit": "終了"
   }
 }

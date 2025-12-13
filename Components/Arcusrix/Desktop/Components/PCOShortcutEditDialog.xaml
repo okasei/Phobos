@@ -54,14 +54,13 @@
                            VerticalAlignment="Center"/>
 
                 <Button x:Name="CloseButton"
+                        Style="{StaticResource PhobosButtonIcon}"
                         Content="&#10005;"
                         Width="32"
                         Height="32"
                         Background="Transparent"
-                        BorderThickness="0"
                         Foreground="{DynamicResource Foreground3Brush}"
                         FontSize="14"
-                        Cursor="Hand"
                         HorizontalAlignment="Right"
                         Click="CloseButton_Click"/>
             </Grid>

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Phobos.Components.Arcusrix.Common;
+using Phobos.Components.Arcusrix.ThemeManager.Helpers;
 using Newtonsoft.Json;
 using System.Windows.Media;
 
@@ -29,8 +30,39 @@ namespace Phobos.Components.Arcusrix.ThemeManager
         public PCOThemeManager()
         {
             InitializeComponent();
+            ThemeManagerLocalization.RegisterAll();
+            ApplyLocalization();
             Loaded += PCOThemeManager_Loaded;
         }
+
+        #region Localization
+
+        private void ApplyLocalization()
+        {
+            // Header
+            TitleText.Text = ThemeManagerLocalization.Get(ThemeManagerLocalization.Title);
+            SubtitleText.Text = ThemeManagerLocalization.Get(ThemeManagerLocalization.Subtitle);
+
+            // Buttons
+            RefreshButton.Content = ThemeManagerLocalization.Get(ThemeManagerLocalization.Button_Refresh);
+            ImportButton.Content = ThemeManagerLocalization.Get(ThemeManagerLocalization.Button_Import);
+            NewButton.Content = ThemeManagerLocalization.Get(ThemeManagerLocalization.Button_Create);
+            ApplyButton.Content = ThemeManagerLocalization.Get(ThemeManagerLocalization.Button_Apply);
+            PreviewButton.Content = ThemeManagerLocalization.Get(ThemeManagerLocalization.Button_Preview);
+            ExportButton.Content = ThemeManagerLocalization.Get(ThemeManagerLocalization.Button_Export);
+            SaveButton.Content = ThemeManagerLocalization.Get(ThemeManagerLocalization.Button_Save);
+
+            // Search
+            FilterBox.Tag = ThemeManagerLocalization.Get(ThemeManagerLocalization.List_Search);
+
+            // Default text
+            ThemeTitle.Text = ThemeManagerLocalization.Get(ThemeManagerLocalization.List_Select);
+            CurrentBadgeText.Text = ThemeManagerLocalization.Get(ThemeManagerLocalization.List_Current);
+            ColorEditorTitle.Text = ThemeManagerLocalization.Get(ThemeManagerLocalization.Editor_Title);
+            StatusText.Text = ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_Ready);
+        }
+
+        #endregion
 
         private async void PCOThemeManager_Loaded(object sender, RoutedEventArgs e)
         {
@@ -53,13 +85,13 @@ namespace Phobos.Components.Arcusrix.ThemeManager
 
         private async Task RefreshThemesAsync()
         {
-            SetStatus("Loading themes...");
+            SetStatus(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_Loading));
             await PMTheme.Instance.RefreshThemes();
             await Dispatcher.InvokeAsync(() =>
             {
                 _themes = PMTheme.Instance.GetAvailableThemeInfos();
                 DisplayThemes(_themes);
-                SetStatus($"Found {_themes.Count} themes");
+                SetStatus(ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Status_Found, _themes.Count));
             });
         }
 
@@ -136,7 +168,7 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                 };
                 currentBadge.Child = new TextBlock
                 {
-                    Text = "Current",
+                    Text = ThemeManagerLocalization.Get(ThemeManagerLocalization.List_Current),
                     FontSize = 10,
                     Foreground = (Brush)FindResource("Background1Brush")
                 };
@@ -205,7 +237,7 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                 ShowPreview(theme);
             }
 
-            SetStatus($"Selected: {theme?.Name ?? themeId}");
+            SetStatus(ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Status_Selected, theme?.Name ?? themeId));
         }
 
         private void PopulateColorEditor(IPhobosTheme? theme)
@@ -224,32 +256,32 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                 if (_editingConfig != null)
                 {
                     // Primary colors section
-                    AddColorSection("Primary Colors");
+                    AddColorSection(ThemeManagerLocalization.Get(ThemeManagerLocalization.Editor_Primary));
                     AddColorPicker("Primary", _editingConfig.Colors.Primary);
                     AddColorPicker("PrimaryHover", _editingConfig.Colors.PrimaryHover);
                     AddColorPicker("PrimaryPressed", _editingConfig.Colors.PrimaryPressed);
 
                     // Background colors
-                    AddColorSection("Background Colors");
+                    AddColorSection(ThemeManagerLocalization.Get(ThemeManagerLocalization.Editor_Background));
                     AddColorPicker("Background1", _editingConfig.Colors.Background1);
                     AddColorPicker("Background2", _editingConfig.Colors.Background2);
                     AddColorPicker("Background3", _editingConfig.Colors.Background3);
 
                     // Foreground colors
-                    AddColorSection("Foreground Colors");
+                    AddColorSection(ThemeManagerLocalization.Get(ThemeManagerLocalization.Editor_Foreground));
                     AddColorPicker("Foreground1", _editingConfig.Colors.Foreground1);
                     AddColorPicker("Foreground2", _editingConfig.Colors.Foreground2);
                     AddColorPicker("Foreground3", _editingConfig.Colors.Foreground3);
 
                     // Status colors
-                    AddColorSection("Status Colors");
+                    AddColorSection(ThemeManagerLocalization.Get(ThemeManagerLocalization.Editor_Status));
                     AddColorPicker("Success", _editingConfig.Colors.Success);
                     AddColorPicker("Warning", _editingConfig.Colors.Warning);
                     AddColorPicker("Danger", _editingConfig.Colors.Danger);
                     AddColorPicker("Info", _editingConfig.Colors.Info);
 
                     // Border colors
-                    AddColorSection("Border Colors");
+                    AddColorSection(ThemeManagerLocalization.Get(ThemeManagerLocalization.Editor_Border));
                     AddColorPicker("Border", _editingConfig.Colors.Border);
                     AddColorPicker("BorderFocus", _editingConfig.Colors.BorderFocus);
                 }
@@ -259,7 +291,7 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                 // Code-defined theme - show read-only info
                 var infoText = new TextBlock
                 {
-                    Text = "This is a built-in theme.\nColors cannot be edited.",
+                    Text = ThemeManagerLocalization.Get(ThemeManagerLocalization.Editor_Readonly),
                     Foreground = (Brush)FindResource("Foreground3Brush"),
                     FontSize = 12,
                     TextWrapping = TextWrapping.Wrap,
@@ -387,23 +419,23 @@ namespace Phobos.Components.Arcusrix.ThemeManager
         {
             if (string.IsNullOrEmpty(_selectedThemeId))
             {
-                await PCDialogPlugin.ErrorDialogAsync("Please select a theme first", "Apply Theme");
+                await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_SelectTheme), TitleText.Text);
                 return;
             }
 
-            SetStatus("Will be applied on next restart...");
+            SetStatus(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_ApplyRestart));
             var success = await PMTheme.Instance.LoadThemeAndSaveAsync(_selectedThemeId);
 
             if (success)
             {
-                SetStatus($"Theme applied: {_selectedThemeId}");
+                SetStatus(ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Status_Applied, _selectedThemeId));
                 await RefreshThemesAsync();
                 SelectTheme(_selectedThemeId);
             }
             else
             {
-                await PCDialogPlugin.ErrorDialogAsync("Failed to apply theme", "Apply Theme");
-                SetStatus("Failed to apply theme");
+                await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_ApplyFailed), TitleText.Text);
+                SetStatus(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_ApplyFailed));
             }
         }
 
@@ -411,7 +443,7 @@ namespace Phobos.Components.Arcusrix.ThemeManager
         {
             if (string.IsNullOrEmpty(_selectedThemeId))
             {
-                _ = PCDialogPlugin.ErrorDialogAsync("Please select a theme first", "Preview Theme");
+                _ = PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_SelectTheme), TitleText.Text);
                 return;
             }
 
@@ -419,7 +451,7 @@ namespace Phobos.Components.Arcusrix.ThemeManager
             if (theme != null)
             {
                 ShowPreview(theme);
-                SetStatus($"Preview: {theme.Name}");
+                SetStatus(ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Status_Selected, theme.Name));
             }
         }
 
@@ -427,14 +459,14 @@ namespace Phobos.Components.Arcusrix.ThemeManager
         {
             if (string.IsNullOrEmpty(_selectedThemeId))
             {
-                await PCDialogPlugin.ErrorDialogAsync("Please select a theme first", "Export Theme");
+                await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_SelectTheme), TitleText.Text);
                 return;
             }
 
             var theme = PMTheme.Instance.GetTheme(_selectedThemeId) as PCConfigBasedTheme;
             if (theme == null)
             {
-                await PCDialogPlugin.ErrorDialogAsync("Only file-based themes can be exported", "Export Theme");
+                await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_ExportOnlyFile), TitleText.Text);
                 return;
             }
 
@@ -449,11 +481,11 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                 var config = _editingConfigChanged && _editingConfig != null ? _editingConfig : theme.GetConfig();
                 if (PCThemeLoader.SaveToFile(config, save.FileName))
                 {
-                    SetStatus($"Exported to: {save.FileName}");
+                    SetStatus(ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Status_Exported, save.FileName));
                 }
                 else
                 {
-                    await PCDialogPlugin.ErrorDialogAsync("Failed to export theme", "Export Theme");
+                    await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_ExportFailed), TitleText.Text);
                 }
             }
         }
@@ -462,13 +494,13 @@ namespace Phobos.Components.Arcusrix.ThemeManager
         {
             if (_editingConfig == null)
             {
-                await PCDialogPlugin.ErrorDialogAsync("No editable theme selected", "Save Theme");
+                await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_NoEditable), TitleText.Text);
                 return;
             }
 
             if (!_editingConfigChanged)
             {
-                SetStatus("No changes to save");
+                SetStatus(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_NoChanges));
                 return;
             }
 
@@ -482,7 +514,7 @@ namespace Phobos.Components.Arcusrix.ThemeManager
             {
                 if (File.Exists(save.FileName))
                 {
-                    var overwrite = await PCDialogPlugin.ConfirmDialogAsync("File exists. Overwrite?", "Save Theme");
+                    var overwrite = await PCDialogPlugin.ConfirmDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_FileExists), TitleText.Text);
                     if (!overwrite) return;
                 }
 
@@ -495,12 +527,12 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                         await RefreshThemesAsync();
                         SelectTheme(theme.ThemeId);
                         _editingConfigChanged = false;
-                        SetStatus($"Theme saved: {theme.Name}");
+                        SetStatus(ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Status_Saved, theme.Name));
                     }
                 }
                 else
                 {
-                    await PCDialogPlugin.ErrorDialogAsync("Failed to save theme", "Save Theme");
+                    await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_SaveFailed), TitleText.Text);
                 }
             }
         }
@@ -510,19 +542,19 @@ namespace Phobos.Components.Arcusrix.ThemeManager
             var dialog = new OpenFileDialog
             {
                 Filter = "Phobos Theme (*.phobos-theme.json)|*.phobos-theme.json|All files (*.*)|*.*",
-                Title = "Import Theme"
+                Title = ThemeManagerLocalization.Get(ThemeManagerLocalization.Button_Import)
             };
 
             if (dialog.ShowDialog() == true)
             {
-                SetStatus("Importing theme...");
+                SetStatus(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_Importing));
 
                 // Validate theme file
                 var cfg = PCThemeLoader.LoadFromFile(dialog.FileName);
                 if (cfg == null)
                 {
-                    await PCDialogPlugin.ErrorDialogAsync("Failed to load theme file.", "Import Theme");
-                    SetStatus("Import failed");
+                    await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_LoadFailed), TitleText.Text);
+                    SetStatus(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_ImportFailed));
                     return;
                 }
 
@@ -531,10 +563,10 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                 if (existing != null)
                 {
                     var overwrite = await PCDialogPlugin.ConfirmDialogAsync(
-                        $"A theme with ID '{cfg.Metadata.Id}' already exists. Overwrite?", "Duplicate Theme");
+                        ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Dialog_Duplicate, cfg.Metadata.Id), TitleText.Text);
                     if (!overwrite)
                     {
-                        SetStatus("Import cancelled");
+                        SetStatus(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_ImportCancelled));
                         return;
                     }
                 }
@@ -545,12 +577,12 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                 {
                     await RefreshThemesAsync();
                     SelectTheme(theme.ThemeId);
-                    SetStatus($"Imported: {theme.Name}");
+                    SetStatus(ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Status_Imported, theme.Name));
                 }
                 else
                 {
-                    await PCDialogPlugin.ErrorDialogAsync("Failed to import theme", "Import Theme");
-                    SetStatus("Import failed");
+                    await PCDialogPlugin.ErrorDialogAsync(ThemeManagerLocalization.Get(ThemeManagerLocalization.Dialog_ImportFailed), TitleText.Text);
+                    SetStatus(ThemeManagerLocalization.Get(ThemeManagerLocalization.Status_ImportFailed));
                 }
             }
         }
@@ -587,7 +619,7 @@ namespace Phobos.Components.Arcusrix.ThemeManager
                     {
                         await RefreshThemesAsync();
                         SelectTheme(theme.ThemeId);
-                        SetStatus($"Created: {theme.Name}");
+                        SetStatus(ThemeManagerLocalization.GetFormat(ThemeManagerLocalization.Status_Created, theme.Name));
                     }
                 }
             }

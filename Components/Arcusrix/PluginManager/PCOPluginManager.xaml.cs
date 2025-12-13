@@ -334,13 +334,13 @@ namespace Phobos.Components.Arcusrix.PluginManager
 
             if (plugin.IsSystemPlugin)
             {
-                var systemBadge = CreateBadge(PMLocalization.Get("plugins.system"), "WarningBrush");
+                var systemBadge = CreateBadge(PMLocalization.Get("plugins.system"), "Foreground1Brush");
                 nameRow.Children.Add(systemBadge);
             }
 
             if (plugin.CanLaunch)
             {
-                var launchableBadge = CreateBadge(PMLocalization.Get("plugins.launchable"), "SuccessBrush");
+                var launchableBadge = CreateBadge(PMLocalization.Get("plugins.launchable"), "Foreground1Brush");
                 nameRow.Children.Add(launchableBadge);
             }
 
@@ -453,13 +453,13 @@ namespace Phobos.Components.Arcusrix.PluginManager
                     FontFamily = new FontFamily("Segoe MDL2 Assets"),
                     FontSize = 12,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = (Brush)FindResource("ErrorBrush")
+                    Foreground = (Brush)FindResource("Foreground1Brush")
                 });
                 uninstallContent.Children.Add(new TextBlock
                 {
                     Text = PMLocalization.Get("plugins.uninstall"),
                     Margin = new Thickness(6, 0, 0, 0),
-                    Foreground = (Brush)FindResource("ErrorBrush")
+                    Foreground = (Brush)FindResource("Foreground1Brush")
                 });
                 uninstallButton.Content = uninstallContent;
                 uninstallButton.Click += UninstallButton_Click;
@@ -827,7 +827,7 @@ namespace Phobos.Components.Arcusrix.PluginManager
                 FontSize = 13,
                 FontWeight = FontWeights.SemiBold,
                 VerticalAlignment = VerticalAlignment.Center,
-                Foreground = (Brush)FindResource("PrimaryBrush")
+                Foreground = (Brush)FindResource("Foreground1Brush")
             };
             Grid.SetColumn(protocolText, 0);
             grid.Children.Add(protocolText);
@@ -1202,7 +1202,7 @@ namespace Phobos.Components.Arcusrix.PluginManager
 
             if (permissionRecord.IsTrusted)
             {
-                var trustedBadge = CreateBadge(PMLocalization.Get("permissions.trusted"), "SuccessBrush");
+                var trustedBadge = CreateBadge(PMLocalization.Get("permissions.trusted"), "Foreground1Brush");
                 nameRow.Children.Add(trustedBadge);
             }
 
@@ -1356,11 +1356,11 @@ namespace Phobos.Components.Arcusrix.PluginManager
             {
                 case PermissionState.Granted:
                     statusText.Text = PMLocalization.Get("permissions.granted");
-                    statusText.Foreground = (Brush)FindResource("SuccessBrush");
+                    statusText.Foreground = (Brush)FindResource("Foreground1Brush");
                     break;
                 case PermissionState.Denied:
                     statusText.Text = PMLocalization.Get("permissions.denied");
-                    statusText.Foreground = (Brush)FindResource("ErrorBrush");
+                    statusText.Foreground = (Brush)FindResource("Foreground1Brush");
                     break;
                 default:
                     statusText.Text = PMLocalization.Get("permissions.not_set");
@@ -1398,7 +1398,7 @@ namespace Phobos.Components.Arcusrix.PluginManager
             {
                 Text = PMLocalization.Get("permissions.deny"),
                 FontSize = 11,
-                Foreground = (Brush)FindResource("ErrorBrush")
+                Foreground = (Brush)FindResource("Foreground1Brush")
             };
             denyButton.Content = denyContent;
             denyButton.Click += DenyPermission_Click;

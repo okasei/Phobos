@@ -86,6 +86,9 @@
     "Dialog.LaunchError": "Launch Error",
     "Dialog.Error": "Error",
     "Dialog.UninstallComplete": "Uninstall Complete",
-    "Dialog.UninstallFailed": "Uninstall Failed"
+    "Dialog.UninstallFailed": "Uninstall Failed",
+
+    "Tray_Show": "Show",
+    "Tray_Exit": "Exit"
   }
 }

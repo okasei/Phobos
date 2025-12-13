@@ -86,6 +86,9 @@
     "Dialog.LaunchError": "실행 오류",
     "Dialog.Error": "오류",
     "Dialog.UninstallComplete": "제거 완료",
-    "Dialog.UninstallFailed": "제거 실패"
+    "Dialog.UninstallFailed": "제거 실패",
+
+    "Tray_Show": "표시",
+    "Tray_Exit": "종료"
   }
 }

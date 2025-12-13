@@ -1,0 +1,54 @@
+{
+  "name": "任務管理器",
+  "langCode": "zh-TW",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "任務管理器",
+
+    "Tab.RunningPlugins": "執行中的外掛",
+    "Tab.StartupItems": "啟動項目",
+    "Startup.Subtitle": "管理 Phobos 啟動時執行的外掛",
+
+    "Running.Count": "{0} 個外掛執行中",
+
+    "Button.Refresh": "重新整理",
+    "Button.EndTask": "結束工作",
+    "Button.Add": "新增",
+    "Button.Edit": "編輯",
+    "Button.Delete": "刪除",
+    "Button.Cancel": "取消",
+    "Button.Save": "儲存",
+    "Button.Enable": "啟用",
+    "Button.Disable": "停用",
+
+    "Header.PluginName": "外掛名稱",
+    "Header.PackageName": "套件名稱",
+    "Header.Status": "狀態",
+    "Header.Memory": "記憶體",
+    "Header.Enabled": "啟用",
+    "Header.Command": "命令",
+    "Header.Priority": "優先順序",
+    "Header.Actions": "操作",
+
+    "Status.Running": "執行中",
+    "Status.Suspended": "已暫停",
+    "Status.Stopped": "已停止",
+
+    "Empty.NoRunningPlugins": "沒有執行中的外掛",
+    "Empty.NoStartupItems": "沒有啟動項目",
+
+    "Dialog.AddTitle": "新增啟動項目",
+    "Dialog.EditTitle": "編輯啟動項目",
+    "Dialog.PackageName": "套件名稱",
+    "Dialog.Command": "命令",
+    "Dialog.Priority": "優先順序（數值越小越先啟動）",
+    "Dialog.PriorityHint": "優先順序數值越小，啟動時越先執行",
+
+    "Message.EndTaskConfirm": "確定要結束此工作嗎？\n\n外掛：{0}",
+    "Message.DeleteConfirm": "確定要刪除此啟動項目嗎？\n\n套件：{0}",
+    "Message.CannotEndSystemPlugin": "無法結束系統外掛。系統外掛是 Phobos 正常運作所必需的。",
+
+    "Tooltip.ToggleMenu": "切換選單",
+    "Tooltip.Toggle": "切換"
+  }
+}

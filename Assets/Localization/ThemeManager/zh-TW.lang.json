@@ -1,0 +1,66 @@
+{
+  "name": "主題管理器",
+  "langCode": "zh-TW",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "主題管理器",
+    "tm.subtitle": "選擇、預覽和自訂主題",
+
+    "button.refresh": "重新整理",
+    "button.import": "匯入",
+    "button.create": "新建",
+    "button.apply": "套用",
+    "button.preview": "預覽",
+    "button.export": "匯出",
+    "button.save": "儲存變更",
+
+    "list.search": "搜尋主題...",
+    "list.current": "目前",
+    "list.select": "選擇一個主題",
+
+    "preview.title": "預覽",
+    "preview.buttons": "按鈕",
+    "preview.input": "輸入框",
+    "preview.selection": "選擇控制項",
+    "preview.toggle": "開關",
+    "preview.progress": "進度",
+    "preview.list": "清單",
+
+    "editor.title": "色彩編輯器",
+    "editor.primary": "主要色彩",
+    "editor.background": "背景色彩",
+    "editor.foreground": "前景色彩",
+    "editor.status": "狀態色彩",
+    "editor.border": "邊框色彩",
+    "editor.readonly": "這是內建主題。\n無法編輯色彩。",
+
+    "status.ready": "就緒",
+    "status.loading": "正在載入主題...",
+    "status.found": "找到 {0} 個主題",
+    "status.selected": "已選擇：{0}",
+    "status.applied": "主題已套用：{0}",
+    "status.exported": "已匯出至：{0}",
+    "status.saved": "主題已儲存：{0}",
+    "status.created": "已建立：{0}",
+    "status.imported": "已匯入：{0}",
+    "status.importing": "正在匯入主題...",
+    "status.apply_restart": "將在下次啟動時套用...",
+    "status.no_changes": "沒有需要儲存的變更",
+    "status.import_cancelled": "匯入已取消",
+    "status.import_failed": "匯入失敗",
+    "status.apply_failed": "套用主題失敗",
+
+    "dialog.select_theme": "請先選擇一個主題",
+    "dialog.export_only_file": "只有基於檔案的主題可以匯出",
+    "dialog.no_editable": "未選擇可編輯的主題",
+    "dialog.file_exists": "檔案已存在。是否覆寫？",
+    "dialog.load_failed": "無法載入主題檔案。",
+    "dialog.duplicate": "ID 為 '{0}' 的主題已存在。是否覆寫？",
+    "dialog.export_failed": "匯出主題失敗",
+    "dialog.import_failed": "匯入主題失敗",
+    "dialog.save_failed": "儲存主題失敗",
+
+    "menu.expand": "展開選單",
+    "menu.collapse": "收起選單"
+  }
+}

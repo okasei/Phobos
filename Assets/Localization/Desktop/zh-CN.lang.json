@@ -86,6 +86,9 @@
     "Dialog.LaunchError": "启动错误",
     "Dialog.Error": "错误",
     "Dialog.UninstallComplete": "卸载完成",
-    "Dialog.UninstallFailed": "卸载失败"
+    "Dialog.UninstallFailed": "卸载失败",
+
+    "Tray_Show": "显示",
+    "Tray_Exit": "退出"
   }
 }

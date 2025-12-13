@@ -25,6 +25,10 @@ namespace Phobos.Components.Arcusrix.TaskManager.Helpers
         // 选项卡
         public const string Tab_RunningPlugins = "Tab.RunningPlugins";
         public const string Tab_StartupItems = "Tab.StartupItems";
+        public const string Startup_Subtitle = "Startup.Subtitle";
+
+        // 运行中插件数量
+        public const string Running_Count = "Running.Count";
 
         // 按钮
         public const string Button_Refresh = "Button.Refresh";

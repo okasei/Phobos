@@ -128,7 +128,7 @@
                                     <Border.Effect>
                                         <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="4" Opacity="0.3"/>
                                     </Border.Effect>
-                                    <ScrollViewer SnapsToDevicePixels="True">
+                                    <ScrollViewer Style="{DynamicResource PhobosScrollViewerAlwaysVisible}" SnapsToDevicePixels="True">
                                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
                                     </ScrollViewer>
                                 </Border>

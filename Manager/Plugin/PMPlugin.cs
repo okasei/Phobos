@@ -439,14 +439,8 @@ namespace Phobos.Manager.Plugin
                 var sourceDir = Path.GetDirectoryName(pluginPath);
                 if (!string.IsNullOrEmpty(sourceDir))
                 {
-                    foreach (var dllFile in Directory.GetFiles(sourceDir, "*.dll"))
-                    {
-                        var dllDest = Path.Combine(pluginDir, Path.GetFileName(dllFile));
-                        if (!File.Exists(dllDest))
-                        {
-                            File.Copy(dllFile, dllDest);
-                        }
-                    }
+                    // 递归复制所有文件（保持目录结构）
+                    CopyDirectoryRecursive(sourceDir, pluginDir, new[] { ".dll", ".json", ".xml", ".png", ".ico", ".svg", ".jpg", ".jpeg", ".lang.json" });
                 }
 
                 // 获取主程序集文件名（用于日志）
@@ -2436,6 +2430,58 @@ namespace Phobos.Manager.Plugin
                     return string.Empty;
                 }
             });
+        }
+
+        #endregion
+
+        #region 文件复制辅助方法
+
+        /// <summary>
+        /// 递归复制目录中的文件（保持目录结构）
+        /// </summary>
+        /// <param name="sourceDir">源目录</param>
+        /// <param name="destDir">目标目录</param>
+        /// <param name="extensions">允许复制的文件扩展名（如 .dll, .json）</param>
+        private void CopyDirectoryRecursive(string sourceDir, string destDir, string[] extensions)
+        {
+            try
+            {
+                // 复制顶层文件
+                foreach (var file in Directory.GetFiles(sourceDir))
+                {
+                    var ext = Path.GetExtension(file).ToLowerInvariant();
+                    if (extensions.Any(e => ext.EndsWith(e, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        var destFile = Path.Combine(destDir, Path.GetFileName(file));
+                        if (!File.Exists(destFile))
+                        {
+                            File.Copy(file, destFile);
+                        }
+                    }
+                }
+
+                // 递归处理子目录
+                foreach (var subDir in Directory.GetDirectories(sourceDir))
+                {
+                    var dirName = Path.GetFileName(subDir);
+
+                    // 跳过特殊目录
+                    if (dirName.StartsWith(".") || dirName.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
+                        dirName.Equals("bin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var destSubDir = Path.Combine(destDir, dirName);
+                    Utils.IO.PUFileSystem.Instance.CreateFullFolders(destSubDir);
+
+                    CopyDirectoryRecursive(subDir, destSubDir, extensions);
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Warning("PMPlugin", $"CopyDirectoryRecursive error: {ex.Message}");
+            }
         }
 
         #endregion

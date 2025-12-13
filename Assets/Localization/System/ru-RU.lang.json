@@ -1,0 +1,31 @@
+{
+  "name": "Phobos System",
+  "langCode": "ru-RU",
+  "version": "1.0.0",
+  "items": {
+    "app.name": "Phobos",
+    "app.error.database": "Ошибка подключения к базе данных",
+    "app.error.plugin": "Ошибка загрузки плагина",
+
+    "error.title": "Ошибка - Phobos",
+    "error.fatal.title": "Критическая ошибка",
+    "error.startup.failed": "Не удалось запустить Phobos",
+    "error.paths.failed": "Не удалось инициализировать пути приложения",
+    "error.database.failed": "Не удалось подключиться к базе данных",
+    "error.database.init.failed": "Не удалось инициализировать базу данных",
+    "error.theme.failed": "Не удалось загрузить тему",
+    "error.plugin.manager.failed": "Не удалось инициализировать менеджер плагинов",
+    "error.plugin.register.failed": "Не удалось зарегистрировать встроенные плагины",
+    "error.plugin.launch.failed": "Не удалось запустить плагин по умолчанию",
+    "error.boot.failed": "Не удалось выполнить элементы загрузки",
+    "error.details": "Подробности ошибки:",
+
+    "button.ok": "OK",
+    "button.cancel": "Отмена",
+    "button.yes": "Да",
+    "button.no": "Нет",
+    "button.exit": "Выход",
+    "button.retry": "Повторить",
+    "button.close": "Закрыть"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "작업 관리자",
+  "langCode": "ko-KR",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "작업 관리자",
+
+    "Tab.RunningPlugins": "실행 중인 플러그인",
+    "Tab.StartupItems": "시작 항목",
+    "Startup.Subtitle": "Phobos 시작 시 실행되는 플러그인 관리",
+
+    "Running.Count": "{0}개의 플러그인 실행 중",
+
+    "Button.Refresh": "새로 고침",
+    "Button.EndTask": "작업 끝내기",
+    "Button.Add": "추가",
+    "Button.Edit": "편집",
+    "Button.Delete": "삭제",
+    "Button.Cancel": "취소",
+    "Button.Save": "저장",
+    "Button.Enable": "활성화",
+    "Button.Disable": "비활성화",
+
+    "Header.PluginName": "플러그인 이름",
+    "Header.PackageName": "패키지 이름",
+    "Header.Status": "상태",
+    "Header.Memory": "메모리",
+    "Header.Enabled": "활성화",
+    "Header.Command": "명령",
+    "Header.Priority": "우선 순위",
+    "Header.Actions": "작업",
+
+    "Status.Running": "실행 중",
+    "Status.Suspended": "일시 중지됨",
+    "Status.Stopped": "중지됨",
+
+    "Empty.NoRunningPlugins": "실행 중인 플러그인 없음",
+    "Empty.NoStartupItems": "시작 항목 없음",
+
+    "Dialog.AddTitle": "시작 항목 추가",
+    "Dialog.EditTitle": "시작 항목 편집",
+    "Dialog.PackageName": "패키지 이름",
+    "Dialog.Command": "명령",
+    "Dialog.Priority": "우선 순위 (낮을수록 먼저 실행)",
+    "Dialog.PriorityHint": "우선 순위 값이 낮을수록 부팅 시 먼저 실행됩니다",
+
+    "Message.EndTaskConfirm": "이 작업을 끝내시겠습니까?\n\n플러그인: {0}",
+    "Message.DeleteConfirm": "이 시작 항목을 삭제하시겠습니까?\n\n패키지: {0}",
+    "Message.CannotEndSystemPlugin": "시스템 플러그인은 종료할 수 없습니다. 시스템 플러그인은 Phobos가 제대로 작동하는 데 필수적입니다.",
+
+    "Tooltip.ToggleMenu": "메뉴 전환",
+    "Tooltip.Toggle": "전환"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "Диспетчер задач",
+  "langCode": "ru-RU",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "Диспетчер задач",
+
+    "Tab.RunningPlugins": "Запущенные плагины",
+    "Tab.StartupItems": "Элементы автозагрузки",
+    "Startup.Subtitle": "Управление плагинами, запускаемыми при старте Phobos",
+
+    "Running.Count": "{0} плагинов запущено",
+
+    "Button.Refresh": "Обновить",
+    "Button.EndTask": "Завершить задачу",
+    "Button.Add": "Добавить",
+    "Button.Edit": "Редактировать",
+    "Button.Delete": "Удалить",
+    "Button.Cancel": "Отмена",
+    "Button.Save": "Сохранить",
+    "Button.Enable": "Включить",
+    "Button.Disable": "Отключить",
+
+    "Header.PluginName": "Название плагина",
+    "Header.PackageName": "Имя пакета",
+    "Header.Status": "Статус",
+    "Header.Memory": "Память",
+    "Header.Enabled": "Включено",
+    "Header.Command": "Команда",
+    "Header.Priority": "Приоритет",
+    "Header.Actions": "Действия",
+
+    "Status.Running": "Запущен",
+    "Status.Suspended": "Приостановлен",
+    "Status.Stopped": "Остановлен",
+
+    "Empty.NoRunningPlugins": "Нет запущенных плагинов",
+    "Empty.NoStartupItems": "Нет элементов автозагрузки",
+
+    "Dialog.AddTitle": "Добавить элемент автозагрузки",
+    "Dialog.EditTitle": "Редактировать элемент автозагрузки",
+    "Dialog.PackageName": "Имя пакета",
+    "Dialog.Command": "Команда",
+    "Dialog.Priority": "Приоритет (меньше = раньше)",
+    "Dialog.PriorityHint": "Меньшие значения приоритета выполняются раньше при загрузке",
+
+    "Message.EndTaskConfirm": "Вы уверены, что хотите завершить эту задачу?\n\nПлагин: {0}",
+    "Message.DeleteConfirm": "Вы уверены, что хотите удалить этот элемент автозагрузки?\n\nПакет: {0}",
+    "Message.CannotEndSystemPlugin": "Невозможно завершить системные плагины. Системные плагины необходимы для правильной работы Phobos.",
+
+    "Tooltip.ToggleMenu": "Переключить меню",
+    "Tooltip.Toggle": "Переключить"
+  }
+}

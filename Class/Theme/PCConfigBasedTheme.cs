@@ -181,29 +181,22 @@ namespace Phobos.Class.Theme
             _resourceDictionary["TitleBarHeight"] = _config.Dimensions.TitleBarHeight;
 
             // ============ 控件样式 ============
+            // 注意：不覆盖 PhobosButtonStyles.xaml 中已定义的按钮样式
+            // 这些样式已经在 XAML 中正确定义了 TextElement.Foreground 绑定
             foreach (var kvp in _controlStyles)
             {
-                var key = kvp.Key.Name + "Style"; // e.g., "ButtonStyle"
+                // 跳过 Button 类型，因为 PhobosButtonStyles.xaml 中已经定义了完整的按钮样式
+                if (kvp.Key == typeof(Button))
+                    continue;
+
+                var key = kvp.Key.Name + "Style"; // e.g., "TextBoxStyle"
                 _resourceDictionary[key] = kvp.Value;
-                // add typed key as well, so resources[typeof(Button)] is available
+                // add typed key as well, so resources[typeof(TextBox)] is available
                 _resourceDictionary[kvp.Key] = kvp.Value;
             }
 
-            // Also add some common named resources used across XAML that may expect named keys
-            if (_controlStyles.TryGetValue(typeof(Button), out var buttonStyle))
-            {
-                _resourceDictionary["PrimaryButtonStyle"] = buttonStyle;
-                _resourceDictionary["PhobosButton"] = buttonStyle;
-                _resourceDictionary["DialogButtonStyle"] = buttonStyle; // safe default
-            }
-
-            // Secondary button style (named only)
-            var secondaryBtnStyle = CreateSecondaryButtonStyle();
-            if (secondaryBtnStyle != null)
-            {
-                _resourceDictionary["SecondaryButtonStyle"] = secondaryBtnStyle;
-                _resourceDictionary["PhobosButtonSecondary"] = secondaryBtnStyle;
-            }
+            // 不再覆盖 PhobosButton 相关样式，保留 PhobosButtonStyles.xaml 中的定义
+            // 以下代码已移除，因为会覆盖 XAML 中正确的样式定义
 
             // Toggle / CheckBox style fallback
             var toggleStyle = CreateToggleSwitchStyle();
@@ -211,46 +204,6 @@ namespace Phobos.Class.Theme
             {
                 _resourceDictionary["PhobosToggleSwitch"] = toggleStyle;
                 _resourceDictionary[typeof(CheckBox)] = toggleStyle;
-            }
-
-            // Additional named button variants (danger/success/ghost/icon/sizes)
-            if (_resourceDictionary.Contains("PhobosButton"))
-            {
-                var baseBtn = _resourceDictionary["PhobosButton"] as Style;
-                if (baseBtn != null)
-                {
-                    // Danger
-                    var danger = new Style(typeof(Button), baseBtn);
-                    danger.Setters.Add(new Setter(Control.BackgroundProperty, GetBrush(_config.Colors.Danger)));
-                    danger.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush(_config.Colors.Background1)));
-                    _resourceDictionary["PhobosButtonDanger"] = danger;
-
-                    // Success
-                    var success = new Style(typeof(Button), baseBtn);
-                    success.Setters.Add(new Setter(Control.BackgroundProperty, GetBrush(_config.Colors.Success)));
-                    success.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush(_config.Colors.Background1)));
-                    _resourceDictionary["PhobosButtonSuccess"] = success;
-
-                    // Ghost (transparent)
-                    var ghost = new Style(typeof(Button), baseBtn);
-                    ghost.Setters.Add(new Setter(Control.BackgroundProperty, Brushes.Transparent));
-                    ghost.Setters.Add(new Setter(Control.BorderBrushProperty, GetBrush(_config.Colors.Border)));
-                    _resourceDictionary["PhobosButtonGhost"] = ghost;
-
-                    // Icon (keep base but smaller padding)
-                    var icon = new Style(typeof(Button), baseBtn);
-                    icon.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(6)));
-                    _resourceDictionary["PhobosButtonIcon"] = icon;
-
-                    // Small / Large
-                    var small = new Style(typeof(Button), baseBtn);
-                    small.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, _config.Dimensions.ButtonHeightSmall));
-                    _resourceDictionary["PhobosButtonSmall"] = small;
-
-                    var large = new Style(typeof(Button), baseBtn);
-                    large.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, _config.Dimensions.ButtonHeightLarge));
-                    _resourceDictionary["PhobosButtonLarge"] = large;
-                }
             }
 
             return _resourceDictionary;
@@ -485,7 +438,9 @@ namespace Phobos.Class.Theme
             _controlStyles[typeof(ListBoxItem)] = CreateListBoxItemStyle();
             _controlStyles[typeof(ScrollViewer)] = CreateScrollViewerStyle();
             _controlStyles[typeof(Grid)] = CreateGridStyle();
-            _controlStyles[typeof(Border)] = CreateBorderStyle();
+            // 注意：不注册 Border 的默认样式，因为 Border 是基础布局元素
+            // 全局 Border 样式会影响菜单项、滚动条等不需要边框的元素
+            // 需要边框的地方应该显式设置样式
         }
 
         private Style CreateButtonStyle()
@@ -540,6 +495,8 @@ namespace Phobos.Class.Theme
             var contentPresenter = new FrameworkElementFactory(typeof(ContentPresenter));
             contentPresenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
             contentPresenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            // 绑定 TextElement.Foreground 到按钮的 Foreground 属性，确保文字显示
+            contentPresenter.SetBinding(System.Windows.Documents.TextElement.ForegroundProperty, new System.Windows.Data.Binding("Foreground") { RelativeSource = new System.Windows.Data.RelativeSource(System.Windows.Data.RelativeSourceMode.TemplatedParent) });
 
             border.AppendChild(contentPresenter);
             template.VisualTree = border;

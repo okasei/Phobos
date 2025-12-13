@@ -7,6 +7,9 @@
 
     "Tab.RunningPlugins": "运行中的插件",
     "Tab.StartupItems": "启动项",
+    "Startup.Subtitle": "管理 Phobos 启动时运行的插件",
+
+    "Running.Count": "{0} 个插件运行中",
 
     "Button.Refresh": "刷新",
     "Button.EndTask": "结束任务",

@@ -1,0 +1,54 @@
+{
+  "name": "タスクマネージャー",
+  "langCode": "ja-JP",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "タスクマネージャー",
+
+    "Tab.RunningPlugins": "実行中のプラグイン",
+    "Tab.StartupItems": "スタートアップ項目",
+    "Startup.Subtitle": "Phobos 起動時に実行するプラグインを管理",
+
+    "Running.Count": "{0} 個のプラグインが実行中",
+
+    "Button.Refresh": "更新",
+    "Button.EndTask": "タスクの終了",
+    "Button.Add": "追加",
+    "Button.Edit": "編集",
+    "Button.Delete": "削除",
+    "Button.Cancel": "キャンセル",
+    "Button.Save": "保存",
+    "Button.Enable": "有効化",
+    "Button.Disable": "無効化",
+
+    "Header.PluginName": "プラグイン名",
+    "Header.PackageName": "パッケージ名",
+    "Header.Status": "ステータス",
+    "Header.Memory": "メモリ",
+    "Header.Enabled": "有効",
+    "Header.Command": "コマンド",
+    "Header.Priority": "優先度",
+    "Header.Actions": "操作",
+
+    "Status.Running": "実行中",
+    "Status.Suspended": "一時停止",
+    "Status.Stopped": "停止",
+
+    "Empty.NoRunningPlugins": "実行中のプラグインはありません",
+    "Empty.NoStartupItems": "スタートアップ項目はありません",
+
+    "Dialog.AddTitle": "スタートアップ項目を追加",
+    "Dialog.EditTitle": "スタートアップ項目を編集",
+    "Dialog.PackageName": "パッケージ名",
+    "Dialog.Command": "コマンド",
+    "Dialog.Priority": "優先度（小さい値ほど先に実行）",
+    "Dialog.PriorityHint": "優先度の値が小さいほど、起動時に先に実行されます",
+
+    "Message.EndTaskConfirm": "このタスクを終了しますか？\n\nプラグイン：{0}",
+    "Message.DeleteConfirm": "このスタートアップ項目を削除しますか？\n\nパッケージ：{0}",
+    "Message.CannotEndSystemPlugin": "システムプラグインは終了できません。システムプラグインは Phobos の正常な動作に必要です。",
+
+    "Tooltip.ToggleMenu": "メニューの切り替え",
+    "Tooltip.Toggle": "切り替え"
+  }
+}

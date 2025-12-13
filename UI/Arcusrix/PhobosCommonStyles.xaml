@@ -60,12 +60,15 @@
                         <Border.Effect>
                             <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="3" Opacity="0.3"/>
                         </Border.Effect>
-                        <ContentPresenter/>
+                        <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- ============ 全局工具提示样式（应用于所有 ToolTip） ============ -->
+    <Style TargetType="ToolTip" BasedOn="{StaticResource PhobosToolTip}"/>
 
     <!-- ============ 分组框样式 ============ -->
     <Style x:Key="PhobosGroupBox" TargetType="GroupBox">

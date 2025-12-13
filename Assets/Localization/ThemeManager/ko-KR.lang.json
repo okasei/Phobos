@@ -1,0 +1,66 @@
+{
+  "name": "테마 관리자",
+  "langCode": "ko-KR",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "테마 관리자",
+    "tm.subtitle": "테마 선택, 미리보기 및 사용자 정의",
+
+    "button.refresh": "새로고침",
+    "button.import": "가져오기",
+    "button.create": "새로 만들기",
+    "button.apply": "적용",
+    "button.preview": "미리보기",
+    "button.export": "내보내기",
+    "button.save": "변경사항 저장",
+
+    "list.search": "테마 검색...",
+    "list.current": "현재",
+    "list.select": "테마 선택",
+
+    "preview.title": "미리보기",
+    "preview.buttons": "버튼",
+    "preview.input": "입력",
+    "preview.selection": "선택",
+    "preview.toggle": "토글 스위치",
+    "preview.progress": "진행률",
+    "preview.list": "목록",
+
+    "editor.title": "색상 편집기",
+    "editor.primary": "기본 색상",
+    "editor.background": "배경 색상",
+    "editor.foreground": "전경 색상",
+    "editor.status": "상태 색상",
+    "editor.border": "테두리 색상",
+    "editor.readonly": "이것은 기본 제공 테마입니다.\n색상을 편집할 수 없습니다.",
+
+    "status.ready": "준비됨",
+    "status.loading": "테마 로드 중...",
+    "status.found": "테마 {0}개 발견",
+    "status.selected": "선택됨: {0}",
+    "status.applied": "테마 적용됨: {0}",
+    "status.exported": "내보내기 완료: {0}",
+    "status.saved": "테마 저장됨: {0}",
+    "status.created": "생성됨: {0}",
+    "status.imported": "가져오기 완료: {0}",
+    "status.importing": "테마 가져오는 중...",
+    "status.apply_restart": "다음 시작 시 적용됩니다...",
+    "status.no_changes": "저장할 변경사항 없음",
+    "status.import_cancelled": "가져오기 취소됨",
+    "status.import_failed": "가져오기 실패",
+    "status.apply_failed": "테마 적용 실패",
+
+    "dialog.select_theme": "먼저 테마를 선택해주세요",
+    "dialog.export_only_file": "파일 기반 테마만 내보낼 수 있습니다",
+    "dialog.no_editable": "편집 가능한 테마가 선택되지 않았습니다",
+    "dialog.file_exists": "파일이 존재합니다. 덮어쓰시겠습니까?",
+    "dialog.load_failed": "테마 파일을 로드할 수 없습니다.",
+    "dialog.duplicate": "ID가 '{0}'인 테마가 이미 존재합니다. 덮어쓰시겠습니까?",
+    "dialog.export_failed": "테마 내보내기 실패",
+    "dialog.import_failed": "테마 가져오기 실패",
+    "dialog.save_failed": "테마 저장 실패",
+
+    "menu.expand": "메뉴 펼치기",
+    "menu.collapse": "메뉴 접기"
+  }
+}

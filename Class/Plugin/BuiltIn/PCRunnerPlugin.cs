@@ -441,6 +441,14 @@ namespace Phobos.Class.Plugin.BuiltIn
                 Description = "Phobos Runner Protocol Handler",
                 Command = "run://v1?cmd=%0"
             });
+            
+            await Link(new LinkAssociation
+            {
+                Protocol = "run",
+                Name = "RunnerHandler Special",
+                Description = "Phobos Runner Protocol Handler",
+                Command = "%0"
+            });
 
             return await base.OnInstall(args);
         }

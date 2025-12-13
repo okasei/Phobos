@@ -191,25 +191,15 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                
+
                 <!-- 快捷键按钮（左下角） -->
-                <Button Grid.Column="0" Style="{DynamicResource PhobosButton}"
+                <Button Grid.Column="0" Style="{DynamicResource PhobosButtonSecondary}"
                         x:Name="HotkeyButton"
                         Height="36"
-                        Background="{DynamicResource Background3Brush}"
-                        Foreground="{DynamicResource Foreground1Brush}"
-                        BorderThickness="0"
-                        FontSize="{DynamicResource FontSizeMd}"
-                        Cursor="Hand"
                         HorizontalAlignment="Left"
                         Padding="16,0"
                         Click="HotkeyButton_Click">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
-                        </Style>
-                    </Button.Resources>
-                    <StackPanel Orientation="Horizontal" Grid.Column="0">
+                    <StackPanel Orientation="Horizontal">
                         <TextBlock Text="⌨" Margin="0,0,8,0"/>
                         <TextBlock x:Name="HotkeyButtonText" Text="Set Hotkey"/>
                     </StackPanel>
@@ -221,19 +211,8 @@
                         Content="Close"
                         Width="100"
                         Height="36"
-                        Background="{DynamicResource PrimaryBrush}"
-                        Foreground="{DynamicResource Foreground1Brush}"
-                        BorderThickness="0"
-                        FontSize="{DynamicResource FontSizeMd}"
-                        Cursor="Hand"
                         HorizontalAlignment="Right"
-                        Click="CloseButton_Click">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
+                        Click="CloseButton_Click"/>
             </Grid>
         </Grid>
     </Border>

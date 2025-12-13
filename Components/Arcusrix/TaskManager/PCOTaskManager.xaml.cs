@@ -81,6 +81,9 @@ namespace Phobos.Components.Arcusrix.TaskManager
 
         private void ApplyLocalization()
         {
+            // 导航栏标题
+            NavTitle.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Title);
+
             // 选项卡标签
             LabelRunning.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Tab_RunningPlugins);
             LabelStartup.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Tab_StartupItems);
@@ -97,6 +100,7 @@ namespace Phobos.Components.Arcusrix.TaskManager
 
             // 启动项页面
             TitleStartupItems.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Tab_StartupItems);
+            StartupSubtitle.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Startup_Subtitle);
             BtnRefreshStartupText.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Button_Refresh);
             BtnAddStartupText.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Button_Add);
             BtnEditStartupText.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Button_Edit);
@@ -113,6 +117,14 @@ namespace Phobos.Components.Arcusrix.TaskManager
             LabelPriority.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Dialog_Priority);
             BtnCancelText.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Button_Cancel);
             BtnSaveText.Text = TaskManagerLocalization.Get(TaskManagerLocalization.Button_Save);
+        }
+
+        /// <summary>
+        /// 更新运行中插件数量文本
+        /// </summary>
+        private void UpdateRunningCount(int count)
+        {
+            RunningCountText.Text = TaskManagerLocalization.GetFormat(TaskManagerLocalization.Running_Count, count);
         }
 
         #endregion
@@ -267,6 +279,9 @@ namespace Phobos.Components.Arcusrix.TaskManager
                         RunningPlugins.Add(plugin);
                     }
                     RunningPluginsList.ItemsSource = RunningPlugins;
+
+                    // 更新运行中插件数量
+                    UpdateRunningCount(RunningPlugins.Count);
 
                     // 更新空状态显示
                     EmptyRunningState.Visibility = RunningPlugins.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

@@ -1,0 +1,54 @@
+{
+  "name": "Gestionnaire de tâches",
+  "langCode": "fr-FR",
+  "version": "1.0.0",
+  "items": {
+    "TaskManager.Title": "Gestionnaire de tâches",
+
+    "Tab.RunningPlugins": "Plugins en cours d'exécution",
+    "Tab.StartupItems": "Éléments de démarrage",
+    "Startup.Subtitle": "Gérer les plugins qui s'exécutent au démarrage de Phobos",
+
+    "Running.Count": "{0} plugins en cours d'exécution",
+
+    "Button.Refresh": "Actualiser",
+    "Button.EndTask": "Fin de tâche",
+    "Button.Add": "Ajouter",
+    "Button.Edit": "Modifier",
+    "Button.Delete": "Supprimer",
+    "Button.Cancel": "Annuler",
+    "Button.Save": "Enregistrer",
+    "Button.Enable": "Activer",
+    "Button.Disable": "Désactiver",
+
+    "Header.PluginName": "Nom du plugin",
+    "Header.PackageName": "Nom du package",
+    "Header.Status": "Statut",
+    "Header.Memory": "Mémoire",
+    "Header.Enabled": "Activé",
+    "Header.Command": "Commande",
+    "Header.Priority": "Priorité",
+    "Header.Actions": "Actions",
+
+    "Status.Running": "En cours",
+    "Status.Suspended": "Suspendu",
+    "Status.Stopped": "Arrêté",
+
+    "Empty.NoRunningPlugins": "Aucun plugin en cours d'exécution",
+    "Empty.NoStartupItems": "Aucun élément de démarrage",
+
+    "Dialog.AddTitle": "Ajouter un élément de démarrage",
+    "Dialog.EditTitle": "Modifier l'élément de démarrage",
+    "Dialog.PackageName": "Nom du package",
+    "Dialog.Command": "Commande",
+    "Dialog.Priority": "Priorité (plus bas = plus tôt)",
+    "Dialog.PriorityHint": "Les valeurs de priorité plus basses sont exécutées plus tôt au démarrage",
+
+    "Message.EndTaskConfirm": "Voulez-vous vraiment terminer cette tâche ?\n\nPlugin : {0}",
+    "Message.DeleteConfirm": "Voulez-vous vraiment supprimer cet élément de démarrage ?\n\nPackage : {0}",
+    "Message.CannotEndSystemPlugin": "Impossible de terminer les plugins système. Les plugins système sont essentiels au bon fonctionnement de Phobos.",
+
+    "Tooltip.ToggleMenu": "Basculer le menu",
+    "Tooltip.Toggle": "Basculer"
+  }
+}

@@ -108,7 +108,7 @@
                 </Grid.RenderTransform>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*" MinWidth="50"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
@@ -123,7 +123,7 @@
                            Stretch="Uniform"/>
                 </Border>
 
-                <!-- 中间标题 -->
+                <!-- 中间标题 - 使用 TextBlock 自动测量宽度 -->
                 <TextBlock x:Name="MinTitle"
                            Grid.Column="1"
                            Text="通知"
@@ -132,7 +132,9 @@
                            FontSize="{DynamicResource FontSizeSm}"
                            FontWeight="{DynamicResource FontWeightSemibold}"
                            VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis"/>
+                           TextAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           TextWrapping="NoWrap"/>
 
                 <!-- 右侧提示图片 -->
                 <Border Grid.Column="2"

@@ -1,0 +1,66 @@
+{
+  "name": "Gestor de temas",
+  "langCode": "es-ES",
+  "version": "1.0.0",
+  "items": {
+    "tm.title": "Gestor de temas",
+    "tm.subtitle": "Seleccionar, previsualizar y personalizar temas",
+
+    "button.refresh": "Actualizar",
+    "button.import": "Importar",
+    "button.create": "Crear nuevo",
+    "button.apply": "Aplicar",
+    "button.preview": "Vista previa",
+    "button.export": "Exportar",
+    "button.save": "Guardar cambios",
+
+    "list.search": "Buscar temas...",
+    "list.current": "Actual",
+    "list.select": "Seleccionar un tema",
+
+    "preview.title": "Vista previa",
+    "preview.buttons": "Botones",
+    "preview.input": "Entrada",
+    "preview.selection": "Selección",
+    "preview.toggle": "Interruptor",
+    "preview.progress": "Progreso",
+    "preview.list": "Lista",
+
+    "editor.title": "Editor de colores",
+    "editor.primary": "Colores primarios",
+    "editor.background": "Colores de fondo",
+    "editor.foreground": "Colores de primer plano",
+    "editor.status": "Colores de estado",
+    "editor.border": "Colores de borde",
+    "editor.readonly": "Este es un tema integrado.\nLos colores no se pueden editar.",
+
+    "status.ready": "Listo",
+    "status.loading": "Cargando temas...",
+    "status.found": "{0} temas encontrados",
+    "status.selected": "Seleccionado: {0}",
+    "status.applied": "Tema aplicado: {0}",
+    "status.exported": "Exportado a: {0}",
+    "status.saved": "Tema guardado: {0}",
+    "status.created": "Creado: {0}",
+    "status.imported": "Importado: {0}",
+    "status.importing": "Importando tema...",
+    "status.apply_restart": "Se aplicará en el próximo inicio...",
+    "status.no_changes": "No hay cambios para guardar",
+    "status.import_cancelled": "Importación cancelada",
+    "status.import_failed": "Error de importación",
+    "status.apply_failed": "Error al aplicar el tema",
+
+    "dialog.select_theme": "Por favor, seleccione primero un tema",
+    "dialog.export_only_file": "Solo se pueden exportar temas basados en archivos",
+    "dialog.no_editable": "No hay tema editable seleccionado",
+    "dialog.file_exists": "El archivo existe. ¿Sobrescribir?",
+    "dialog.load_failed": "No se pudo cargar el archivo de tema.",
+    "dialog.duplicate": "Ya existe un tema con ID '{0}'. ¿Sobrescribir?",
+    "dialog.export_failed": "Error al exportar el tema",
+    "dialog.import_failed": "Error al importar el tema",
+    "dialog.save_failed": "Error al guardar el tema",
+
+    "menu.expand": "Expandir menú",
+    "menu.collapse": "Contraer menú"
+  }
+}

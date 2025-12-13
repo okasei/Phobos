@@ -22,28 +22,28 @@
     <ResourceDictionary.MergedDictionaries>
         <!-- 基础样式和回退颜色（必须最先加载） -->
         <ResourceDictionary Source="PhobosBaseStyles.xaml"/>
-        
+
         <!-- 按钮样式 -->
         <ResourceDictionary Source="PhobosButtonStyles.xaml"/>
-        
+
         <!-- 输入控件样式 (TextBox, PasswordBox) -->
         <ResourceDictionary Source="PhobosInputStyles.xaml"/>
-        
+
+        <!-- 滚动条样式 (必须在 SelectStyles 之前加载，因为 ComboBox 使用 ScrollViewer 样式) -->
+        <ResourceDictionary Source="PhobosScrollBarStyles.xaml"/>
+
         <!-- 选择控件样式 (ComboBox, RadioButton, CheckBox) -->
         <ResourceDictionary Source="PhobosSelectStyles.xaml"/>
-        
-        <!-- 滚动条样式 -->
-        <ResourceDictionary Source="PhobosScrollBarStyles.xaml"/>
-        
+
         <!-- 进度条和滑块样式 -->
         <ResourceDictionary Source="PhobosProgressStyles.xaml"/>
-        
+
         <!-- 菜单样式 -->
         <ResourceDictionary Source="PhobosMenuStyles.xaml"/>
-        
+
         <!-- 选项卡样式 -->
         <ResourceDictionary Source="PhobosTabStyles.xaml"/>
-        
+
         <!-- 其他常用控件样式 -->
         <ResourceDictionary Source="PhobosCommonStyles.xaml"/>
     </ResourceDictionary.MergedDictionaries>

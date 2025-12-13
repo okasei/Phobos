@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -100,6 +101,7 @@ namespace Phobos
         {
             try
             {
+                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                 LocalizationManager.Instance.CurrentLanguage = CultureInfo.CurrentCulture.IetfLanguageTag;
 
                 // 初始化路径
@@ -241,6 +243,40 @@ namespace Phobos
             {
                 ShowFatalError("error.fatal.title", "error.startup.failed", $"{ex.Message}\n\n{ex.StackTrace}");
                 Shutdown(1);
+            }
+        }
+
+        private static Assembly? CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            try
+            {
+                // 1. 获取正在解析的程序集名称
+                var assemblyName = new AssemblyName(args.Name).Name + ".dll";
+
+                // 2. 优先检查主程序同级下的 \Shared\ 目录
+                var appBasePath = AppDomain.CurrentDomain.BaseDirectory;
+                var sharedLocalPath = Path.Combine(appBasePath, "Shared", assemblyName);
+                if (File.Exists(sharedLocalPath))
+                {
+                    return Assembly.LoadFrom(sharedLocalPath);
+                }
+
+                // 3. 如果本地没有，则检查AppData下的目录
+                var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var sharedAppDataPath = Path.Combine(appDataPath, "Phobos", "Shared", assemblyName);
+                if (File.Exists(sharedAppDataPath))
+                {
+                    return Assembly.LoadFrom(sharedAppDataPath);
+                }
+
+                // 4. 如果两个地方都找不到，返回null，会按默认规则继续查找或抛出异常
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // 记录日志
+                System.Diagnostics.Debug.WriteLine($"加载程序集 {args.Name} 时出错: {ex.Message}");
+                return null;
             }
         }
 
