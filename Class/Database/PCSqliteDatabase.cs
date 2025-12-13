@@ -40,9 +40,9 @@ namespace Phobos.Class.Database
             try
             {
                 var directory = Path.GetDirectoryName(_databasePath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                if (!string.IsNullOrEmpty(directory))
                 {
-                    Directory.CreateDirectory(directory);
+                    Utils.IO.PUFileSystem.Instance.CreateFullFolders(directory);
                 }
 
                 var connectionStringBuilder = new SqliteConnectionStringBuilder
@@ -160,6 +160,13 @@ namespace Phobos.Class.Database
                     UpdateTime TEXT NOT NULL DEFAULT (datetime('now'))
                 );
 
+                CREATE TABLE IF NOT EXISTS Phobos_Permission (
+                    PackageName TEXT PRIMARY KEY NOT NULL,
+                    IsTrusted INTEGER NOT NULL DEFAULT 0,
+                    Permissions TEXT NOT NULL DEFAULT '',
+                    Denied TEXT NOT NULL DEFAULT ''
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_appdata_package ON Phobos_Appdata(PackageName);
                 CREATE INDEX IF NOT EXISTS idx_associated_package ON Phobos_AssociatedItem(PackageName);
                 CREATE INDEX IF NOT EXISTS idx_protocol_protocol ON Phobos_Protocol(Protocol);
@@ -169,6 +176,7 @@ namespace Phobos.Class.Database
                 CREATE INDEX IF NOT EXISTS idx_plugin_enabled ON Phobos_Plugin(IsEnabled);
                 CREATE INDEX IF NOT EXISTS idx_theme_builtin ON Phobos_Theme(IsBuiltIn);
                 CREATE INDEX IF NOT EXISTS idx_theme_enabled ON Phobos_Theme(IsEnabled);
+                CREATE INDEX IF NOT EXISTS idx_permission_trusted ON Phobos_Permission(IsTrusted);
             ";
 
             await ExecuteNonQuery(createTablesSql);

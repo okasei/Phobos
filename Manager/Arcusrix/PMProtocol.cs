@@ -12,6 +12,113 @@ using Phobos.Utils.General;
 namespace Phobos.Manager.Arcusrix
 {
     /// <summary>
+    /// 特殊协议类型
+    /// </summary>
+    public static class SpecialProtocolType
+    {
+        /// <summary>
+        /// 文本类型
+        /// </summary>
+        public const string Text = "text";
+
+        /// <summary>
+        /// 图片类型
+        /// </summary>
+        public const string Image = "image";
+
+        /// <summary>
+        /// 浏览器类型
+        /// </summary>
+        public const string Browser = "browser";
+
+        /// <summary>
+        /// 视频/音频类型
+        /// </summary>
+        public const string Video = "video";
+
+        /// <summary>
+        /// 文本文件扩展名
+        /// </summary>
+        public static readonly HashSet<string> TextExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".txt", ".log", ".ini", ".inf", ".cfg", ".conf", ".config",
+            ".css", ".js", ".ts", ".jsx", ".tsx", ".json", ".xml",
+            ".yml", ".yaml", ".toml", ".md", ".markdown", ".rst",
+            ".srt", ".sub", ".ass", ".ssa", ".vtt", ".lrc",
+            ".sh", ".bash", ".zsh", ".fish", ".ps1", ".psm1", ".bat", ".cmd",
+            ".py", ".pyw", ".rb", ".php", ".pl", ".pm", ".lua",
+            ".c", ".h", ".cpp", ".hpp", ".cc", ".cxx", ".cs", ".java",
+            ".go", ".rs", ".swift", ".kt", ".kts", ".scala", ".clj",
+            ".sql", ".graphql", ".gql",
+            ".gitignore", ".gitattributes", ".editorconfig", ".env",
+            ".properties", ".gradle", ".makefile", ".cmake",
+            ".dockerfile", ".dockerignore", ".htaccess", ".nginx",
+            ".csv", ".tsv", ".nfo", ".diz", ".readme", ".license",
+            ".asm", ".s", ".vbs", ".vb", ".bas", ".cls", ".frm"
+        };
+
+        /// <summary>
+        /// 图片文件扩展名
+        /// </summary>
+        public static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".icon",
+            ".webp", ".avif", ".apng", ".svg", ".svgz",
+            ".tiff", ".tif", ".psd", ".ai", ".eps",
+            ".raw", ".cr2", ".nef", ".orf", ".sr2", ".arw", ".dng",
+            ".heic", ".heif", ".jfif", ".jp2", ".j2k", ".jpf", ".jpm",
+            ".exr", ".hdr", ".pbm", ".pgm", ".ppm", ".pnm",
+            ".tga", ".pcx", ".dds", ".cur", ".ani"
+        };
+
+        /// <summary>
+        /// 浏览器可解析的扩展名
+        /// </summary>
+        public static readonly HashSet<string> BrowserExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".html", ".htm", ".xhtml", ".xht", ".mhtml", ".mht",
+            ".xml", ".xsl", ".xslt", ".rss", ".atom", ".rdf",
+            ".php", ".asp", ".aspx", ".jsp", ".do", ".action",
+            ".shtml", ".shtm", ".jhtml", ".cfm", ".cgi"
+        };
+
+        /// <summary>
+        /// 浏览器协议
+        /// </summary>
+        public static readonly HashSet<string> BrowserProtocols = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "http:", "https:", "ftp:", "ftps:", "file:", "data:", "about:", "javascript:"
+        };
+
+        /// <summary>
+        /// 视频/音频文件扩展名
+        /// </summary>
+        public static readonly HashSet<string> VideoExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            // 视频格式
+            ".mp4", ".m4v", ".mkv", ".avi", ".wmv", ".mov", ".flv", ".f4v",
+            ".webm", ".ogv", ".3gp", ".3g2", ".ts", ".mts", ".m2ts",
+            ".vob", ".mpg", ".mpeg", ".m2v", ".divx", ".xvid",
+            ".rm", ".rmvb", ".asf", ".swf", ".dv", ".dvr-ms",
+            ".wtv", ".h264", ".h265", ".hevc", ".av1", ".vp8", ".vp9",
+            // 音频格式
+            ".mp3", ".wav", ".flac", ".aac", ".m4a", ".ogg", ".oga",
+            ".wma", ".aiff", ".aif", ".ape", ".alac", ".opus", ".ac3",
+            ".dts", ".mka", ".mid", ".midi", ".mod", ".xm", ".it", ".s3m",
+            ".ra", ".ram", ".au", ".snd", ".cda", ".amr", ".awb", ".wv"
+        };
+
+        /// <summary>
+        /// 视频/流媒体协议
+        /// </summary>
+        public static readonly HashSet<string> VideoProtocols = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "rtmp:", "rtmps:", "rtsp:", "rtp:", "mms:", "mmsh:", "mmst:",
+            "hls:", "dash:", "udp:", "tcp:", "srt:", "rist:"
+        };
+    }
+
+    /// <summary>
     /// 协议/文件类型关联项信息 (包含 Phobos_Shell, Phobos_Protocol 和 Phobos_AssociatedItem 的信息)
     /// </summary>
     public class ProtocolAssociationInfo
@@ -851,6 +958,157 @@ namespace Phobos.Manager.Arcusrix
         {
             var systemUUID = $"system_{protocolOrType.ToLowerInvariant()}";
             return await BindDefaultHandler(protocolOrType, systemUUID, "com.microsoft.windows");
+        }
+
+        #endregion
+
+        #region 特殊类型解析
+
+        /// <summary>
+        /// 解析输入并返回特殊类型（如果匹配）
+        /// </summary>
+        /// <param name="input">输入的协议、文件名或路径</param>
+        /// <returns>特殊类型 (text, image, browser, video) 或 null 如果不匹配任何特殊类型</returns>
+        public static string? ResolveSpecialType(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return null;
+
+            var trimmed = input.Trim();
+
+            // 1. 检查是否是协议
+            var colonIndex = trimmed.IndexOf(':');
+            if (colonIndex > 0 && colonIndex < 10) // 协议通常很短
+            {
+                var protocol = trimmed.Substring(0, colonIndex + 1).ToLowerInvariant();
+
+                // 检查浏览器协议
+                if (SpecialProtocolType.BrowserProtocols.Contains(protocol))
+                    return SpecialProtocolType.Browser;
+
+                // 检查视频/流媒体协议
+                if (SpecialProtocolType.VideoProtocols.Contains(protocol))
+                    return SpecialProtocolType.Video;
+            }
+
+            // 2. 提取扩展名
+            string? extension = null;
+
+            // 处理带协议的 URL（如 file:///path/to/file.txt 或 http://example.com/file.txt）
+            if (colonIndex > 0)
+            {
+                // 尝试从 URL 中提取文件名和扩展名
+                var path = trimmed;
+
+                // 移除查询字符串和锚点
+                var queryIndex = path.IndexOf('?');
+                if (queryIndex > 0) path = path.Substring(0, queryIndex);
+                var hashIndex = path.IndexOf('#');
+                if (hashIndex > 0) path = path.Substring(0, hashIndex);
+
+                // 获取最后一个路径段
+                var lastSlash = path.LastIndexOfAny(new[] { '/', '\\' });
+                var fileName = lastSlash >= 0 ? path.Substring(lastSlash + 1) : path;
+
+                // 提取扩展名
+                var dotIndex = fileName.LastIndexOf('.');
+                if (dotIndex > 0 && dotIndex < fileName.Length - 1)
+                {
+                    extension = fileName.Substring(dotIndex).ToLowerInvariant();
+                }
+            }
+            else
+            {
+                // 普通文件路径或扩展名
+                if (trimmed.StartsWith("."))
+                {
+                    // 已经是扩展名格式
+                    extension = trimmed.ToLowerInvariant();
+                }
+                else
+                {
+                    // 尝试从文件名/路径提取扩展名
+                    var lastSlash = trimmed.LastIndexOfAny(new[] { '/', '\\' });
+                    var fileName = lastSlash >= 0 ? trimmed.Substring(lastSlash + 1) : trimmed;
+                    var dotIndex = fileName.LastIndexOf('.');
+                    if (dotIndex > 0 && dotIndex < fileName.Length - 1)
+                    {
+                        extension = fileName.Substring(dotIndex).ToLowerInvariant();
+                    }
+                }
+            }
+
+            // 3. 根据扩展名匹配特殊类型
+            if (!string.IsNullOrEmpty(extension))
+            {
+                // 按优先级检查：video > image > browser > text
+                if (SpecialProtocolType.VideoExtensions.Contains(extension))
+                    return SpecialProtocolType.Video;
+
+                if (SpecialProtocolType.ImageExtensions.Contains(extension))
+                    return SpecialProtocolType.Image;
+
+                if (SpecialProtocolType.BrowserExtensions.Contains(extension))
+                    return SpecialProtocolType.Browser;
+
+                if (SpecialProtocolType.TextExtensions.Contains(extension))
+                    return SpecialProtocolType.Text;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 解析输入并返回实际协议（优先返回特殊类型，如果不匹配则返回原始协议/扩展名）
+        /// </summary>
+        /// <param name="input">输入的协议、文件名或路径</param>
+        /// <returns>解析后的协议键（特殊类型或原始协议/扩展名）</returns>
+        public static string ResolveProtocolKey(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            // 先尝试解析为特殊类型
+            var specialType = ResolveSpecialType(input);
+            if (specialType != null)
+                return specialType;
+
+            // 不是特殊类型，返回原始协议或扩展名
+            var trimmed = input.Trim();
+
+            // 检查是否是协议
+            var colonIndex = trimmed.IndexOf(':');
+            if (colonIndex > 0 && colonIndex < 10)
+            {
+                return trimmed.Substring(0, colonIndex + 1).ToLowerInvariant();
+            }
+
+            // 提取扩展名
+            if (trimmed.StartsWith("."))
+            {
+                return trimmed.ToLowerInvariant();
+            }
+
+            var lastSlash = trimmed.LastIndexOfAny(new[] { '/', '\\' });
+            var fileName = lastSlash >= 0 ? trimmed.Substring(lastSlash + 1) : trimmed;
+            var dotIndex = fileName.LastIndexOf('.');
+            if (dotIndex > 0 && dotIndex < fileName.Length - 1)
+            {
+                return fileName.Substring(dotIndex).ToLowerInvariant();
+            }
+
+            return trimmed.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// 检查输入是否属于指定的特殊类型
+        /// </summary>
+        /// <param name="input">输入的协议、文件名或路径</param>
+        /// <param name="specialType">特殊类型（使用 SpecialProtocolType 常量）</param>
+        /// <returns>是否匹配</returns>
+        public static bool IsSpecialType(string input, string specialType)
+        {
+            return ResolveSpecialType(input) == specialType;
         }
 
         #endregion

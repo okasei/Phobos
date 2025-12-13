@@ -211,6 +211,24 @@
                                        Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
+
+                    <!-- Permissions Tab -->
+                    <Button x:Name="NavPermissions"
+                            Style="{StaticResource NavItemStyle}"
+                            Click="NavPermissions_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8D7;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"
+                                       Width="24"/>
+                            <TextBlock x:Name="NavPermissionsText"
+                                       Text="Permissions"
+                                       FontSize="14"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!-- Status Bar at Bottom -->
@@ -446,6 +464,53 @@
 
                         <ItemsControl x:Name="PluginLanguageList"/>
                     </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Permissions Page -->
+            <Grid x:Name="PermissionsPage" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Grid Grid.Row="0" Margin="24,20,24,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <TextBlock x:Name="PermissionsTitleText"
+                                   Text="Permission Settings"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource Foreground1Brush}"/>
+                        <TextBlock x:Name="PermissionsSubtitleText"
+                                   Text="Manage plugin permissions and trust settings"
+                                   FontSize="13"
+                                   Margin="0,4,0,0"
+                                   Foreground="{DynamicResource Foreground4Brush}"/>
+                    </StackPanel>
+
+                    <!-- Search Box -->
+                    <Grid Grid.Row="1" Margin="0,16,0,0">
+                        <TextBox x:Name="PermissionsSearchBox"
+                                 Style="{DynamicResource PhobosSearchBox}"
+                                 Tag="Search plugins..."
+                                 MaxWidth="400"
+                                 HorizontalAlignment="Left"
+                                 TextChanged="PermissionsSearchBox_TextChanged"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Permissions Content -->
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="24,0">
+                    <ItemsControl x:Name="PermissionsList" Margin="0,0,0,24"/>
                 </ScrollViewer>
             </Grid>
         </Grid>

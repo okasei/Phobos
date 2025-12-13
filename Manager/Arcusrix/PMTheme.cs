@@ -140,7 +140,7 @@ namespace Phobos.Manager.Arcusrix
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Phobos", "Themes");
             if (!Directory.Exists(userThemesDir))
             {
-                Directory.CreateDirectory(userThemesDir);
+                Utils.IO.PUFileSystem.Instance.CreateFullFolders(userThemesDir);
                 return;
             }
 
@@ -533,8 +533,7 @@ namespace Phobos.Manager.Arcusrix
                 {
                     var userThemesDir = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Phobos", "Themes");
-                    if (!Directory.Exists(userThemesDir))
-                        Directory.CreateDirectory(userThemesDir);
+                    Utils.IO.PUFileSystem.Instance.CreateFullFolders(userThemesDir);
 
                     var fileName = $"{theme.ThemeId}.phobos-theme.json";
                     targetPath = Path.Combine(userThemesDir, fileName);

@@ -158,10 +158,7 @@ namespace Phobos.Manager.Plugin
             _database = database;
             _pluginsDirectory = pluginsDirectory;
 
-            if (!Directory.Exists(_pluginsDirectory))
-            {
-                Directory.CreateDirectory(_pluginsDirectory);
-            }
+            Utils.IO.PUFileSystem.Instance.CreateFullFolders(_pluginsDirectory);
 
             // 加载所有已安装的插件
             await LoadInstalledPlugins();
@@ -230,6 +227,9 @@ namespace Phobos.Manager.Plugin
                 // 插件间通信
                 RequestPlugin = HandleRequestPlugin,
                 RequestProtocolHandler = HandleRequestProtocolHandler,
+                // 文件夹方法
+                GetCacheFolder = HandleGetCacheFolder,
+                GetPluginFolder = HandleGetPluginFolder,
             };
         }
 
@@ -431,7 +431,7 @@ namespace Phobos.Manager.Plugin
                 {
                     Directory.Delete(pluginDir, true);
                 }
-                Directory.CreateDirectory(pluginDir);
+                Utils.IO.PUFileSystem.Instance.CreateFullFolders(pluginDir);
 
                 var destPath = Path.Combine(pluginDir, Path.GetFileName(pluginPath));
                 File.Copy(pluginPath, destPath, true);
@@ -1500,12 +1500,11 @@ namespace Phobos.Manager.Plugin
                 var protocol = association.Protocol.ToLowerInvariant();
                 var packageName = caller.PackageName;
 
-                // 查询是否已存在该包名+协议的组合
+                // 查询是否已存在该包名+协议的组合（直接通过 Protocol 表的 UpdateUID 判断）
                 var existing = await _database.ExecuteQuery(
                     @"SELECT p.UUID, p.AssociatedItem
                       FROM Phobos_Protocol p
-                      INNER JOIN Phobos_AssociatedItem a ON p.AssociatedItem = a.Name
-                      WHERE p.Protocol = @protocol COLLATE NOCASE AND a.PackageName = @packageName COLLATE NOCASE",
+                      WHERE p.Protocol = @protocol AND p.UpdateUID = @packageName",
                     new Dictionary<string, object>
                     {
                         { "@protocol", protocol },
@@ -1514,39 +1513,62 @@ namespace Phobos.Manager.Plugin
 
                 if (existing?.Count > 0)
                 {
-                    // 已存在：更新记录，保存旧值到 LastValue
+                    // 已存在：检查是否有变化
                     var existingUuid = existing[0]["UUID"]?.ToString() ?? "";
                     var oldAssociatedItem = existing[0]["AssociatedItem"]?.ToString() ?? "";
 
-                    // 更新已有的 AssociatedItem（通过旧 Name 找到它）
-                    await _database.ExecuteNonQuery(
-                        @"UPDATE Phobos_AssociatedItem
-                          SET Name = @newName, Description = @description, Command = @command
-                          WHERE Name = @oldName AND PackageName = @packageName",
+                    // 查询当前 AssociatedItem 的详细信息
+                    var currentItem = await _database.ExecuteQuery(
+                        @"SELECT Description, Command FROM Phobos_AssociatedItem
+                          WHERE Name = @name AND PackageName = @packageName",
                         new Dictionary<string, object>
                         {
-                            { "@newName", association.Name },
-                            { "@oldName", oldAssociatedItem },
-                            { "@packageName", packageName },
-                            { "@description", TextEscaper.Escape(association.Description) },
-                            { "@command", association.Command }
+                            { "@name", oldAssociatedItem },
+                            { "@packageName", packageName }
                         });
 
-                    // 更新 Protocol 记录，同时更新 AssociatedItem 引用和 LastValue
-                    await _database.ExecuteNonQuery(
-                        @"UPDATE Phobos_Protocol
-                          SET AssociatedItem = @associatedItem,
-                              UpdateUID = @uid,
-                              UpdateTime = datetime('now'),
-                              LastValue = @lastValue
-                          WHERE UUID = @uuid",
-                        new Dictionary<string, object>
-                        {
-                            { "@uuid", existingUuid },
-                            { "@associatedItem", association.Name },
-                            { "@uid", packageName },
-                            { "@lastValue", oldAssociatedItem }
-                        });
+                    var currentDescription = currentItem?.Count > 0 ? currentItem[0]["Description"]?.ToString() ?? "" : "";
+                    var currentCommand = currentItem?.Count > 0 ? currentItem[0]["Command"]?.ToString() ?? "" : "";
+                    var newDescription = TextEscaper.Escape(association.Description);
+                    var newCommand = association.Command;
+
+                    // 只有当值真的变化时才更新
+                    var nameChanged = oldAssociatedItem != association.Name;
+                    var descChanged = currentDescription != newDescription;
+                    var cmdChanged = currentCommand != newCommand;
+
+                    if (nameChanged || descChanged || cmdChanged)
+                    {
+                        // 更新已有的 AssociatedItem（通过旧 Name 找到它）
+                        await _database.ExecuteNonQuery(
+                            @"UPDATE Phobos_AssociatedItem
+                              SET Name = @newName, Description = @description, Command = @command
+                              WHERE Name = @oldName AND PackageName = @packageName",
+                            new Dictionary<string, object>
+                            {
+                                { "@newName", association.Name },
+                                { "@oldName", oldAssociatedItem },
+                                { "@packageName", packageName },
+                                { "@description", newDescription },
+                                { "@command", newCommand }
+                            });
+
+                        // 更新 Protocol 记录，同时更新 AssociatedItem 引用和 LastValue
+                        await _database.ExecuteNonQuery(
+                            @"UPDATE Phobos_Protocol
+                              SET AssociatedItem = @associatedItem,
+                                  UpdateUID = @uid,
+                                  UpdateTime = datetime('now'),
+                                  LastValue = @lastValue
+                              WHERE UUID = @uuid",
+                            new Dictionary<string, object>
+                            {
+                                { "@uuid", existingUuid },
+                                { "@associatedItem", association.Name },
+                                { "@uid", packageName },
+                                { "@lastValue", oldAssociatedItem }
+                            });
+                    }
                 }
                 else
                 {
@@ -2330,6 +2352,90 @@ namespace Phobos.Manager.Plugin
                     Error = ex
                 };
             }
+        }
+
+        #endregion
+
+        #region 文件夹处理器
+
+        /// <summary>
+        /// 获取插件的缓存文件夹路径
+        /// 路径格式: %APPDATA%\Phobos\Cache\{PackageName}\
+        /// 如果文件夹不存在会自动创建
+        /// </summary>
+        /// <param name="caller">调用者上下文</param>
+        /// <returns>缓存文件夹路径</returns>
+        internal async Task<string> HandleGetCacheFolder(PluginCallerContext caller)
+        {
+            return await GetCacheFolder(caller.PackageName);
+        }
+
+        /// <summary>
+        /// 获取插件的数据文件夹路径
+        /// 路径格式: %APPDATA%\Phobos\Plugins\{PackageName}\
+        /// 如果文件夹不存在会自动创建
+        /// </summary>
+        /// <param name="caller">调用者上下文</param>
+        /// <returns>插件数据文件夹路径</returns>
+        internal async Task<string> HandleGetPluginFolder(PluginCallerContext caller)
+        {
+            return await GetPluginFolder(caller.PackageName);
+        }
+
+        /// <summary>
+        /// 获取指定插件的缓存文件夹路径（供内部或系统插件使用）
+        /// </summary>
+        /// <param name="packageName">插件包名</param>
+        /// <param name="isSystemPlugin">是否为系统插件（跳过某些验证）</param>
+        /// <returns>缓存文件夹路径</returns>
+        public async Task<string> GetCacheFolder(string packageName, bool isSystemPlugin = false)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    var cachePath = Path.Combine(appDataPath, "Phobos", "Cache", packageName);
+
+                    // 使用 PUFileSystem.CreateFullFolders 递归创建目录
+                    Utils.IO.PUFileSystem.Instance.CreateFullFolders(cachePath);
+
+                    return cachePath;
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PMPlugin", $"Failed to get cache folder for {packageName}: {ex.Message}");
+                    return string.Empty;
+                }
+            });
+        }
+
+        /// <summary>
+        /// 获取指定插件的数据文件夹路径（供内部或系统插件使用）
+        /// </summary>
+        /// <param name="packageName">插件包名</param>
+        /// <param name="isSystemPlugin">是否为系统插件（跳过某些验证）</param>
+        /// <returns>插件数据文件夹路径</returns>
+        public async Task<string> GetPluginFolder(string packageName, bool isSystemPlugin = false)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    var pluginPath = Path.Combine(appDataPath, "Phobos", "Plugins", packageName);
+
+                    // 使用 PUFileSystem.CreateFullFolders 递归创建目录
+                    Utils.IO.PUFileSystem.Instance.CreateFullFolders(pluginPath);
+
+                    return pluginPath;
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PMPlugin", $"Failed to get plugin folder for {packageName}: {ex.Message}");
+                    return string.Empty;
+                }
+            });
         }
 
         #endregion

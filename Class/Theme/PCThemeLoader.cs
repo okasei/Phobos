@@ -81,9 +81,9 @@ namespace Phobos.Class.Theme
             try
             {
                 var directory = Path.GetDirectoryName(filePath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                if (!string.IsNullOrEmpty(directory))
                 {
-                    Directory.CreateDirectory(directory);
+                    Utils.IO.PUFileSystem.Instance.CreateFullFolders(directory);
                 }
 
                 var json = JsonConvert.SerializeObject(config, Formatting.Indented);

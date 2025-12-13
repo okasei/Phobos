@@ -129,5 +129,42 @@ namespace Phobos.Utils.IO
             }
             File.Move(source, dest);
         }
+
+        /// <summary>
+        /// 递归创建文件夹（如果路径中的父目录不存在也会一并创建）
+        /// 例如: C:\A\B\C 如果 C:\A 不存在，会依次创建 C:\A、C:\A\B、C:\A\B\C
+        /// </summary>
+        /// <param name="path">目标文件夹路径</param>
+        /// <returns>是否成功创建（如果已存在也返回 true）</returns>
+        public bool CreateFullFolders(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            try
+            {
+                // Directory.CreateDirectory 本身就支持递归创建
+                // 但我们显式处理以确保行为清晰
+                if (Directory.Exists(path))
+                    return true;
+
+                Directory.CreateDirectory(path);
+                return Directory.Exists(path);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 异步递归创建文件夹
+        /// </summary>
+        /// <param name="path">目标文件夹路径</param>
+        /// <returns>是否成功创建</returns>
+        public Task<bool> CreateFullFoldersAsync(string path)
+        {
+            return Task.Run(() => CreateFullFolders(path));
+        }
     }
 }

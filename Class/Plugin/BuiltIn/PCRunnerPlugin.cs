@@ -1790,9 +1790,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         {
             if (!Directory.Exists(IconCacheDirectory))
             {
-                Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"Phobos"));
-                Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"Phobos","Cache"));
-                Directory.CreateDirectory(IconCacheDirectory);
+                Utils.IO.PUFileSystem.Instance.CreateFullFolders(IconCacheDirectory);
                 PCLoggerPlugin.Info("Runner", $"Created icon cache directory: {IconCacheDirectory}");
             }
         }

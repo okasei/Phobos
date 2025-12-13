@@ -1,6 +1,7 @@
 using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Components.Plugin;
 using Phobos.Manager.Arcusrix;
+using Phobos.Manager.Permission;
 using Phobos.Manager.Plugin;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
@@ -104,6 +105,7 @@ namespace Phobos.Components.Arcusrix.PluginManager
             NavPluginsText.Text = PMLocalization.Get("tab.plugins");
             NavProtocolsText.Text = PMLocalization.Get("tab.protocols");
             NavLanguageText.Text = PMLocalization.Get("tab.language");
+            NavPermissionsText.Text = PMLocalization.Get("tab.permissions");
 
             // Plugins Page
             PluginsTitleText.Text = PMLocalization.Get("plugins.title");
@@ -125,6 +127,11 @@ namespace Phobos.Components.Arcusrix.PluginManager
             PluginLanguageTitle.Text = PMLocalization.Get("language.plugin");
             PluginLanguageDesc.Text = PMLocalization.Get("language.plugin_desc");
             ApplyLanguageButtonText.Text = PMLocalization.Get("language.apply");
+
+            // Permissions Page
+            PermissionsTitleText.Text = PMLocalization.Get("permissions.title");
+            PermissionsSubtitleText.Text = PMLocalization.Get("permissions.subtitle");
+            PermissionsSearchBox.Tag = PMLocalization.Get("permissions.search");
 
             // Menu tooltip
             UpdateMenuTooltip();
@@ -162,6 +169,7 @@ namespace Phobos.Components.Arcusrix.PluginManager
             PUAnimation.AnimateOpacityTo(NavPluginsText, textOpacity);
             PUAnimation.AnimateOpacityTo(NavProtocolsText, textOpacity);
             PUAnimation.AnimateOpacityTo(NavLanguageText, textOpacity);
+            PUAnimation.AnimateOpacityTo(NavPermissionsText, textOpacity);
 
             UpdateMenuTooltip();
         }
@@ -184,18 +192,26 @@ namespace Phobos.Components.Arcusrix.PluginManager
             ShowPage(LanguagePage);
         }
 
+        private void NavPermissions_Click(object sender, RoutedEventArgs e)
+        {
+            SetActiveNav(NavPermissions);
+            ShowPage(PermissionsPage);
+            _ = LoadPermissionsAsync();
+        }
+
         private void SetActiveNav(Button activeButton)
         {
             NavPlugins.Tag = null;
             NavProtocols.Tag = null;
             NavLanguage.Tag = null;
+            NavPermissions.Tag = null;
             activeButton.Tag = "Active";
         }
 
         private void ShowPage(UIElement page)
         {
             // Fade out all pages
-            var pages = new[] { PluginsPage, ProtocolsPage, LanguagePage };
+            var pages = new[] { PluginsPage, ProtocolsPage, LanguagePage, PermissionsPage };
             foreach (var p in pages)
             {
                 if (p != page && p.Visibility == Visibility.Visible)
@@ -1071,6 +1087,447 @@ namespace Phobos.Components.Arcusrix.PluginManager
 
         #endregion
 
+        #region Permissions Tab
+
+        private List<PluginMetadata> _permissionsPluginList = new();
+
+        private void PermissionsSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            FilterPermissionsPlugins(PermissionsSearchBox.Text);
+        }
+
+        private async Task LoadPermissionsAsync()
+        {
+            _permissionsPluginList = await PMPlugin.Instance.GetInstalledPlugins();
+            DisplayPermissionsPlugins(_permissionsPluginList);
+        }
+
+        private void FilterPermissionsPlugins(string searchText)
+        {
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                DisplayPermissionsPlugins(_permissionsPluginList);
+                return;
+            }
+
+            var filtered = _permissionsPluginList.FindAll(p =>
+                p.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                p.PackageName.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            );
+
+            DisplayPermissionsPlugins(filtered);
+        }
+
+        private void DisplayPermissionsPlugins(List<PluginMetadata> plugins)
+        {
+            PermissionsList.Items.Clear();
+
+            // Filter out system plugins that have all default permissions
+            var manageable = plugins.Where(p => !p.IsSystemPlugin).ToList();
+
+            if (manageable.Count == 0)
+            {
+                var noPluginsText = new TextBlock
+                {
+                    Text = PMLocalization.Get("permissions.no_plugins"),
+                    FontSize = 14,
+                    Foreground = (Brush)FindResource("Foreground4Brush"),
+                    Margin = new Thickness(0, 20, 0, 0)
+                };
+                PermissionsList.Items.Add(noPluginsText);
+                return;
+            }
+
+            foreach (var plugin in manageable)
+            {
+                var card = CreatePermissionCard(plugin);
+                PermissionsList.Items.Add(card);
+            }
+        }
+
+        private Border CreatePermissionCard(PluginMetadata plugin)
+        {
+            var lang = LocalizationManager.Instance.CurrentLanguage;
+            var permissionRecord = PMPermission.Instance.GetPermissionRecord(plugin.PackageName);
+
+            var card = new Border
+            {
+                Style = (Style)FindResource("PluginCardStyle"),
+                Tag = plugin.PackageName
+            };
+
+            var mainStack = new StackPanel();
+
+            // Header row with plugin info and trust toggle
+            var headerGrid = new Grid();
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Icon
+            var iconBorder = new Border
+            {
+                Width = 40,
+                Height = 40,
+                CornerRadius = new CornerRadius(8),
+                Margin = new Thickness(0, 0, 12, 0),
+                Background = (Brush)FindResource("Background3Brush")
+            };
+
+            var iconText = new TextBlock
+            {
+                Text = "\uE8D7",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 18,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = (Brush)FindResource("PrimaryBrush")
+            };
+            iconBorder.Child = iconText;
+            Grid.SetColumn(iconBorder, 0);
+            headerGrid.Children.Add(iconBorder);
+
+            // Plugin info
+            var infoStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+
+            var nameRow = new StackPanel { Orientation = Orientation.Horizontal };
+            var nameText = new TextBlock
+            {
+                Text = plugin.GetLocalizedName(lang),
+                FontSize = 15,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = (Brush)FindResource("Foreground1Brush")
+            };
+            nameRow.Children.Add(nameText);
+
+            if (permissionRecord.IsTrusted)
+            {
+                var trustedBadge = CreateBadge(PMLocalization.Get("permissions.trusted"), "SuccessBrush");
+                nameRow.Children.Add(trustedBadge);
+            }
+
+            infoStack.Children.Add(nameRow);
+
+            var packageText = new TextBlock
+            {
+                Text = plugin.PackageName,
+                FontSize = 12,
+                Margin = new Thickness(0, 2, 0, 0),
+                Foreground = (Brush)FindResource("Foreground4Brush")
+            };
+            infoStack.Children.Add(packageText);
+
+            Grid.SetColumn(infoStack, 1);
+            headerGrid.Children.Add(infoStack);
+
+            // Trust button
+            var trustButton = new Button
+            {
+                Style = (Style)FindResource(permissionRecord.IsTrusted ? "PhobosButtonSecondary" : "PhobosButton"),
+                Tag = plugin,
+                Margin = new Thickness(8, 0, 0, 0)
+            };
+
+            var trustContent = new StackPanel { Orientation = Orientation.Horizontal };
+            trustContent.Children.Add(new TextBlock
+            {
+                Text = permissionRecord.IsTrusted ? "\uE8FB" : "\uE8FA",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            trustContent.Children.Add(new TextBlock
+            {
+                Text = permissionRecord.IsTrusted
+                    ? PMLocalization.Get("permissions.remove_trusted")
+                    : PMLocalization.Get("permissions.set_trusted"),
+                Margin = new Thickness(6, 0, 0, 0)
+            });
+            trustButton.Content = trustContent;
+            trustButton.Click += TrustButton_Click;
+
+            Grid.SetColumn(trustButton, 2);
+            headerGrid.Children.Add(trustButton);
+
+            mainStack.Children.Add(headerGrid);
+
+            // Permission list (only show if not trusted)
+            if (!permissionRecord.IsTrusted)
+            {
+                var permissionsGrid = CreatePermissionsGrid(plugin.PackageName, permissionRecord);
+                permissionsGrid.Margin = new Thickness(0, 16, 0, 0);
+                mainStack.Children.Add(permissionsGrid);
+            }
+
+            card.Child = mainStack;
+            return card;
+        }
+
+        private Grid CreatePermissionsGrid(string packageName, PermissionRecord record)
+        {
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var permissionsStack = new StackPanel();
+
+            // All standard permissions
+            var allPermissions = new[]
+            {
+                PhobosPermissions.NOTIFICATION_SEND,
+                PhobosPermissions.AUTOSTART,
+                PhobosPermissions.LINKSTART,
+                PhobosPermissions.READ_SYS,
+                PhobosPermissions.WRITE_SYS,
+                PhobosPermissions.PLUGINSETTING_READ,
+                PhobosPermissions.PLUGINSETTING_WRITE,
+                PhobosPermissions.DESKTOPITEM
+            };
+
+            foreach (var permission in allPermissions)
+            {
+                var row = CreatePermissionRow(packageName, permission, record);
+                permissionsStack.Children.Add(row);
+            }
+
+            Grid.SetColumn(permissionsStack, 0);
+            Grid.SetColumnSpan(permissionsStack, 2);
+            grid.Children.Add(permissionsStack);
+
+            return grid;
+        }
+
+        private Border CreatePermissionRow(string packageName, string permission, PermissionRecord record)
+        {
+            var permissionState = PMPermission.Instance.GetPermissionState(packageName, permission);
+
+            var row = new Border
+            {
+                Background = (Brush)FindResource("Background2Brush"),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12, 8, 12, 8),
+                Margin = new Thickness(0, 0, 0, 6)
+            };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Permission info
+            var infoStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+
+            var permissionName = new TextBlock
+            {
+                Text = PMLocalization.Get($"permission.{permission}"),
+                FontSize = 13,
+                FontWeight = FontWeights.Medium,
+                Foreground = (Brush)FindResource("Foreground1Brush")
+            };
+            infoStack.Children.Add(permissionName);
+
+            var permissionDesc = new TextBlock
+            {
+                Text = PMLocalization.Get($"permission.{permission}.desc"),
+                FontSize = 11,
+                Margin = new Thickness(0, 2, 0, 0),
+                Foreground = (Brush)FindResource("Foreground4Brush")
+            };
+            infoStack.Children.Add(permissionDesc);
+
+            Grid.SetColumn(infoStack, 0);
+            grid.Children.Add(infoStack);
+
+            // Action buttons
+            var buttonStack = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            // Status indicator
+            var statusText = new TextBlock
+            {
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 12, 0)
+            };
+
+            switch (permissionState)
+            {
+                case PermissionState.Granted:
+                    statusText.Text = PMLocalization.Get("permissions.granted");
+                    statusText.Foreground = (Brush)FindResource("SuccessBrush");
+                    break;
+                case PermissionState.Denied:
+                    statusText.Text = PMLocalization.Get("permissions.denied");
+                    statusText.Foreground = (Brush)FindResource("ErrorBrush");
+                    break;
+                default:
+                    statusText.Text = PMLocalization.Get("permissions.not_set");
+                    statusText.Foreground = (Brush)FindResource("Foreground4Brush");
+                    break;
+            }
+            buttonStack.Children.Add(statusText);
+
+            // Grant button
+            var grantButton = new Button
+            {
+                Style = (Style)FindResource("PhobosButtonSecondary"),
+                Padding = new Thickness(8, 4, 8, 4),
+                Tag = new PermissionActionTag { PackageName = packageName, Permission = permission },
+                IsEnabled = permissionState != PermissionState.Granted
+            };
+            grantButton.Content = new TextBlock
+            {
+                Text = PMLocalization.Get("permissions.grant"),
+                FontSize = 11
+            };
+            grantButton.Click += GrantPermission_Click;
+            buttonStack.Children.Add(grantButton);
+
+            // Deny button
+            var denyButton = new Button
+            {
+                Style = (Style)FindResource("PhobosButtonSecondary"),
+                Padding = new Thickness(8, 4, 8, 4),
+                Margin = new Thickness(6, 0, 0, 0),
+                Tag = new PermissionActionTag { PackageName = packageName, Permission = permission },
+                IsEnabled = permissionState != PermissionState.Denied
+            };
+            var denyContent = new TextBlock
+            {
+                Text = PMLocalization.Get("permissions.deny"),
+                FontSize = 11,
+                Foreground = (Brush)FindResource("ErrorBrush")
+            };
+            denyButton.Content = denyContent;
+            denyButton.Click += DenyPermission_Click;
+            buttonStack.Children.Add(denyButton);
+
+            // Reset button
+            var resetButton = new Button
+            {
+                Style = (Style)FindResource("PhobosButtonSecondary"),
+                Padding = new Thickness(8, 4, 8, 4),
+                Margin = new Thickness(6, 0, 0, 0),
+                Tag = new PermissionActionTag { PackageName = packageName, Permission = permission },
+                IsEnabled = permissionState != PermissionState.NotSet
+            };
+            resetButton.Content = new TextBlock
+            {
+                Text = PMLocalization.Get("permissions.reset"),
+                FontSize = 11
+            };
+            resetButton.Click += ResetPermission_Click;
+            buttonStack.Children.Add(resetButton);
+
+            Grid.SetColumn(buttonStack, 1);
+            grid.Children.Add(buttonStack);
+
+            row.Child = grid;
+            return row;
+        }
+
+        private async void TrustButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is PluginMetadata plugin)
+            {
+                var lang = LocalizationManager.Instance.CurrentLanguage;
+                var pluginName = plugin.GetLocalizedName(lang);
+                var record = PMPermission.Instance.GetPermissionRecord(plugin.PackageName);
+
+                try
+                {
+                    if (record.IsTrusted)
+                    {
+                        // Confirm revoke trust
+                        var confirmed = await PCDialogPlugin.ConfirmDialogAsync(
+                            PMLocalization.GetFormat("permissions.confirm_revoke_trust_message", pluginName),
+                            PMLocalization.Get("permissions.confirm_revoke_trust"));
+
+                        if (confirmed)
+                        {
+                            await PMPermission.Instance.SetTrusted(plugin.PackageName, false);
+                            SetStatus(PMLocalization.Get("permissions.saved"));
+                            await LoadPermissionsAsync();
+                        }
+                    }
+                    else
+                    {
+                        // Confirm trust
+                        var confirmed = await PCDialogPlugin.ConfirmDialogAsync(
+                            PMLocalization.GetFormat("permissions.confirm_trust_message", pluginName),
+                            PMLocalization.Get("permissions.confirm_trust"));
+
+                        if (confirmed)
+                        {
+                            await PMPermission.Instance.SetTrusted(plugin.PackageName, true);
+                            SetStatus(PMLocalization.Get("permissions.saved"));
+                            await LoadPermissionsAsync();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PluginManager", $"Failed to change trust status: {ex.Message}");
+                    await PCDialogPlugin.ErrorDialogAsync(ex.Message, PMLocalization.Get("permissions.title"));
+                }
+            }
+        }
+
+        private async void GrantPermission_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is PermissionActionTag tag)
+            {
+                try
+                {
+                    await PMPermission.Instance.GrantPermission(tag.PackageName, tag.Permission);
+                    SetStatus(PMLocalization.Get("permissions.saved"));
+                    await LoadPermissionsAsync();
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PluginManager", $"Failed to grant permission: {ex.Message}");
+                }
+            }
+        }
+
+        private async void DenyPermission_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is PermissionActionTag tag)
+            {
+                try
+                {
+                    await PMPermission.Instance.DenyPermissionPermanently(tag.PackageName, tag.Permission);
+                    SetStatus(PMLocalization.Get("permissions.saved"));
+                    await LoadPermissionsAsync();
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PluginManager", $"Failed to deny permission: {ex.Message}");
+                }
+            }
+        }
+
+        private async void ResetPermission_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is PermissionActionTag tag)
+            {
+                try
+                {
+                    await PMPermission.Instance.ResetPermission(tag.PackageName, tag.Permission);
+                    SetStatus(PMLocalization.Get("permissions.saved"));
+                    await LoadPermissionsAsync();
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PluginManager", $"Failed to reset permission: {ex.Message}");
+                }
+            }
+        }
+
+        #endregion
+
         #region Helpers
 
         private void SetStatus(string message)
@@ -1092,5 +1549,14 @@ namespace Phobos.Components.Arcusrix.PluginManager
         public string Protocol { get; set; } = "";
         public string Handler { get; set; } = "";
         public string Command { get; set; } = "";
+    }
+
+    /// <summary>
+    /// Permission action tag for button click handlers
+    /// </summary>
+    public class PermissionActionTag
+    {
+        public string PackageName { get; set; } = "";
+        public string Permission { get; set; } = "";
     }
 }

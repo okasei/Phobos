@@ -136,7 +136,7 @@ namespace Phobos.Components.Arcusrix.Desktop
             // 设置布局文件路径
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var layoutDir = Path.Combine(appDataPath, "Phobos", "Plugins", "com.phobos.desktop", "Layout");
-            Directory.CreateDirectory(layoutDir);
+            Utils.IO.PUFileSystem.Instance.CreateFullFolders(layoutDir);
             _layoutPath = Path.Combine(layoutDir, "desktop_layout.json");
 
             System.Diagnostics.Debug.WriteLine($"[PCOPhobosDesktop] Layout path: {_layoutPath}");

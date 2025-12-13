@@ -3,6 +3,7 @@ using Phobos.Shared.Interface;
 using Phobos.Utils.Media;
 using System;
 using System.Collections.Generic;
+using System.Media;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -37,6 +38,11 @@ namespace Phobos.Components.Arcusrix.Notifier
         private CancellationTokenSource? _autoCloseTokenSource;
         private readonly Action<string>? _onClosed;
         private readonly Action? _onNextNotification;
+
+        // 声音播放相关
+        private SoundPlayer? _soundPlayer;
+        private CancellationTokenSource? _alarmLoopTokenSource;
+        private bool _isAlarmPlaying = false;
 
         #region 尺寸常量
 
@@ -130,7 +136,7 @@ namespace Phobos.Components.Arcusrix.Notifier
             _notification = notification;
 
             // 设置关闭回调，供 HTML/UserControl 提供者调用
-            notification.CloseAction = CloseNotification;
+            notification.CloseAction = () => CloseNotification();
 
             // 设置图标
             SetIcon(notification);
@@ -164,6 +170,9 @@ namespace Phobos.Components.Arcusrix.Notifier
             // 播放入场动画
             PCLoggerPlugin.Debug("Notifier", "Playing enter animation...");
             PlayEnterAnimation();
+
+            // 播放声音
+            PlayNotificationSound(notification);
 
             // 启动自动关闭计时器
             StartAutoCloseTimer(notification.Duration);
@@ -566,7 +575,7 @@ namespace Phobos.Components.Arcusrix.Notifier
                 try
                 {
                     await Task.Delay(duration, _autoCloseTokenSource.Token);
-                    await Dispatcher.InvokeAsync(CloseNotification);
+                    await Dispatcher.InvokeAsync(() => CloseNotification(isTimeout: true));
                 }
                 catch (TaskCanceledException)
                 {
@@ -588,6 +597,99 @@ namespace Phobos.Components.Arcusrix.Notifier
                 StartAutoCloseTimer(2000); // 鼠标移出后 2 秒关闭
             }
         }
+
+        #region 声音播放
+
+        /// <summary>
+        /// 播放通知声音
+        /// </summary>
+        private void PlayNotificationSound(IPhobosNotification notification)
+        {
+            if (string.IsNullOrEmpty(notification.SoundPath))
+                return;
+
+            try
+            {
+                _soundPlayer = new SoundPlayer(notification.SoundPath);
+
+                if (notification.Type == NotificationType.Alarm)
+                {
+                    // 闹钟模式：循环播放直到超时或关闭
+                    StartAlarmLoop();
+                }
+                else
+                {
+                    // 普通模式：播放一次
+                    _soundPlayer.Play();
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Notifier", $"Failed to play sound: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 开始闹钟循环播放
+        /// </summary>
+        private void StartAlarmLoop()
+        {
+            if (_soundPlayer == null || _isAlarmPlaying)
+                return;
+
+            _isAlarmPlaying = true;
+            _alarmLoopTokenSource?.Cancel();
+            _alarmLoopTokenSource = new CancellationTokenSource();
+
+            var token = _alarmLoopTokenSource.Token;
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (!token.IsCancellationRequested && _isAlarmPlaying)
+                    {
+                        try
+                        {
+                            _soundPlayer?.PlaySync();
+                        }
+                        catch
+                        {
+                            // 忽略播放错误，继续尝试
+                        }
+
+                        // 短暂延迟后继续播放
+                        await Task.Delay(100, token);
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    // 循环被取消
+                }
+            }, token);
+        }
+
+        /// <summary>
+        /// 停止声音播放
+        /// </summary>
+        private void StopSound()
+        {
+            _isAlarmPlaying = false;
+            _alarmLoopTokenSource?.Cancel();
+
+            try
+            {
+                _soundPlayer?.Stop();
+                _soundPlayer?.Dispose();
+                _soundPlayer = null;
+            }
+            catch
+            {
+                // 忽略停止错误
+            }
+        }
+
+        #endregion
 
         #region 动画
 
@@ -957,9 +1059,25 @@ namespace Phobos.Components.Arcusrix.Notifier
             _notification?.ContentAction?.Invoke();
         }
 
-        private void CloseNotification()
+        private void CloseNotification(bool isTimeout = false)
         {
             _autoCloseTokenSource?.Cancel();
+
+            // 立刻停止声音播放
+            StopSound();
+
+            // 如果是超时且为闹钟类型，调用超时回调
+            if (isTimeout && _notification?.Type == NotificationType.Alarm)
+            {
+                try
+                {
+                    _notification.TimeoutAction?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("Notifier", $"TimeoutAction failed: {ex.Message}");
+                }
+            }
 
             PlayExitAnimation(() =>
             {

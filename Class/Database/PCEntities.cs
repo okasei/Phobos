@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Phobos.Class.Database
 {
@@ -232,5 +234,61 @@ namespace Phobos.Class.Database
         public string UpdateUID { get; set; } = string.Empty;
         public DateTime UpdateTime { get; set; } = DateTime.Now;
         public string LastValue { get; set; } = string.Empty; // 上一个默认打开方式
+    }
+
+    /// <summary>
+    /// 权限表实体 - 记录插件的权限设置
+    /// </summary>
+    public class PCPhobosPermission
+    {
+        /// <summary>
+        /// 插件包名（主键）
+        /// </summary>
+        public string PackageName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 是否信任该插件（信任后所有权限全通）
+        /// </summary>
+        public bool IsTrusted { get; set; } = false;
+
+        /// <summary>
+        /// 已授权的权限列表（多个用逗号分隔）
+        /// </summary>
+        public string Permissions { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 已拒绝的权限列表（永不询问，多个用逗号分隔）
+        /// </summary>
+        public string Denied { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 获取已授权权限列表
+        /// </summary>
+        public List<string> GetPermissionList()
+        {
+            if (string.IsNullOrWhiteSpace(Permissions))
+                return new List<string>();
+
+            return Permissions
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .Where(p => !string.IsNullOrEmpty(p))
+                .ToList();
+        }
+
+        /// <summary>
+        /// 获取已拒绝权限列表
+        /// </summary>
+        public List<string> GetDeniedList()
+        {
+            if (string.IsNullOrWhiteSpace(Denied))
+                return new List<string>();
+
+            return Denied
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .Where(p => !string.IsNullOrEmpty(p))
+                .ToList();
+        }
     }
 }

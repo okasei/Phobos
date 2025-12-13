@@ -297,12 +297,9 @@ namespace Phobos
             _pluginsPath = Path.Combine(_appDataPath, "Plugins");
             _databasePath = Path.Combine(_appDataPath, "Phobos.db");
 
-            // 确保目录存在
-            if (!Directory.Exists(_appDataPath))
-                Directory.CreateDirectory(_appDataPath);
-
-            if (!Directory.Exists(_pluginsPath))
-                Directory.CreateDirectory(_pluginsPath);
+            // 确保目录存在（使用递归创建）
+            Utils.IO.PUFileSystem.Instance.CreateFullFolders(_appDataPath);
+            Utils.IO.PUFileSystem.Instance.CreateFullFolders(_pluginsPath);
         }
 
         private async Task InitializeDatabase()
@@ -405,112 +402,7 @@ namespace Phobos
             var handlers = new PluginHandlers
             {
                 RequestPhobos = PMPlugin.Instance.HandleRequestPhobos,
-                Link = async (caller, association) =>
-                {
-                    // 内置插件的 Link 处理
-                    if (Database != null)
-                    {
-                        var protocol = association.Protocol.ToLowerInvariant();
-                        var packageName = caller.PackageName;
-
-                        // 查询是否已存在该包名+协议的组合（直接通过 Protocol 表的 UpdateUID 判断）
-                        var existing = await Database.ExecuteQuery(
-                            @"SELECT p.UUID, p.AssociatedItem
-                              FROM Phobos_Protocol p
-                              WHERE p.Protocol = @protocol AND p.UpdateUID = @packageName",
-                            new System.Collections.Generic.Dictionary<string, object>
-                            {
-                                { "@protocol", protocol },
-                                { "@packageName", packageName }
-                            });
-
-                        if (existing?.Count > 0)
-                        {
-                            // 已存在：检查是否有变化
-                            var existingUuid = existing[0]["UUID"]?.ToString() ?? "";
-                            var oldAssociatedItem = existing[0]["AssociatedItem"]?.ToString() ?? "";
-
-                            // 查询当前 AssociatedItem 的详细信息
-                            var currentItem = await Database.ExecuteQuery(
-                                @"SELECT Description, Command FROM Phobos_AssociatedItem
-                                  WHERE Name = @name AND PackageName = @packageName",
-                                new System.Collections.Generic.Dictionary<string, object>
-                                {
-                                    { "@name", oldAssociatedItem },
-                                    { "@packageName", packageName }
-                                });
-
-                            var currentDescription = currentItem?.Count > 0 ? currentItem[0]["Description"]?.ToString() ?? "" : "";
-                            var currentCommand = currentItem?.Count > 0 ? currentItem[0]["Command"]?.ToString() ?? "" : "";
-                            var newDescription = Shared.Class.TextEscaper.Escape(association.Description);
-                            var newCommand = association.Command;
-
-                            // 只有当值真的变化时才更新
-                            var nameChanged = oldAssociatedItem != association.Name;
-                            var descChanged = currentDescription != newDescription;
-                            var cmdChanged = currentCommand != newCommand;
-
-                            if (nameChanged || descChanged || cmdChanged)
-                            {
-                                // 更新已有的 AssociatedItem（通过旧 Name 找到它）
-                                await Database.ExecuteNonQuery(
-                                    @"UPDATE Phobos_AssociatedItem
-                                      SET Name = @newName, Description = @description, Command = @command
-                                      WHERE Name = @oldName AND PackageName = @packageName",
-                                    new System.Collections.Generic.Dictionary<string, object>
-                                    {
-                                        { "@newName", association.Name },
-                                        { "@oldName", oldAssociatedItem },
-                                        { "@packageName", packageName },
-                                        { "@description", newDescription },
-                                        { "@command", newCommand }
-                                    });
-
-                                // 更新 Protocol 记录，同时更新 AssociatedItem 引用和 LastValue
-                                await Database.ExecuteNonQuery(
-                                    @"UPDATE Phobos_Protocol
-                                      SET AssociatedItem = @associatedItem,
-                                          UpdateUID = @uid,
-                                          UpdateTime = datetime('now'),
-                                          LastValue = @lastValue
-                                      WHERE UUID = @uuid",
-                                    new System.Collections.Generic.Dictionary<string, object>
-                                    {
-                                        { "@uuid", existingUuid },
-                                        { "@associatedItem", association.Name },
-                                        { "@uid", packageName },
-                                        { "@lastValue", oldAssociatedItem }
-                                    });
-                            }
-                        }
-                        else
-                        {
-                            // 不存在：插入新记录
-                            await Database.ExecuteNonQuery(
-                                @"INSERT OR REPLACE INTO Phobos_AssociatedItem (Name, PackageName, Description, Command)
-                                  VALUES (@name, @packageName, @description, @command)",
-                                new System.Collections.Generic.Dictionary<string, object>
-                                {
-                                    { "@name", association.Name },
-                                    { "@packageName", packageName },
-                                    { "@description", Shared.Class.TextEscaper.Escape(association.Description) },
-                                    { "@command", association.Command }
-                                });
-
-                            await Database.ExecuteNonQuery(
-                                @"INSERT INTO Phobos_Protocol (UUID, Protocol, AssociatedItem, UpdateUID, UpdateTime, LastValue)
-                                  VALUES (@uuid, @protocol, @associatedItem, @uid, datetime('now'), '')",
-                                new System.Collections.Generic.Dictionary<string, object>
-                                {
-                                    { "@uuid", Guid.NewGuid().ToString("N") },
-                                    { "@protocol", protocol },
-                                    { "@associatedItem", association.Name },
-                                    { "@uid", packageName }
-                                });
-                        }
-                    }
-                    return new RequestResult { Success = true };
-                },
+                Link = PMPlugin.Instance.HandleLink,
                 Request = PMPlugin.Instance.HandleRequest,
                 LinkDefault = PMPlugin.Instance.HandleLinkDefault,
                 ReadConfig = PMPlugin.Instance.HandleReadConfig,
@@ -539,7 +431,9 @@ namespace Phobos
                 SendNotificationObject = PMPlugin.Instance.HandleSendNotificationObject,
                 Log = PMPlugin.Instance.HandleLog,
                 RequestPlugin = PMPlugin.Instance.HandleRequestPlugin,
-                RequestProtocolHandler = PMPlugin.Instance.HandleRequestProtocolHandler
+                RequestProtocolHandler = PMPlugin.Instance.HandleRequestProtocolHandler,
+                GetCacheFolder = PMPlugin.Instance.HandleGetCacheFolder,
+                GetPluginFolder = PMPlugin.Instance.HandleGetPluginFolder
             };
 
 

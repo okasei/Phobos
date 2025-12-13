@@ -90,10 +90,7 @@ namespace Phobos.Class.Plugin.BuiltIn
         private static string CreateLogDirectory()
         {
             var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Phobos", "Logs");
-            if (!Directory.Exists(logDir))
-            {
-                Directory.CreateDirectory(logDir);
-            }
+            Utils.IO.PUFileSystem.Instance.CreateFullFolders(logDir);
             var logFilePath = Path.Combine(logDir, $"Phobos_{DateTime.Now:yyyyMMdd}.log");
             return logFilePath;
         }
