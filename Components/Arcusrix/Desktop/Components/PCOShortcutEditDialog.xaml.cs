@@ -455,15 +455,14 @@ namespace Phobos.Components.Arcusrix.Desktop.Components
             });
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             // 验证输入
             if (string.IsNullOrWhiteSpace(NameTextBox.Text))
             {
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     DesktopLocalization.Get(DesktopLocalization.Shortcut_NameRequired),
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                    true,
                     this);
                 return;
             }
@@ -471,10 +470,9 @@ namespace Phobos.Components.Arcusrix.Desktop.Components
             var selectedPackage = GetSelectedPackageName();
             if (string.IsNullOrEmpty(selectedPackage))
             {
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     DesktopLocalization.Get(DesktopLocalization.Shortcut_PluginRequired),
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                    true,
                     this);
                 return;
             }

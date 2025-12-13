@@ -246,7 +246,7 @@ namespace Phobos
             }
         }
 
-        private static Assembly? CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        private Assembly? CurrentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
         {
             try
             {

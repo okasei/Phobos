@@ -196,6 +196,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                 // 注销所有快捷键
                 Manager.Hotkey.PMHotkey.Instance.Dispose();
                 CleanupTrayExtension();
+                Application.Current.Shutdown(0);
                 return;
             }
 
@@ -1673,10 +1674,9 @@ namespace Phobos.Components.Arcusrix.Desktop
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[RunShortcut] Error: {ex.Message}");
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     ex.Message,
                     Components.DesktopLocalization.Get(Components.DesktopLocalization.Dialog_LaunchError),
-                    true,
                     this);
             }
         }
@@ -1781,7 +1781,7 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// <summary>
         /// 注册单个桌面项的快捷键
         /// </summary>
-        private void RegisterItemHotkey(DesktopItem item)
+        private async void RegisterItemHotkey(DesktopItem item)
         {
             if (string.IsNullOrEmpty(item.Hotkey))
                 return;
@@ -1795,10 +1795,9 @@ namespace Phobos.Components.Arcusrix.Desktop
 
             if (!Manager.Hotkey.PMHotkey.Instance.Register(hotkeyInfo))
             {
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     $"Failed to register hotkey: {item.Hotkey}",
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                    true,
                     this);
             }
         }
@@ -2344,10 +2343,9 @@ namespace Phobos.Components.Arcusrix.Desktop
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[LaunchPlugin] Error: {ex.Message}");
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     $"Failed to launch plugin: {ex.Message}",
                     DesktopLocalization.Get(DesktopLocalization.Dialog_LaunchError),
-                    true,
                     this);
             }
         }
@@ -2836,7 +2834,7 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// <summary>
         /// 从文件夹中移除插件到桌面
         /// </summary>
-        private void RemovePluginFromFolder(PluginDisplayItem plugin, FolderDesktopItem folder)
+        private async void RemovePluginFromFolder(PluginDisplayItem plugin, FolderDesktopItem folder)
         {
             try
             {
@@ -2883,11 +2881,9 @@ namespace Phobos.Components.Arcusrix.Desktop
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[RemovePluginFromFolder] Error: {ex.Message}");
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     $"Failed to move plugin out of folder: {ex.Message}",
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                    true,
                     this);
             }
         }
@@ -2895,16 +2891,15 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// <summary>
         /// 将插件添加到文件夹
         /// </summary>
-        private void AddPluginToFolder(PluginDisplayItem plugin, FolderDesktopItem folder)
+        private async void AddPluginToFolder(PluginDisplayItem plugin, FolderDesktopItem folder)
         {
             try
             {
                 if (folder.PluginPackageNames.Contains(plugin.PackageName))
                 {
-                    Service.Arcusrix.PSDialogService.Warning(
+                    await Service.Arcusrix.PSDialogService.Warning(
                         DesktopLocalization.GetFormat(DesktopLocalization.Dialog_AlreadyInFolder, plugin.Name),
                         DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                        true,
                         this);
                     return;
                 }
@@ -2925,11 +2920,9 @@ namespace Phobos.Components.Arcusrix.Desktop
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[AddPluginToFolder] Error: {ex.Message}");
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     $"Failed to add plugin to folder: {ex.Message}",
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                    true,
                     this);
             }
         }
@@ -2960,10 +2953,9 @@ namespace Phobos.Components.Arcusrix.Desktop
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ShowPluginInfo] Error: {ex.Message}");
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     $"Failed to show plugin info: {ex.Message}",
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                    true,
                     this);
             }
         }
@@ -2991,10 +2983,9 @@ namespace Phobos.Components.Arcusrix.Desktop
             try
             {
                 // 从数据库获取插件的 SettingUri
-                var records = await _database.ExecuteQuery(
-                    $"SELECT SettingUri FROM Phobos_Plugin WHERE PackageName = '{plugin.PackageName}'");
+                var records = await _database?.ExecuteQuery($"SELECT SettingUri FROM Phobos_Plugin WHERE PackageName = '{plugin.PackageName}'");
 
-                if (records.Count > 0)
+                if (records != null && records.Count > 0)
                 {
                     var settingUri = records[0]["SettingUri"]?.ToString();
 
@@ -3006,20 +2997,18 @@ namespace Phobos.Components.Arcusrix.Desktop
                     else
                     {
                         // 没有设置页面，显示提示
-                        Service.Arcusrix.PSDialogService.Warning(
+                        await Service.Arcusrix.PSDialogService.Warning(
                             DesktopLocalization.GetFormat(DesktopLocalization.Dialog_NoSettings, plugin.Name),
                             DesktopLocalization.Get(DesktopLocalization.Menu_Plugin_Settings),
-                            true,
                             this);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     $"Failed to open settings: {ex.Message}",
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                    true,
                     this);
             }
         }
@@ -3031,10 +3020,10 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             var t = alreadyUninstalled == true;
             // 显示确认对话框
-            var result = t ? t : Service.Arcusrix.PSDialogService.Confirm(
+            var result = t ? t : await Service.Arcusrix.PSDialogService.Confirm(
                 DesktopLocalization.GetFormat(DesktopLocalization.Dialog_ConfirmUninstall_Message, plugin.Name),
                 DesktopLocalization.Get(DesktopLocalization.Dialog_ConfirmUninstall),
-                true, this);
+                this);
 
             if (result)
             {
@@ -3078,7 +3067,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                     SaveLayout();
 
                     if (!t)
-                        Service.Arcusrix.PSDialogService.Info(
+                        await Service.Arcusrix.PSDialogService.Info(
                             $"Plugin '{plugin.Name}' has been uninstalled successfully.",
                             DesktopLocalization.Get(DesktopLocalization.Dialog_UninstallComplete),
                             true,
@@ -3086,10 +3075,9 @@ namespace Phobos.Components.Arcusrix.Desktop
                 }
                 catch (Exception ex)
                 {
-                    Service.Arcusrix.PSDialogService.Warning(
+                    await Service.Arcusrix.PSDialogService.Warning(
                         $"Failed to uninstall plugin: {ex.Message}",
                         DesktopLocalization.Get(DesktopLocalization.Dialog_UninstallFailed),
-                        true,
                         this);
                 }
             }
@@ -3786,10 +3774,9 @@ namespace Phobos.Components.Arcusrix.Desktop
             }
             catch (Exception ex)
             {
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     $"Failed to launch plugin: {ex.Message}",
                     DesktopLocalization.Get(DesktopLocalization.Dialog_LaunchError),
-                    true,
                     this);
 
             }

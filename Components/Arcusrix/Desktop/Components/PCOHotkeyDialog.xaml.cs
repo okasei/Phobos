@@ -65,7 +65,7 @@ namespace Phobos.Components.Arcusrix.Desktop.Components
         /// <summary>
         /// 捕获按键
         /// </summary>
-        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             e.Handled = true;
 
@@ -100,10 +100,9 @@ namespace Phobos.Components.Arcusrix.Desktop.Components
             if (_currentModifiers == ModifierKeys.None &&
                 !(key >= Key.F1 && key <= Key.F24))
             {
-                Service.Arcusrix.PSDialogService.Warning(
+                await Service.Arcusrix.PSDialogService.Warning(
                     DesktopLocalization.Get(DesktopLocalization.Hotkey_NeedModifier),
                     DesktopLocalization.Get(DesktopLocalization.Dialog_Error),
-                    true,
                     this);
                 return;
             }

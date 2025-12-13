@@ -3,6 +3,7 @@ using Phobos.Shared.Class;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
@@ -23,59 +24,59 @@ namespace Phobos.Service.Arcusrix
         /// <param name="title">标题（可选）</param>
         /// <param name="owner">父窗口（可选）</param>
         /// <returns>用户是否确认</returns>
-        public static bool Confirm(string message, string? title = null, bool isModal = true, Window? owner = null)
+        public async static Task<bool> Confirm(string message, string? title = null, Window? owner = null)
         {
-            return PCDialogPlugin.Confirm(message, title, isModal, owner);
+            return await PCDialogPlugin.ConfirmDialogAsync(message, title, owner);
         }
 
         /// <summary>
         /// 显示确认对话框（带调用者图标）
         /// </summary>
-        public static bool Confirm(string message, string? title, bool isModal = true, ImageSource? callerIcon = null, Window? owner = null)
+        public static async Task<bool> Confirm(string message, string? title, ImageSource? callerIcon = null, Window? owner = null)
         {
-            return PCDialogPlugin.Confirm(message, title, callerIcon, isModal, owner);
+            return await PCDialogPlugin.ConfirmDialogAsync(message, title, owner);
         }
 
         /// <summary>
         /// 显示信息对话框
         /// </summary>
-        public static void Info(string message, string? title = null, bool isModal = true, Window? owner = null)
+        public async static Task Info(string message, string? title = null, bool isModal = true, Window? owner = null)
         {
-            PCDialogPlugin.Info(message, title, isModal, owner);
+            await PCDialogPlugin.InfoDialogAsync(message, title, owner);
         }
 
         /// <summary>
         /// 显示警告对话框
         /// </summary>
-        public static void Warning(string message, string? title = null, bool isModal = true, Window? owner = null)
+        public async static Task Warning(string message, string? title = null, Window? owner = null)
         {
-            PCDialogPlugin.Warning(message, title, isModal, owner);
+            await PCDialogPlugin.WarningDialogAsync(message, title, owner);
         }
 
         /// <summary>
         /// 显示错误对话框
         /// </summary>
-        public static void Error(string message, string? title = null, bool isModal = true, Window? owner = null)
+        public async static Task Error(string message, string? title = null, Window? owner = null)
         {
-            PCDialogPlugin.Error(message, title, isModal, owner);
+            await PCDialogPlugin.ErrorDialogAsync(message, title, owner);
         }
 
         /// <summary>
         /// 显示是/否对话框
         /// </summary>
         /// <returns>true=是，false=否，null=取消/关闭</returns>
-        public static bool? YesNo(string message, string? title = null, bool isModal = true, Window? owner = null)
+        public async static Task<bool?> YesNo(string message, string? title = null, Window? owner = null)
         {
-            return PCDialogPlugin.YesNo(message, title, isModal, owner);
+            return await PCDialogPlugin.YesNoCancelDialogAsync(message, title, owner);
         }
 
         /// <summary>
         /// 显示是/否/取消对话框
         /// </summary>
         /// <returns>true=是，false=否，null=取消</returns>
-        public static bool? YesNoCancel(string message, string? title = null, bool isModal = true, Window? owner = null)
+        public async static Task<bool?> YesNoCancel(string message, string? title = null, Window? owner = null)
         {
-            return PCDialogPlugin.YesNoCancel(message, title, isModal, owner);
+            return await PCDialogPlugin.YesNoCancelDialogAsync(message, title, owner);
         }
 
         #endregion
@@ -85,9 +86,9 @@ namespace Phobos.Service.Arcusrix
         /// <summary>
         /// 显示自定义对话框
         /// </summary>
-        public static DialogCallbackResult Show(DialogConfig config)
+        public async static Task<DialogCallbackResult> Show(DialogConfig config)
         {
-            return PCDialogPlugin.Show(config);
+            return await PCDialogPlugin.ShowDialogAsync(config);
         }
 
         /// <summary>
@@ -140,13 +141,13 @@ namespace Phobos.Service.Arcusrix
                 config.PositionMode = DialogPositionMode.CenterOwner;
             }
 
-            PCDialogPlugin.Show(config);
+            PCDialogPlugin.ShowDialogAsync(config);
         }
 
         /// <summary>
         /// 显示带图片的确认对话框
         /// </summary>
-        public static bool ConfirmWithImage(string message, ImageSource image, string? title = null, bool isModal = true, Window? owner = null)
+        public async static Task<bool> ConfirmWithImage(string message, ImageSource image, string? title = null, bool isModal = true, Window? owner = null)
         {
             var config = DialogPresets.Confirm(message, title);
             config.ContentMode = DialogContentMode.ImageWithText;
@@ -158,7 +159,7 @@ namespace Phobos.Service.Arcusrix
                 config.PositionMode = DialogPositionMode.CenterOwner;
             }
 
-            var result = PCDialogPlugin.Show(config);
+            var result = await PCDialogPlugin.ShowDialogAsync(config);
             return result.ButtonTag == "ok";
         }
 
@@ -175,7 +176,7 @@ namespace Phobos.Service.Arcusrix
         /// <param name="showCancel">是否显示取消按钮</param>
         /// <param name="owner">父窗口</param>
         /// <returns>对话框结果</returns>
-        public static DialogCallbackResult ShowWithButtons(
+        public static async Task<DialogCallbackResult> ShowWithButtons(
             string message,
             string? title,
             List<DialogButton> buttons,
@@ -200,13 +201,13 @@ namespace Phobos.Service.Arcusrix
                 config.PositionMode = DialogPositionMode.CenterOwner;
             }
 
-            return PCDialogPlugin.Show(config);
+            return await PCDialogPlugin.ShowDialogAsync(config);
         }
 
         /// <summary>
         /// 显示三按钮对话框
         /// </summary>
-        public static string? ShowThreeButton(
+        public async static Task<string?> ShowThreeButton(
             string message,
             string? title,
             string button1Text,
@@ -222,14 +223,14 @@ namespace Phobos.Service.Arcusrix
                 new DialogButton { Text = button3Text, Tag = "button3", ButtonType = DialogButtonType.Secondary }
             };
 
-            var result = ShowWithButtons(message, title, buttons, false, isModal, owner);
+            var result = await ShowWithButtons(message, title, buttons, false, isModal, owner);
             return result.ButtonTag;
         }
 
         /// <summary>
         /// 显示四按钮对话框
         /// </summary>
-        public static string? ShowFourButton(
+        public async static Task<string?> ShowFourButton(
             string message,
             string? title,
             string button1Text,
@@ -247,7 +248,7 @@ namespace Phobos.Service.Arcusrix
                 new DialogButton { Text = button4Text, Tag = "button4", ButtonType = DialogButtonType.Secondary }
             };
 
-            var result = ShowWithButtons(message, title, buttons, false, isModal, owner);
+            var result = await ShowWithButtons(message, title, buttons, false, isModal, owner);
             return result.ButtonTag;
         }
 
@@ -264,8 +265,8 @@ namespace Phobos.Service.Arcusrix
 
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                var result = Confirm(message, title, false, owner);
-                tcs.SetResult(result);
+                var result = Confirm(message, title, owner);
+                tcs.SetResult(result.Result);
             });
 
             return tcs.Task;
@@ -274,17 +275,17 @@ namespace Phobos.Service.Arcusrix
         /// <summary>
         /// 异步显示是/否对话框
         /// </summary>
-        public static Task<bool?> YesNoAsync(string message, string? title = null, Window? owner = null)
+        public async static Task<bool?> YesNoAsync(string message, string? title = null, Window? owner = null)
         {
             var tcs = new TaskCompletionSource<bool?>();
 
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.Invoke(async () =>
             {
-                var result = YesNo(message, title, false, owner);
+                var result = await YesNo(message, title, owner);
                 tcs.SetResult(result);
             });
 
-            return tcs.Task;
+            return await tcs.Task;
         }
 
         /// <summary>
@@ -294,9 +295,9 @@ namespace Phobos.Service.Arcusrix
         {
             var tcs = new TaskCompletionSource<DialogCallbackResult>();
 
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.Invoke(async () =>
             {
-                var result = Show(config);
+                var result = await Show(config);
                 tcs.SetResult(result);
             });
 
@@ -310,7 +311,7 @@ namespace Phobos.Service.Arcusrix
         /// <summary>
         /// 显示自定义内容对话框
         /// </summary>
-        public static DialogCallbackResult ShowCustomContent(
+        public async static Task<DialogCallbackResult> ShowCustomContent(
             FrameworkElement content,
             string? title = null,
             List<DialogButton>? buttons = null,
@@ -342,13 +343,13 @@ namespace Phobos.Service.Arcusrix
                 config.PositionMode = DialogPositionMode.CenterOwner;
             }
 
-            return PCDialogPlugin.Show(config);
+            return await PCDialogPlugin.ShowDialogAsync(config);
         }
 
         /// <summary>
         /// 显示自定义按钮区域对话框
         /// </summary>
-        public static DialogCallbackResult ShowCustomButtons(
+        public static async Task<DialogCallbackResult> ShowCustomButtons(
             string message,
             FrameworkElement buttonArea,
             string? title = null,
@@ -370,7 +371,7 @@ namespace Phobos.Service.Arcusrix
                 config.PositionMode = DialogPositionMode.CenterOwner;
             }
 
-            return PCDialogPlugin.Show(config);
+            return await PCDialogPlugin.ShowDialogAsync(config);
         }
 
         #endregion

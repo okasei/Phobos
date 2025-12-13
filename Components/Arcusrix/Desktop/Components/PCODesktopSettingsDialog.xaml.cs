@@ -63,12 +63,11 @@ namespace Phobos.Components.Arcusrix.Desktop.Components
             }
         }
 
-        private void ResetLayout_Click(object sender, RoutedEventArgs e)
+        private async void ResetLayout_Click(object sender, RoutedEventArgs e)
         {
-            var result = Service.Arcusrix.PSDialogService.Confirm(
+            var result = await Service.Arcusrix.PSDialogService.Confirm(
                 "Are you sure you want to reset the desktop layout?\n\nAll folders will be removed and plugins will be rearranged in default order.",
                 "Confirm Reset",
-                true,
                 this);
 
             if (result)

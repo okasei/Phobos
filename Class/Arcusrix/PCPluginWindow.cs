@@ -190,7 +190,7 @@ namespace Phobos.Class.Arcusrix
                     parentDecorator.Child = null;
                 }
 
-                ContentArea.Children.Add(plugin.ContentArea);
+                ContentArea?.Children?.Add(plugin.ContentArea);
             }
 
             // 窗口状态变化处理
