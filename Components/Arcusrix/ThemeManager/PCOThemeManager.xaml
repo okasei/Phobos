@@ -1,0 +1,215 @@
+<UserControl x:Class="Phobos.Components.Arcusrix.ThemeManager.PCOThemeManager"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:common="clr-namespace:Phobos.Components.Arcusrix.Common;assembly=Phobos"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="720" d:DesignWidth="960">
+
+    <UserControl.Resources>
+        <!-- Theme card styles (specific to this view) -->
+        <Style x:Key="ThemeCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="ThemeCardSelectedStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Background3Brush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="CurrentBadgeStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Vertical" Grid.Column="0">
+                <TextBlock Text="Theme Manager" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource Foreground1Brush}"/>
+                <TextBlock Text="Select, preview and customize your themes" FontSize="13" Foreground="{DynamicResource Foreground3Brush}" Margin="0,4,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center">
+                <Button x:Name="RefreshButton" Content="Refresh" Style="{DynamicResource PhobosButtonSecondary}" Click="RefreshButton_Click"/>
+                <Button x:Name="ImportButton" Content="Import" Style="{DynamicResource PhobosButtonSecondary}" Margin="8,0,0,0" Click="ImportButton_Click"/>
+                <Button x:Name="NewButton" Content="Create New" Style="{DynamicResource PhobosButton}" Margin="8,0,0,0" Click="NewButton_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Theme list panel -->
+        <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource Background2Brush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="12" CornerRadius="8" Margin="0,0,12,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Search box -->
+                <TextBox x:Name="FilterBox" Grid.Row="0" Margin="0,0,0,12"
+                         Style="{DynamicResource PhobosSearchBox}"
+                         Tag="Search themes..."
+                         TextChanged="FilterBox_TextChanged"/>
+
+                <!-- Theme list -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{DynamicResource {x:Type ScrollViewer}}">
+                    <ItemsControl x:Name="ThemeList">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Preview & details panel -->
+        <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource Background2Brush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="16" CornerRadius="8" Margin="4,0,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Theme info header -->
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Vertical" Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="ThemeTitle" Text="Select a theme" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Foreground1Brush}"/>
+                            <Border x:Name="CurrentBadge" Visibility="Collapsed" Style="{StaticResource CurrentBadgeStyle}">
+                                <TextBlock Text="Current" FontSize="11" Foreground="{DynamicResource Background1Brush}"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock x:Name="ThemeInfo" Text="" FontSize="12" Foreground="{DynamicResource Foreground3Brush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Top">
+                        <Button x:Name="ApplyButton" Content="Apply" Style="{DynamicResource PhobosButton}" Click="ApplyButton_Click"/>
+                        <Button x:Name="PreviewButton" Content="Preview" Style="{DynamicResource PhobosButtonSecondary}" Margin="8,0,0,0" Click="PreviewButton_Click"/>
+                        <Button x:Name="ExportButton" Content="Export" Style="{DynamicResource PhobosButtonSecondary}" Margin="8,0,0,0" Click="ExportButton_Click"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Preview content -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="280"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Preview area -->
+                    <Border Grid.Column="0" x:Name="PreviewArea" Background="{DynamicResource Background1Brush}" CornerRadius="8" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="16" Margin="0,0,12,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel>
+                                <TextBlock Text="Preview" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Foreground2Brush}" Margin="0,0,0,12"/>
+
+                                <!-- Buttons -->
+                                <TextBlock Text="Buttons" FontSize="12" Foreground="{DynamicResource Foreground3Brush}" Margin="0,0,0,8"/>
+                                <WrapPanel Margin="0,0,0,16">
+                                    <Button Content="Primary" Margin="0,0,8,8" Style="{DynamicResource PhobosButton}"/>
+                                    <Button Content="Secondary" Margin="0,0,8,8" Style="{DynamicResource PhobosButtonSecondary}"/>
+                                    <Button Content="Ghost" Margin="0,0,8,8" Style="{DynamicResource PhobosButtonGhost}"/>
+                                    <Button Content="Danger" Margin="0,0,8,8" Style="{DynamicResource PhobosButtonDanger}"/>
+                                    <Button Content="Success" Margin="0,0,8,8" Style="{DynamicResource PhobosButtonSuccess}"/>
+                                    <Button Content="Disabled" Margin="0,0,8,8" Style="{DynamicResource PhobosButton}" IsEnabled="False"/>
+                                </WrapPanel>
+
+                                <!-- Input -->
+                                <TextBlock Text="Input" FontSize="12" Foreground="{DynamicResource Foreground3Brush}" Margin="0,0,0,8"/>
+                                <TextBox Width="300" Tag="Enter text..." Margin="0,0,0,8" HorizontalAlignment="Left" Style="{DynamicResource PhobosTextBox}"/>
+                                <TextBox Width="300" Text="Disabled input" Margin="0,0,0,16" HorizontalAlignment="Left" Style="{DynamicResource PhobosTextBox}" IsEnabled="False"/>
+
+                                <!-- Toggle and Radio -->
+                                <TextBlock Text="Selection" FontSize="12" Foreground="{DynamicResource Foreground3Brush}" Margin="0,0,0,8"/>
+                                <WrapPanel Margin="0,0,0,16">
+                                    <CheckBox Content="Checkbox" Margin="0,0,16,8" Style="{DynamicResource PhobosCheckBox}"/>
+                                    <CheckBox Content="Checked" IsChecked="True" Margin="0,0,16,8" Style="{DynamicResource PhobosCheckBox}"/>
+                                    <RadioButton Content="Option A" Margin="0,0,16,8" Style="{DynamicResource PhobosRadioButton}"/>
+                                    <RadioButton Content="Option B" Margin="0,0,16,8" Style="{DynamicResource PhobosRadioButton}"/>
+                                </WrapPanel>
+
+                                <!-- Toggle Switch -->
+                                <TextBlock Text="Toggle Switch" FontSize="12" Foreground="{DynamicResource Foreground3Brush}" Margin="0,0,0,8"/>
+                                <WrapPanel Margin="0,0,0,16">
+                                    <CheckBox Content="Off" Margin="0,0,16,8" Style="{DynamicResource PhobosToggleSwitch}"/>
+                                    <CheckBox Content="On" IsChecked="True" Margin="0,0,16,8" Style="{DynamicResource PhobosToggleSwitch}"/>
+                                </WrapPanel>
+
+                                <!-- Slider and Progress -->
+                                <TextBlock Text="Progress" FontSize="12" Foreground="{DynamicResource Foreground3Brush}" Margin="0,0,0,8"/>
+                                <Slider Width="300" Height="24" Margin="0,0,0,8" HorizontalAlignment="Left" Value="60" Style="{DynamicResource PhobosSlider}"/>
+                                <ProgressBar Width="300" Height="8" Margin="0,0,0,16" HorizontalAlignment="Left" Value="40" Style="{DynamicResource PhobosProgressBar}"/>
+
+                                <!-- List -->
+                                <TextBlock Text="List" FontSize="12" Foreground="{DynamicResource Foreground3Brush}" Margin="0,0,0,8"/>
+                                <ListBox Width="300" Height="120" HorizontalAlignment="Left" Style="{DynamicResource PhobosListBox}">
+                                    <ListBoxItem Style="{DynamicResource PhobosListBoxItem}">List item 1</ListBoxItem>
+                                    <ListBoxItem Style="{DynamicResource PhobosListBoxItem}" IsSelected="True">List item 2 (selected)</ListBoxItem>
+                                    <ListBoxItem Style="{DynamicResource PhobosListBoxItem}">List item 3</ListBoxItem>
+                                    <ListBoxItem Style="{DynamicResource PhobosListBoxItem}">List item 4</ListBoxItem>
+                                </ListBox>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Color editor panel -->
+                    <Border Grid.Column="1" Background="{DynamicResource Background3Brush}" CornerRadius="8" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Color Editor" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Foreground1Brush}" Margin="0,0,0,12"/>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="ColorEditorPanel"/>
+                            </ScrollViewer>
+
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                                <Button x:Name="SaveButton" Content="Save Changes" Style="{DynamicResource PhobosButton}" Click="SaveButton_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Status bar -->
+                <Border Grid.Row="2" Background="{DynamicResource Background3Brush}" CornerRadius="4" Padding="12,8" Margin="0,12,0,0">
+                    <TextBlock x:Name="StatusText" Text="Ready" FontSize="12" Foreground="{DynamicResource Foreground3Brush}"/>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

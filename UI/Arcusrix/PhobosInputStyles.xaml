@@ -11,7 +11,7 @@
 
     <!-- ============ 文本框基础样式 ============ -->
     <Style x:Key="PhobosTextBox" TargetType="TextBox">
-        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>

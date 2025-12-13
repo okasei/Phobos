@@ -1,4 +1,4 @@
-﻿using Phobos.Class.Database;
+using Phobos.Class.Database;
 using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Components.Arcusrix.Desktop;
 using Phobos.Components.Arcusrix.Dialog;
@@ -37,123 +37,12 @@ namespace Phobos
 
         #region i18n Error Messages
 
-        private static readonly Dictionary<string, Dictionary<string, string>> _errorMessages = new()
-        {
-            ["error.title"] = new() {
-                { "en-US", "Error - Phobos" },
-                { "zh-CN", "错误 - Phobos" },
-                { "zh-TW", "錯誤 - Phobos" },
-                { "ja-JP", "エラー - Phobos" },
-                { "ko-KR", "오류 - Phobos" }
-            },
-            ["error.fatal.title"] = new() {
-                { "en-US", "Fatal Error" },
-                { "zh-CN", "致命错误" },
-                { "zh-TW", "致命錯誤" },
-                { "ja-JP", "致命的エラー" },
-                { "ko-KR", "치명적 오류" }
-            },
-            ["error.startup.failed"] = new() {
-                { "en-US", "Failed to start Phobos" },
-                { "zh-CN", "Phobos 启动失败" },
-                { "zh-TW", "Phobos 啟動失敗" },
-                { "ja-JP", "Phobos の起動に失敗しました" },
-                { "ko-KR", "Phobos 시작 실패" }
-            },
-            ["error.paths.failed"] = new() {
-                { "en-US", "Failed to initialize application paths" },
-                { "zh-CN", "初始化应用程序路径失败" },
-                { "zh-TW", "初始化應用程式路徑失敗" },
-                { "ja-JP", "アプリケーションパスの初期化に失敗しました" },
-                { "ko-KR", "애플리케이션 경로 초기화 실패" }
-            },
-            ["error.database.failed"] = new() {
-                { "en-US", "Failed to connect to database" },
-                { "zh-CN", "数据库连接失败" },
-                { "zh-TW", "資料庫連接失敗" },
-                { "ja-JP", "データベース接続に失敗しました" },
-                { "ko-KR", "데이터베이스 연결 실패" }
-            },
-            ["error.database.init.failed"] = new() {
-                { "en-US", "Failed to initialize database" },
-                { "zh-CN", "初始化数据库失败" },
-                { "zh-TW", "初始化資料庫失敗" },
-                { "ja-JP", "データベースの初期化に失敗しました" },
-                { "ko-KR", "데이터베이스 초기화 실패" }
-            },
-            ["error.theme.failed"] = new() {
-                { "en-US", "Failed to load theme" },
-                { "zh-CN", "加载主题失败" },
-                { "zh-TW", "載入主題失敗" },
-                { "ja-JP", "テーマの読み込みに失敗しました" },
-                { "ko-KR", "테마 로드 실패" }
-            },
-            ["error.plugin.manager.failed"] = new() {
-                { "en-US", "Failed to initialize plugin manager" },
-                { "zh-CN", "初始化插件管理器失败" },
-                { "zh-TW", "初始化插件管理器失敗" },
-                { "ja-JP", "プラグインマネージャーの初期化に失敗しました" },
-                { "ko-KR", "플러그인 관리자 초기화 실패" }
-            },
-            ["error.plugin.register.failed"] = new() {
-                { "en-US", "Failed to register built-in plugins" },
-                { "zh-CN", "注册内置插件失败" },
-                { "zh-TW", "註冊內建插件失敗" },
-                { "ja-JP", "組み込みプラグインの登録に失敗しました" },
-                { "ko-KR", "내장 플러그인 등록 실패" }
-            },
-            ["error.plugin.launch.failed"] = new() {
-                { "en-US", "Failed to launch default plugin" },
-                { "zh-CN", "启动默认插件失败" },
-                { "zh-TW", "啟動預設插件失敗" },
-                { "ja-JP", "デフォルトプラグインの起動に失敗しました" },
-                { "ko-KR", "기본 플러그인 실행 실패" }
-            },
-            ["error.boot.failed"] = new() {
-                { "en-US", "Failed to execute boot items" },
-                { "zh-CN", "执行启动项失败" },
-                { "zh-TW", "執行啟動項失敗" },
-                { "ja-JP", "起動項目の実行に失敗しました" },
-                { "ko-KR", "부팅 항목 실행 실패" }
-            },
-            ["error.details"] = new() {
-                { "en-US", "Error details:" },
-                { "zh-CN", "错误详情：" },
-                { "zh-TW", "錯誤詳情：" },
-                { "ja-JP", "エラー詳細：" },
-                { "ko-KR", "오류 세부정보:" }
-            },
-            ["button.ok"] = new() {
-                { "en-US", "OK" },
-                { "zh-CN", "确定" },
-                { "zh-TW", "確定" },
-                { "ja-JP", "OK" },
-                { "ko-KR", "확인" }
-            },
-            ["button.exit"] = new() {
-                { "en-US", "Exit" },
-                { "zh-CN", "退出" },
-                { "zh-TW", "退出" },
-                { "ja-JP", "終了" },
-                { "ko-KR", "종료" }
-            }
-        };
-
+        /// <summary>
+        /// 获取错误消息的本地化文本
+        /// </summary>
         private static string GetErrorMessage(string key)
         {
-            var lang = CultureInfo.CurrentCulture.IetfLanguageTag;
-            if (_errorMessages.TryGetValue(key, out var dict))
-            {
-                if (dict.TryGetValue(lang, out var str)) return str;
-                // Try base language (e.g., "zh" from "zh-Hans")
-                var baseLang = lang.Contains("-") ? lang.Split('-')[0] : lang;
-                foreach (var kvp in dict)
-                {
-                    if (kvp.Key.StartsWith(baseLang)) return kvp.Value;
-                }
-                if (dict.TryGetValue("en-US", out var enStr)) return enStr;
-            }
-            return key;
+            return LocalizationManager.Instance.Get(key);
         }
 
         private static async Task ShowErrorDialogAsync(string titleKey, string messageKey, string? details = null)
@@ -225,6 +114,17 @@ namespace Phobos
                     return;
                 }
 
+                // 加载系统本地化资源（需要尽早加载，以便显示本地化的错误消息）
+                try
+                {
+                    LoadSystemLocalization();
+                }
+                catch (Exception ex)
+                {
+                    // 本地化加载失败不是致命错误，继续执行
+                    Debug.WriteLine($"System localization load failed: {ex.Message}");
+                }
+
                 // 初始化 SQLite
                 try
                 {
@@ -263,9 +163,12 @@ namespace Phobos
                 // 加载主题
                 try
                 {
-                    await InitializeTheme();
+                    // 先初始化主题管理器（注册所有主题）
                     await PMTheme.Instance.Initialize();
-                    await PMTheme.Instance.LoadTheme("com.phobos.theme.dark-blue");
+
+                    // 然后加载已保存的主题
+                    await PMTheme.Instance.LoadSavedThemeAsync();
+
                     await InitializeThemeManager();
                 }
                 catch (Exception ex)
@@ -338,6 +241,20 @@ namespace Phobos
             {
                 ShowFatalError("error.fatal.title", "error.startup.failed", $"{ex.Message}\n\n{ex.StackTrace}");
                 Shutdown(1);
+            }
+        }
+
+        /// <summary>
+        /// 加载系统本地化资源
+        /// </summary>
+        private void LoadSystemLocalization()
+        {
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var systemLocDir = Path.Combine(baseDir, "Assets", "Localization", "System");
+
+            if (Directory.Exists(systemLocDir))
+            {
+                LocalizationManager.Instance.LoadGlobalPacks(systemLocDir);
             }
         }
 
@@ -441,25 +358,6 @@ namespace Phobos
         {
             var locManager = LocalizationManager.Instance;
 
-            // 注册默认本地化资源
-            locManager.Register("app.name", new LocalizedString(new System.Collections.Generic.Dictionary<string, string>
-            {
-                { "en-US", "Phobos" },
-                { "zh-CN", "Phobos" }
-            }));
-
-            locManager.Register("app.error.database", new LocalizedString(new System.Collections.Generic.Dictionary<string, string>
-            {
-                { "en-US", "Database connection failed" },
-                { "zh-CN", "数据库连接失败" }
-            }));
-
-            locManager.Register("app.error.plugin", new LocalizedString(new System.Collections.Generic.Dictionary<string, string>
-            {
-                { "en-US", "Plugin loading failed" },
-                { "zh-CN", "插件加载失败" }
-            }));
-
             // 从数据库读取语言设置
             Task.Run(async () =>
             {
@@ -473,26 +371,6 @@ namespace Phobos
                     }
                 }
             }).Wait();
-        }
-
-        private async Task InitializeTheme()
-        {
-            var themeManager = PMTheme.Instance;
-
-            // 从数据库读取主题设置
-            string themeId = "dark";
-            if (Database != null)
-            {
-                var result = await Database.ExecuteQuery(
-                    "SELECT Content FROM Phobos_Main WHERE Key = 'Theme'");
-                if (result?.Count > 0)
-                {
-                    themeId = result[0]["Content"]?.ToString() ?? "dark";
-                }
-            }
-
-            // 加载主题
-            await themeManager.LoadTheme(themeId);
         }
 
         private async Task InitializePluginManager()
@@ -517,6 +395,7 @@ namespace Phobos
                 new PCDialogPlugin(),
                 new PCPluginInstaller(),
                 new PCDesktopPlugin(),
+                new PCThemePlugin(),
                 new PCRunnerPlugin(),
                 new PCNotifierPlugin()
             };
@@ -524,7 +403,7 @@ namespace Phobos
 
             var handlers = new PluginHandlers
             {
-                RequestPhobos = (caller, args) => Task.FromResult(new System.Collections.Generic.List<object>()),
+                RequestPhobos = PMPlugin.Instance.HandleRequestPhobos,
                 Link = async (caller, association) =>
                 {
                     // 内置插件的 Link 处理
@@ -631,15 +510,15 @@ namespace Phobos
                     }
                     return new RequestResult { Success = true };
                 },
-                Request = (caller, cmd, callback, args) => Task.FromResult(new RequestResult { Success = true }),
-                LinkDefault = (caller, protocol) => Task.FromResult(new RequestResult { Success = true }),
-                ReadConfig = (caller, key, pkg) => Task.FromResult(new ConfigResult { Success = false }),
-                WriteConfig = (caller, key, val, pkg) => Task.FromResult(new ConfigResult { Success = true }),
-                ReadSysConfig = (caller, key) => Task.FromResult(new ConfigResult { Success = false }),
-                WriteSysConfig = (caller, key, val) => Task.FromResult(new ConfigResult { Success = true }),
-                BootWithPhobos = (caller, cmd, priority, args) => Task.FromResult(new BootResult { Success = true }),
-                RemoveBootWithPhobos = (caller, uuid) => Task.FromResult(new BootResult { Success = true }),
-                GetBootItems = (caller) => Task.FromResult(new System.Collections.Generic.List<object>()),
+                Request = PMPlugin.Instance.HandleRequest,
+                LinkDefault = PMPlugin.Instance.HandleLinkDefault,
+                ReadConfig = PMPlugin.Instance.HandleReadConfig,
+                WriteConfig = PMPlugin.Instance.HandleWriteConfig,
+                ReadSysConfig = PMPlugin.Instance.HandleReadSysConfig,
+                WriteSysConfig = PMPlugin.Instance.HandleWriteSysConfig,
+                BootWithPhobos = PMPlugin.Instance.HandleBootWithPhobos,
+                RemoveBootWithPhobos = PMPlugin.Instance.HandleRemoveBootWithPhobos,
+                GetBootItems = PMPlugin.Instance.HandleGetBootItems,
                 Subscribe = async (caller, eventId, eventName, args) =>
                 {
                     return PMEvent.Instance.Subscribe(caller.PackageName, eventId, eventName);
@@ -684,13 +563,14 @@ namespace Phobos
                             { "@packageName", plugin.Metadata.PackageName }
                         });
                     var uninstallInfoJson = plugin.Metadata.UninstallInfo != null ? Newtonsoft.Json.JsonConvert.SerializeObject(plugin.Metadata.UninstallInfo) : string.Empty;
+                    var mainAssembly = plugin.Metadata.GetMainAssemblyFileName() ?? string.Empty;
                     if (existing?.Count == 0)
                     {
                         // 注册到数据库
                         await Database.ExecuteNonQuery(
-                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory,
+                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory, MainAssembly,
                                 Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime, Entry, LaunchFlag)
-                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, 'builtin',
+                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, 'builtin', @mainAssembly,
                                 @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'), @entry, @launchFlag)",
                             new System.Collections.Generic.Dictionary<string, object>
                             {
@@ -700,6 +580,7 @@ namespace Phobos
                                 { "@description", plugin.Metadata.GetLocalizedDescription("en-US") },
                                 { "@version", plugin.Metadata.Version },
                                 { "@secret", plugin.Metadata.Secret },
+                                { "@mainAssembly", mainAssembly },
                                 { "@icon", plugin.Metadata.Icon ?? string.Empty },
                                 { "@isSystemPlugin", plugin.Metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", plugin.Metadata.SettingUri ?? string.Empty },
@@ -707,6 +588,8 @@ namespace Phobos
                                 { "@entry", plugin.Metadata.Entry ?? string.Empty },
                                 { "@launchFlag", plugin.Metadata.LaunchFlag == true ? 1 : 0 }
                             });
+                        // 首次安装时调用 OnInstall
+                        await plugin.OnInstall();
                     }
                     else
                     {
@@ -714,7 +597,7 @@ namespace Phobos
                         await Database.ExecuteNonQuery(
                             @"UPDATE Phobos_Plugin SET
                                 Name = @name, Manufacturer = @manufacturer, Description = @description,
-                                Version = @version, Icon = @icon, IsSystemPlugin = @isSystemPlugin,
+                                Version = @version, MainAssembly = @mainAssembly, Icon = @icon, IsSystemPlugin = @isSystemPlugin,
                                 SettingUri = @settingUri, UninstallInfo = @uninstallInfo, Entry = @entry,
                                 LaunchFlag = @launchFlag, UpdateTime = datetime('now')
                               WHERE PackageName = @packageName",
@@ -725,6 +608,7 @@ namespace Phobos
                                 { "@manufacturer", plugin.Metadata.Manufacturer },
                                 { "@description", plugin.Metadata.GetLocalizedDescription("en-US") },
                                 { "@version", plugin.Metadata.Version },
+                                { "@mainAssembly", mainAssembly },
                                 { "@icon", plugin.Metadata.Icon ?? string.Empty },
                                 { "@isSystemPlugin", plugin.Metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", plugin.Metadata.SettingUri ?? string.Empty },
@@ -732,8 +616,6 @@ namespace Phobos
                                 { "@entry", plugin.Metadata.Entry ?? string.Empty },
                                 { "@launchFlag", plugin.Metadata.LaunchFlag == true ? 1 : 0 }
                             });
-                        // 调用 OnInstall (首次)
-                        await plugin.OnInstall();
                     }
                 }
 

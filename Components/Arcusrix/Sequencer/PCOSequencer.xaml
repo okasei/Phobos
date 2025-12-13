@@ -145,7 +145,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="{DynamicResource Background1Brush}">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

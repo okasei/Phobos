@@ -701,6 +701,216 @@ namespace Phobos.Manager.Database
 
         #endregion
 
+        #region Theme Management
+
+        /// <summary>
+        /// 注册主题到数据库
+        /// </summary>
+        public async Task<bool> RegisterTheme(string themeId, string name, string author, string description, string version, string filePath, bool isBuiltIn = false)
+        {
+            if (_database == null) return false;
+
+            try
+            {
+                await _database.ExecuteNonQuery(
+                    @"INSERT OR REPLACE INTO Phobos_Theme
+                      (ThemeId, Name, Author, Description, Version, FilePath, IsBuiltIn, IsEnabled, InstallTime, UpdateTime)
+                      VALUES
+                      (@themeId, @name, @author, @description, @version, @filePath, @isBuiltIn, 1, datetime('now'), datetime('now'))",
+                    new Dictionary<string, object>
+                    {
+                        { "@themeId", themeId },
+                        { "@name", name },
+                        { "@author", author },
+                        { "@description", description },
+                        { "@version", version },
+                        { "@filePath", filePath },
+                        { "@isBuiltIn", isBuiltIn ? 1 : 0 }
+                    });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Phobos.Theme.Register", $"Failed to register theme: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 注销主题
+        /// </summary>
+        public async Task<bool> UnregisterTheme(string themeId)
+        {
+            if (_database == null) return false;
+
+            try
+            {
+                await _database.ExecuteNonQuery(
+                    "DELETE FROM Phobos_Theme WHERE ThemeId = @themeId COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@themeId", themeId } });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Phobos.Theme.Unregister", $"Failed to unregister theme: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取主题记录
+        /// </summary>
+        public async Task<ThemeRecord?> GetThemeRecord(string themeId)
+        {
+            if (_database == null) return null;
+
+            try
+            {
+                var result = await _database.ExecuteQuery(
+                    "SELECT * FROM Phobos_Theme WHERE ThemeId = @themeId COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@themeId", themeId } });
+
+                if (result?.Count > 0)
+                {
+                    return ParseThemeRecord(result[0]);
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取所有主题记录
+        /// </summary>
+        public async Task<List<ThemeRecord>> GetAllThemeRecords()
+        {
+            var records = new List<ThemeRecord>();
+
+            if (_database == null) return records;
+
+            try
+            {
+                var result = await _database.ExecuteQuery("SELECT * FROM Phobos_Theme ORDER BY Name");
+
+                foreach (var row in result ?? new List<Dictionary<string, object>>())
+                {
+                    var record = ParseThemeRecord(row);
+                    if (record != null)
+                    {
+                        records.Add(record);
+                    }
+                }
+            }
+            catch { }
+
+            return records;
+        }
+
+        /// <summary>
+        /// 获取非内置主题记录
+        /// </summary>
+        public async Task<List<ThemeRecord>> GetUserThemeRecords()
+        {
+            var records = new List<ThemeRecord>();
+
+            if (_database == null) return records;
+
+            try
+            {
+                var result = await _database.ExecuteQuery(
+                    "SELECT * FROM Phobos_Theme WHERE IsBuiltIn = 0 ORDER BY Name");
+
+                foreach (var row in result ?? new List<Dictionary<string, object>>())
+                {
+                    var record = ParseThemeRecord(row);
+                    if (record != null)
+                    {
+                        records.Add(record);
+                    }
+                }
+            }
+            catch { }
+
+            return records;
+        }
+
+        /// <summary>
+        /// 检查主题是否已注册
+        /// </summary>
+        public async Task<bool> IsThemeRegistered(string themeId)
+        {
+            if (_database == null) return false;
+
+            try
+            {
+                var result = await _database.ExecuteScalar(
+                    "SELECT COUNT(*) FROM Phobos_Theme WHERE ThemeId = @themeId COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@themeId", themeId } });
+
+                return Convert.ToInt64(result) > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 启用/禁用主题
+        /// </summary>
+        public async Task<bool> SetThemeEnabled(string themeId, bool enabled)
+        {
+            if (_database == null) return false;
+
+            try
+            {
+                await _database.ExecuteNonQuery(
+                    "UPDATE Phobos_Theme SET IsEnabled = @enabled, UpdateTime = datetime('now') WHERE ThemeId = @themeId COLLATE NOCASE",
+                    new Dictionary<string, object>
+                    {
+                        { "@themeId", themeId },
+                        { "@enabled", enabled ? 1 : 0 }
+                    });
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private ThemeRecord? ParseThemeRecord(Dictionary<string, object> row)
+        {
+            try
+            {
+                var record = new ThemeRecord
+                {
+                    ThemeId = row["ThemeId"]?.ToString() ?? string.Empty,
+                    Name = row["Name"]?.ToString() ?? string.Empty,
+                    Author = row["Author"]?.ToString() ?? string.Empty,
+                    Description = row["Description"]?.ToString() ?? string.Empty,
+                    Version = row["Version"]?.ToString() ?? "1.0.0",
+                    FilePath = row["FilePath"]?.ToString() ?? string.Empty,
+                    IsBuiltIn = Convert.ToInt32(row["IsBuiltIn"] ?? 0) == 1,
+                    IsEnabled = Convert.ToInt32(row["IsEnabled"] ?? 1) == 1
+                };
+
+                if (DateTime.TryParse(row["InstallTime"]?.ToString(), out var installTime))
+                    record.InstallTime = installTime;
+                if (DateTime.TryParse(row["UpdateTime"]?.ToString(), out var updateTime))
+                    record.UpdateTime = updateTime;
+
+                return record;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// 备份数据库
         /// </summary>
@@ -731,5 +941,22 @@ namespace Phobos.Manager.Database
                 _database = null;
             }
         }
+    }
+
+    /// <summary>
+    /// 主题记录
+    /// </summary>
+    public class ThemeRecord
+    {
+        public string ThemeId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Author { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Version { get; set; } = "1.0.0";
+        public string FilePath { get; set; } = string.Empty;
+        public bool IsBuiltIn { get; set; }
+        public bool IsEnabled { get; set; } = true;
+        public DateTime InstallTime { get; set; } = DateTime.Now;
+        public DateTime UpdateTime { get; set; } = DateTime.Now;
     }
 }

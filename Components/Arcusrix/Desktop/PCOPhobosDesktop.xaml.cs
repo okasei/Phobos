@@ -2,6 +2,7 @@ using Phobos.Class.Database;
 using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Manager.Plugin;
 using Phobos.Shared.Interface;
+using Phobos.Utils.Media;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -212,50 +213,19 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             var storyboard = new Storyboard();
 
-            var elasticEase = new ElasticEase
-            {
-                EasingMode = EasingMode.EaseOut,
-                Oscillations = 1,
-                Springiness = 8
-            };
-
-            var cubicEase = new CubicEase { EasingMode = EasingMode.EaseOut };
+            var elasticEase = PUAnimation.CreateElasticEase(EasingMode.EaseOut, 1, 8);
+            var cubicEase = PUAnimation.CreateSmoothEase();
 
             // 淡入
-            var fadeIn = new DoubleAnimation
-            {
-                From = 0,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(fadeIn, MainBorder);
-            Storyboard.SetTargetProperty(fadeIn, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(fadeIn);
+            PUAnimation.AddOpacityAnimation(storyboard, MainBorder, 0, 1, 300, cubicEase);
 
             // 缩放X
-            var scaleX = new DoubleAnimation
-            {
-                From = 0.95,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(400),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(scaleX, MainBorder);
-            Storyboard.SetTargetProperty(scaleX, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
-            storyboard.Children.Add(scaleX);
+            PUAnimation.AddScaleXAnimation(storyboard, MainBorder, 0.95, 1, 400, elasticEase, 0,
+                "(UIElement.RenderTransform).(ScaleTransform.ScaleX)");
 
             // 缩放Y
-            var scaleY = new DoubleAnimation
-            {
-                From = 0.95,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(400),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(scaleY, MainBorder);
-            Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
-            storyboard.Children.Add(scaleY);
+            PUAnimation.AddScaleYAnimation(storyboard, MainBorder, 0.95, 1, 400, elasticEase, 0,
+                "(UIElement.RenderTransform).(ScaleTransform.ScaleY)");
 
             storyboard.Begin();
         }
@@ -267,35 +237,14 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             var storyboard = new Storyboard();
 
-            var elasticEase = new ElasticEase
-            {
-                EasingMode = EasingMode.EaseOut,
-                Oscillations = 1,
-                Springiness = 10
-            };
+            var elasticEase = PUAnimation.CreateElasticEase(EasingMode.EaseOut, 1, 10);
 
             // 快速缩放弹跳效果
-            var scaleX = new DoubleAnimation
-            {
-                From = 0.98,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(scaleX, MainBorder);
-            Storyboard.SetTargetProperty(scaleX, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
-            storyboard.Children.Add(scaleX);
+            PUAnimation.AddScaleXAnimation(storyboard, MainBorder, 0.98, 1, 300, elasticEase, 0,
+                "(UIElement.RenderTransform).(ScaleTransform.ScaleX)");
 
-            var scaleY = new DoubleAnimation
-            {
-                From = 0.98,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(scaleY, MainBorder);
-            Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
-            storyboard.Children.Add(scaleY);
+            PUAnimation.AddScaleYAnimation(storyboard, MainBorder, 0.98, 1, 300, elasticEase, 0,
+                "(UIElement.RenderTransform).(ScaleTransform.ScaleY)");
 
             storyboard.Begin();
 
@@ -347,19 +296,7 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// </summary>
         private void AnimateSearchBarWidth(Border border, double targetWidth)
         {
-            var cubicEase = new CubicEase
-            {
-                EasingMode = EasingMode.EaseOut
-            };
-
-            var animation = new DoubleAnimation
-            {
-                To = targetWidth,
-                Duration = TimeSpan.FromMilliseconds(250),
-                EasingFunction = cubicEase
-            };
-
-            border.BeginAnimation(WidthProperty, animation);
+            PUAnimation.AnimateWidthTo(border, targetWidth, 250, PUAnimation.CreateSmoothEase());
         }
 
         #endregion
@@ -825,61 +762,22 @@ namespace Phobos.Components.Arcusrix.Desktop
                 storyboard.BeginTime = TimeSpan.FromMilliseconds(delay);
 
                 // 弹性缓动函数
-                var elasticEase = new ElasticEase
-                {
-                    EasingMode = EasingMode.EaseOut,
-                    Oscillations = 1,
-                    Springiness = 5
-                };
-
-                var cubicEase = new CubicEase { EasingMode = EasingMode.EaseOut };
+                var elasticEase = PUAnimation.CreateElasticEase(EasingMode.EaseOut, 1, 5);
+                var cubicEase = PUAnimation.CreateSmoothEase();
 
                 // 透明度动画
-                var fadeIn = new DoubleAnimation
-                {
-                    From = 0,
-                    To = 1,
-                    Duration = TimeSpan.FromMilliseconds(300),
-                    EasingFunction = cubicEase
-                };
-                Storyboard.SetTarget(fadeIn, control);
-                Storyboard.SetTargetProperty(fadeIn, new PropertyPath(OpacityProperty));
-                storyboard.Children.Add(fadeIn);
+                PUAnimation.AddOpacityAnimation(storyboard, control, 0, 1, 300, cubicEase);
 
                 // Y轴位移动画（向上弹入）
-                var slideUp = new DoubleAnimation
-                {
-                    From = 30,
-                    To = 0,
-                    Duration = TimeSpan.FromMilliseconds(400),
-                    EasingFunction = elasticEase
-                };
-                Storyboard.SetTarget(slideUp, control);
-                Storyboard.SetTargetProperty(slideUp, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(TranslateTransform.Y)"));
-                storyboard.Children.Add(slideUp);
+                PUAnimation.AddTranslateYAnimation(storyboard, control, 30, 0, 400, elasticEase, 0,
+                    "(UIElement.RenderTransform).(TransformGroup.Children)[0].(TranslateTransform.Y)");
 
                 // 缩放动画
-                var scaleX = new DoubleAnimation
-                {
-                    From = 0.8,
-                    To = 1,
-                    Duration = TimeSpan.FromMilliseconds(350),
-                    EasingFunction = elasticEase
-                };
-                Storyboard.SetTarget(scaleX, control);
-                Storyboard.SetTargetProperty(scaleX, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleX)"));
-                storyboard.Children.Add(scaleX);
+                PUAnimation.AddScaleXAnimation(storyboard, control, 0.8, 1, 350, elasticEase, 0,
+                    "(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleX)");
 
-                var scaleY = new DoubleAnimation
-                {
-                    From = 0.8,
-                    To = 1,
-                    Duration = TimeSpan.FromMilliseconds(350),
-                    EasingFunction = elasticEase
-                };
-                Storyboard.SetTarget(scaleY, control);
-                Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleY)"));
-                storyboard.Children.Add(scaleY);
+                PUAnimation.AddScaleYAnimation(storyboard, control, 0.8, 1, 350, elasticEase, 0,
+                    "(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleY)");
 
                 storyboard.Begin();
             }
@@ -932,15 +830,18 @@ namespace Phobos.Components.Arcusrix.Desktop
             grid.Children.Add(iconBorder);
 
             // 名称 - 限制两行，超出省略
+            var fontSize = (double)FindResource("FontSizeSm");
             var nameText = new TextBlock
             {
                 Text = plugin.Name,
-                FontSize = (double)FindResource("FontSizeSm"),
+                FontSize = fontSize,
+                LineHeight = fontSize * 1.3, // 行高为字体大小的1.3倍
+                MaxHeight = fontSize * 1.3 * 2, // 最多两行
+                Width = 88, // 与容器同宽，确保文字能换行
                 Foreground = (SolidColorBrush)FindResource("Foreground1Brush"),
                 TextAlignment = TextAlignment.Center,
                 TextWrapping = TextWrapping.Wrap,
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxHeight = 32, // 约两行
                 Margin = new Thickness(0, 4, 0, 0),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Top
@@ -1132,15 +1033,18 @@ namespace Phobos.Components.Arcusrix.Desktop
             grid.Children.Add(iconBorder);
 
             // 文件夹名称 - 限制两行，超出省略
+            var fontSize = (double)FindResource("FontSizeSm");
             var nameText = new TextBlock
             {
                 Text = folder.Name,
-                FontSize = (double)FindResource("FontSizeSm"),
+                FontSize = fontSize,
+                LineHeight = fontSize * 1.3, // 行高为字体大小的1.3倍
+                MaxHeight = fontSize * 1.3 * 2, // 最多两行
+                Width = 88, // 与容器同宽，确保文字能换行
                 Foreground = (SolidColorBrush)FindResource("Foreground1Brush"),
                 TextAlignment = TextAlignment.Center,
                 TextWrapping = TextWrapping.Wrap,
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxHeight = 32,
                 Margin = new Thickness(0, 4, 0, 0),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Top
@@ -1395,15 +1299,18 @@ namespace Phobos.Components.Arcusrix.Desktop
             grid.Children.Add(iconContainer);
 
             // 快捷方式名称 - 限制两行，超出省略
+            var fontSize = (double)FindResource("FontSizeSm");
             var nameText = new TextBlock
             {
                 Text = shortcut.Name,
-                FontSize = (double)FindResource("FontSizeSm"),
+                FontSize = fontSize,
+                LineHeight = fontSize * 1.3, // 行高为字体大小的1.3倍
+                MaxHeight = fontSize * 1.3 * 2, // 最多两行
+                Width = 88, // 与容器同宽，确保文字能换行
                 Foreground = (SolidColorBrush)FindResource("Foreground1Brush"),
                 TextAlignment = TextAlignment.Center,
                 TextWrapping = TextWrapping.Wrap,
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxHeight = 32,
                 Margin = new Thickness(0, 4, 0, 0),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Top
@@ -1812,21 +1719,7 @@ namespace Phobos.Components.Arcusrix.Desktop
         /// </summary>
         private void AnimateIconScale(FrameworkElement icon, double scale, int duration)
         {
-            var scaleTransform = icon.RenderTransform as ScaleTransform;
-            if (scaleTransform == null)
-            {
-                scaleTransform = new ScaleTransform(1, 1);
-                icon.RenderTransform = scaleTransform;
-                icon.RenderTransformOrigin = new Point(0.5, 0.5);
-            }
-
-            var animation = new DoubleAnimation(scale, TimeSpan.FromMilliseconds(duration))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            };
-
-            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, animation);
-            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, animation);
+            PUAnimation.ScaleTo(icon, scale, duration, PUAnimation.CreateSmoothEase());
         }
 
         /// <summary>
@@ -1998,73 +1891,26 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             var storyboard = new Storyboard();
 
-            var elasticEase = new ElasticEase
-            {
-                EasingMode = EasingMode.EaseOut,
-                Oscillations = 1,
-                Springiness = 6
-            };
-            var cubicEase = new CubicEase { EasingMode = EasingMode.EaseOut };
+            var elasticEase = PUAnimation.CreateElasticEase(EasingMode.EaseOut, 1, 6);
+            var cubicEase = PUAnimation.CreateSmoothEase();
 
             // 遮罩淡入
-            var overlayFade = new DoubleAnimation
-            {
-                From = 0,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(200),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(overlayFade, FolderOverlay);
-            Storyboard.SetTargetProperty(overlayFade, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(overlayFade);
+            PUAnimation.AddOpacityAnimation(storyboard, FolderOverlay, 0, 1, 200, cubicEase);
 
             // 面板淡入
-            var panelFade = new DoubleAnimation
-            {
-                From = 0,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(250),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(panelFade, FolderPanel);
-            Storyboard.SetTargetProperty(panelFade, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(panelFade);
+            PUAnimation.AddOpacityAnimation(storyboard, FolderPanel, 0, 1, 250, cubicEase);
 
             // 面板缩放X
-            var scaleX = new DoubleAnimation
-            {
-                From = 0.8,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(350),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(scaleX, FolderPanel);
-            Storyboard.SetTargetProperty(scaleX, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"));
-            storyboard.Children.Add(scaleX);
+            PUAnimation.AddScaleXAnimation(storyboard, FolderPanel, 0.8, 1, 350, elasticEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)");
 
             // 面板缩放Y
-            var scaleY = new DoubleAnimation
-            {
-                From = 0.8,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(350),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(scaleY, FolderPanel);
-            Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"));
-            storyboard.Children.Add(scaleY);
+            PUAnimation.AddScaleYAnimation(storyboard, FolderPanel, 0.8, 1, 350, elasticEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)");
 
             // 面板上移
-            var slideUp = new DoubleAnimation
-            {
-                From = 20,
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(350),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(slideUp, FolderPanel);
-            Storyboard.SetTargetProperty(slideUp, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"));
-            storyboard.Children.Add(slideUp);
+            PUAnimation.AddTranslateYAnimation(storyboard, FolderPanel, 20, 0, 350, elasticEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)");
 
             storyboard.Begin();
         }
@@ -2076,54 +1922,20 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             var storyboard = new Storyboard();
 
-            var cubicEase = new CubicEase { EasingMode = EasingMode.EaseIn };
+            var cubicEase = PUAnimation.CreateSmoothEase(EasingMode.EaseIn);
 
             // 遮罩淡出
-            var overlayFade = new DoubleAnimation
-            {
-                From = 1,
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(150),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(overlayFade, FolderOverlay);
-            Storyboard.SetTargetProperty(overlayFade, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(overlayFade);
+            PUAnimation.AddOpacityAnimation(storyboard, FolderOverlay, 1, 0, 150, cubicEase);
 
             // 面板淡出
-            var panelFade = new DoubleAnimation
-            {
-                From = 1,
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(150),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(panelFade, FolderPanel);
-            Storyboard.SetTargetProperty(panelFade, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(panelFade);
+            PUAnimation.AddOpacityAnimation(storyboard, FolderPanel, 1, 0, 150, cubicEase);
 
             // 面板缩小
-            var scaleX = new DoubleAnimation
-            {
-                From = 1,
-                To = 0.9,
-                Duration = TimeSpan.FromMilliseconds(150),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(scaleX, FolderPanel);
-            Storyboard.SetTargetProperty(scaleX, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"));
-            storyboard.Children.Add(scaleX);
+            PUAnimation.AddScaleXAnimation(storyboard, FolderPanel, 1, 0.9, 150, cubicEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)");
 
-            var scaleY = new DoubleAnimation
-            {
-                From = 1,
-                To = 0.9,
-                Duration = TimeSpan.FromMilliseconds(150),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(scaleY, FolderPanel);
-            Storyboard.SetTargetProperty(scaleY, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"));
-            storyboard.Children.Add(scaleY);
+            PUAnimation.AddScaleYAnimation(storyboard, FolderPanel, 1, 0.9, 150, cubicEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)");
 
             storyboard.Completed += (s, e) =>
             {
@@ -3407,75 +3219,27 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             var storyboard = new Storyboard();
 
-            var elasticEase = new ElasticEase
-            {
-                EasingMode = EasingMode.EaseOut,
-                Oscillations = 1,
-                Springiness = 6
-            };
-
-            var cubicEase = new CubicEase { EasingMode = EasingMode.EaseOut };
+            var elasticEase = PUAnimation.CreateElasticEase(EasingMode.EaseOut, 1, 6);
+            var cubicEase = PUAnimation.CreateSmoothEase();
 
             // 遮罩淡入
             SettingsOverlay.Opacity = 0;
-            var overlayFade = new DoubleAnimation
-            {
-                From = 0,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(200),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(overlayFade, SettingsOverlay);
-            Storyboard.SetTargetProperty(overlayFade, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(overlayFade);
+            PUAnimation.AddOpacityAnimation(storyboard, SettingsOverlay, 0, 1, 200, cubicEase);
 
             // 面板淡入
             SettingsPanel.Opacity = 0;
-            var fadeIn = new DoubleAnimation
-            {
-                From = 0,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(250),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(fadeIn, SettingsPanel);
-            Storyboard.SetTargetProperty(fadeIn, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(fadeIn);
+            PUAnimation.AddOpacityAnimation(storyboard, SettingsPanel, 0, 1, 250, cubicEase);
 
             // 缩放动画
-            var scaleXAnim = new DoubleAnimation
-            {
-                From = 0.85,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(350),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(scaleXAnim, SettingsPanel);
-            Storyboard.SetTargetProperty(scaleXAnim, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"));
-            storyboard.Children.Add(scaleXAnim);
+            PUAnimation.AddScaleXAnimation(storyboard, SettingsPanel, 0.85, 1, 350, elasticEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)");
 
-            var scaleYAnim = new DoubleAnimation
-            {
-                From = 0.85,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(350),
-                EasingFunction = elasticEase
-            };
-            Storyboard.SetTarget(scaleYAnim, SettingsPanel);
-            Storyboard.SetTargetProperty(scaleYAnim, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"));
-            storyboard.Children.Add(scaleYAnim);
+            PUAnimation.AddScaleYAnimation(storyboard, SettingsPanel, 0.85, 1, 350, elasticEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)");
 
             // Y轴位移
-            var slideAnim = new DoubleAnimation
-            {
-                From = 20,
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(slideAnim, SettingsPanel);
-            Storyboard.SetTargetProperty(slideAnim, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"));
-            storyboard.Children.Add(slideAnim);
+            PUAnimation.AddTranslateYAnimation(storyboard, SettingsPanel, 20, 0, 300, cubicEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)");
 
             storyboard.Begin();
         }
@@ -3487,61 +3251,24 @@ namespace Phobos.Components.Arcusrix.Desktop
         {
             var storyboard = new Storyboard();
 
-            var cubicEase = new CubicEase { EasingMode = EasingMode.EaseIn };
+            var cubicEase = PUAnimation.CreateSmoothEase(EasingMode.EaseIn);
 
             // 遮罩淡出
-            var overlayFade = new DoubleAnimation
-            {
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(200),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(overlayFade, SettingsOverlay);
-            Storyboard.SetTargetProperty(overlayFade, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(overlayFade);
+            PUAnimation.AddOpacityAnimation(storyboard, SettingsOverlay, 1, 0, 200, cubicEase);
 
             // 面板淡出
-            var fadeOut = new DoubleAnimation
-            {
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(180),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(fadeOut, SettingsPanel);
-            Storyboard.SetTargetProperty(fadeOut, new PropertyPath(OpacityProperty));
-            storyboard.Children.Add(fadeOut);
+            PUAnimation.AddOpacityAnimation(storyboard, SettingsPanel, 1, 0, 180, cubicEase);
 
             // 缩放动画
-            var scaleXAnim = new DoubleAnimation
-            {
-                To = 0.9,
-                Duration = TimeSpan.FromMilliseconds(180),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(scaleXAnim, SettingsPanel);
-            Storyboard.SetTargetProperty(scaleXAnim, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"));
-            storyboard.Children.Add(scaleXAnim);
+            PUAnimation.AddScaleXAnimation(storyboard, SettingsPanel, 1, 0.9, 180, cubicEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)");
 
-            var scaleYAnim = new DoubleAnimation
-            {
-                To = 0.9,
-                Duration = TimeSpan.FromMilliseconds(180),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(scaleYAnim, SettingsPanel);
-            Storyboard.SetTargetProperty(scaleYAnim, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"));
-            storyboard.Children.Add(scaleYAnim);
+            PUAnimation.AddScaleYAnimation(storyboard, SettingsPanel, 1, 0.9, 180, cubicEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)");
 
             // Y轴位移
-            var slideAnim = new DoubleAnimation
-            {
-                To = 15,
-                Duration = TimeSpan.FromMilliseconds(180),
-                EasingFunction = cubicEase
-            };
-            Storyboard.SetTarget(slideAnim, SettingsPanel);
-            Storyboard.SetTargetProperty(slideAnim, new PropertyPath("(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"));
-            storyboard.Children.Add(slideAnim);
+            PUAnimation.AddTranslateYAnimation(storyboard, SettingsPanel, 0, 15, 180, cubicEase, 0,
+                "(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)");
 
             storyboard.Completed += (s, e) => onCompleted?.Invoke();
             storyboard.Begin();

@@ -8,7 +8,7 @@
         Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
-        Width="420"
+        Width="580"
         SizeToContent="Height"
         WindowStartupLocation="Manual">
 
@@ -80,7 +80,7 @@
     <Border x:Name="MainBorder"
             Background="{DynamicResource Background2Brush}"
             CornerRadius="24"
-            MinWidth="120"
+            MaxWidth="560"
             Margin="10"
             HorizontalAlignment="Center"
             Cursor="Hand"
@@ -100,9 +100,12 @@
         </Border.Effect>
 
         <!-- 用于高度动画的容器 -->
-        <Grid x:Name="ContentGrid" Margin="12,8" ClipToBounds="True">
+        <Grid x:Name="ContentGrid" Margin="14,10" ClipToBounds="True">
             <!-- 最小化模式 -->
             <Grid x:Name="MinimizedContent" Visibility="Visible">
+                <Grid.RenderTransform>
+                    <TranslateTransform x:Name="MinContentTranslate" X="0" Y="0"/>
+                </Grid.RenderTransform>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -129,8 +132,7 @@
                            FontSize="{DynamicResource FontSizeSm}"
                            FontWeight="{DynamicResource FontWeightSemibold}"
                            VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis"
-                           MaxWidth="180"/>
+                           TextTrimming="CharacterEllipsis"/>
 
                 <!-- 右侧提示图片 -->
                 <Border Grid.Column="2"
@@ -146,6 +148,9 @@
 
             <!-- 展开模式 -->
             <Grid x:Name="ExpandedContent" Visibility="Collapsed">
+                <Grid.RenderTransform>
+                    <TranslateTransform x:Name="ExpandContentTranslate" X="0" Y="0"/>
+                </Grid.RenderTransform>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -154,7 +159,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- 第一行: 图标 + 标题 -->
-                <Grid Grid.Row="0" Margin="0,0,0,8">
+                <Grid Grid.Row="0" Margin="0,2,0,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -162,12 +167,12 @@
 
                     <!-- 图标 -->
                     <Border Grid.Column="0"
-                            Width="36" Height="36"
+                            Width="44" Height="44"
                             CornerRadius="{DynamicResource CornerRadiusMdAll}"
                             Background="{DynamicResource Background3Brush}"
-                            Margin="0,0,10,0">
+                            Margin="0,0,12,0">
                         <Image x:Name="ExpandIcon"
-                               Width="28" Height="28"
+                               Width="32" Height="32"
                                Stretch="Uniform"/>
                     </Border>
 
@@ -177,7 +182,7 @@
                                Text="通知标题"
                                Foreground="{DynamicResource Foreground1Brush}"
                                FontFamily="{DynamicResource FontPrimary}"
-                               FontSize="{DynamicResource FontSizeMd}"
+                               FontSize="{DynamicResource FontSizeLg}"
                                FontWeight="{DynamicResource FontWeightSemibold}"
                                VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis"/>
@@ -186,8 +191,11 @@
                 <!-- 第二行: 内容区域 -->
                 <Border x:Name="ContentArea"
                         Grid.Row="1"
-                        Margin="0,0,0,8"
-                        MaxHeight="150">
+                        Margin="0,0,0,10"
+                        Padding="8"
+                        Background="{DynamicResource Background3Brush}"
+                        CornerRadius="{DynamicResource CornerRadiusMdAll}"
+                        ClipToBounds="True">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
                         <!-- 内容容器 - 可以是 TextBlock 或自定义 UserControl -->

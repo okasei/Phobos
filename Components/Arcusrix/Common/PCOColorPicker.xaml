@@ -1,0 +1,44 @@
+<UserControl x:Class="Phobos.Components.Arcusrix.Common.PCOColorPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="36" d:DesignWidth="300">
+
+    <Grid>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBlock x:Name="Label" Text="Color" Width="140" VerticalAlignment="Center" Foreground="{DynamicResource Foreground1Brush}"/>
+            <Border x:Name="ColorPreview" Width="36" Height="24" CornerRadius="4" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="8,0,8,0" Background="White" MouseLeftButtonUp="ColorPreview_MouseLeftButtonUp" Cursor="Hand"/>
+            <TextBox x:Name="HexText" Width="110" VerticalAlignment="Center" TextChanged="HexText_TextChanged" Background="Transparent" Foreground="{DynamicResource Foreground1Brush}" BorderThickness="0"/>
+        </StackPanel>
+
+        <Popup x:Name="PickerPopup" PlacementTarget="{Binding ElementName=ColorPreview}" Placement="Bottom" StaysOpen="False">
+            <Border Background="{DynamicResource Background2Brush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="8" CornerRadius="6">
+                <StackPanel>
+                    <TextBlock Text="Pick Color" Foreground="{DynamicResource Foreground1Brush}" FontWeight="SemiBold" Margin="0,0,0,6" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="R" Width="20" VerticalAlignment="Center" Foreground="{DynamicResource Foreground3Brush}"/>
+                        <Slider x:Name="SliderR" Minimum="0" Maximum="255" Width="200" ValueChanged="Slider_ValueChanged"/>
+                        <TextBlock x:Name="ValueR" Width="36" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource Foreground1Brush}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="G" Width="20" VerticalAlignment="Center" Foreground="{DynamicResource Foreground3Brush}"/>
+                        <Slider x:Name="SliderG" Minimum="0" Maximum="255" Width="200" ValueChanged="Slider_ValueChanged"/>
+                        <TextBlock x:Name="ValueG" Width="36" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource Foreground1Brush}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="B" Width="20" VerticalAlignment="Center" Foreground="{DynamicResource Foreground3Brush}"/>
+                        <Slider x:Name="SliderB" Minimum="0" Maximum="255" Width="200" ValueChanged="Slider_ValueChanged"/>
+                        <TextBlock x:Name="ValueB" Width="36" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource Foreground1Brush}"/>
+                    </StackPanel>
+                    <Rectangle x:Name="PopupPreview" Height="36" RadiusX="6" RadiusY="6" Margin="0,6,0,6" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="BtnOk" Content="Ok" Width="80" Margin="6,0,0,0" Click="BtnOk_Click"/>
+                        <Button x:Name="BtnCancel" Content="Cancel" Width="80" Margin="6,0,0,0" Click="BtnCancel_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

@@ -166,6 +166,7 @@ namespace Phobos.Manager.Arcusrix
         /// </summary>
         public async Task TriggerAsync(string eventId, string eventName, string source, params object[] args)
         {
+            // 通知插件订阅者
             var subscribers = GetSubscribers(eventId, eventName);
 
             foreach (var packageName in subscribers)

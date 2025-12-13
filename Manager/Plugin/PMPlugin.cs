@@ -3,6 +3,7 @@ using Phobos.Class.Database;
 using Phobos.Class.Plugin.BuiltIn;
 using Phobos.Interface.Plugin;
 using Phobos.Manager.Arcusrix;
+using Phobos.Manager.Database;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 using Phobos.Utils.General;
@@ -343,14 +344,20 @@ namespace Phobos.Manager.Plugin
 
                 var metadata = pluginInstance.Metadata;
 
+                // 检查是否为主题插件 (实现了 IThemePlugin 和 IPhobosTheme)
+                var isThemePlugin = pluginInstance is IThemePlugin && pluginInstance is IPhobosTheme;
+
                 var existing = await _database?.ExecuteQuery(
                     "SELECT * FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
                     new Dictionary<string, object> { { "@packageName", metadata.PackageName } });
 
-                if (existing?.Count > 0)
+                // 同时检查 Phobos_Theme 表
+                var existingTheme = isThemePlugin ? await PMDatabase.Instance.GetThemeRecord(metadata.PackageName) : null;
+
+                if (existing?.Count > 0 || existingTheme != null)
                 {
                     // 验证 Secret Key 是否一致
-                    var existingSecret = existing[0]["Secret"]?.ToString() ?? string.Empty;
+                    var existingSecret = existing?.Count > 0 ? existing[0]["Secret"]?.ToString() ?? string.Empty : string.Empty;
                     if (!string.IsNullOrEmpty(existingSecret) && existingSecret != metadata.Secret)
                     {
                         tempContext.Unload();
@@ -404,18 +411,24 @@ namespace Phobos.Manager.Plugin
                     }
                 }
 
+                // 获取主程序集文件名（用于日志）
+                var mainAssemblyForLog = metadata.GetMainAssemblyFileName() ?? string.Empty;
+
                 if (_database != null)
                 {
                     var uninstallInfoJson = metadata.UninstallInfo != null
                         ? Newtonsoft.Json.JsonConvert.SerializeObject(metadata.UninstallInfo)
                         : string.Empty;
 
+                    // 获取主程序集文件名
+                    var mainAssembly = mainAssemblyForLog;
+
                     if (existing?.Count > 0)
                     {
                         await _database.ExecuteNonQuery(
                             @"UPDATE Phobos_Plugin SET
                                 Name = @name, Manufacturer = @manufacturer, Description = @description,
-                                Version = @version, Secret = @secret, Directory = @directory,
+                                Version = @version, Secret = @secret, Directory = @directory, MainAssembly = @mainAssembly,
                                 Icon = @icon, IsSystemPlugin = @isSystemPlugin, SettingUri = @settingUri,
                                 UninstallInfo = @uninstallInfo, Entry = @entry, LaunchFlag = @launchFlag, UpdateTime = datetime('now')
                               WHERE PackageName = @packageName COLLATE NOCASE",
@@ -428,6 +441,7 @@ namespace Phobos.Manager.Plugin
                                 { "@version", metadata.Version },
                                 { "@secret", metadata.Secret },
                                 { "@directory", pluginDir },
+                                { "@mainAssembly", mainAssembly },
                                 { "@icon", metadata.Icon ?? string.Empty },
                                 { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", metadata.SettingUri ?? string.Empty },
@@ -439,9 +453,9 @@ namespace Phobos.Manager.Plugin
                     else
                     {
                         await _database.ExecuteNonQuery(
-                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory,
+                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory, MainAssembly,
                                 Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime, Entry, LaunchFlag)
-                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, @directory,
+                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, @directory, @mainAssembly,
                                 @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'), @entry, @launchFlag)",
                             new Dictionary<string, object>
                             {
@@ -452,6 +466,7 @@ namespace Phobos.Manager.Plugin
                                 { "@version", metadata.Version },
                                 { "@secret", metadata.Secret },
                                 { "@directory", pluginDir },
+                                { "@mainAssembly", mainAssembly },
                                 { "@icon", metadata.Icon ?? string.Empty },
                                 { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
                                 { "@settingUri", metadata.SettingUri ?? string.Empty },
@@ -460,7 +475,24 @@ namespace Phobos.Manager.Plugin
                                 { "@launchFlag", metadata.LaunchFlag == true ? 1 : 0 }
                             });
                     }
+
+                    // 如果是主题插件，同时注册到 Phobos_Theme 表
+                    if (isThemePlugin)
+                    {
+                        PCLoggerPlugin.Info("PMPlugin", $"Detected IThemePlugin: registering '{metadata.PackageName}' to Phobos_Theme table");
+                        await PMDatabase.Instance.RegisterTheme(
+                            themeId: metadata.PackageName,
+                            name: metadata.Name,
+                            author: metadata.Manufacturer,
+                            description: metadata.GetLocalizedDescription("en-US"),
+                            version: metadata.Version,
+                            filePath: destPath,
+                            isBuiltIn: false
+                        );
+                    }
                 }
+
+                PCLoggerPlugin.Info("PMPlugin", $"Installing plugin '{metadata.PackageName}', MainAssembly='{mainAssemblyForLog}', IsThemePlugin={isThemePlugin}");
 
                 var loadResult = await Load(metadata.PackageName);
                 if (loadResult.Success)
@@ -470,7 +502,24 @@ namespace Phobos.Manager.Plugin
                     {
                         try
                         {
+                            PCLoggerPlugin.Debug("PMPlugin", $"Calling OnInstall for plugin '{metadata.PackageName}'");
                             await plugin.OnInstall();
+                            PCLoggerPlugin.Info("PMPlugin", $"Plugin '{metadata.PackageName}' OnInstall completed");
+
+                            // 如果是主题插件，注册到 PMTheme 并触发 Theme.Installed 事件
+                            if (plugin is IThemePlugin && plugin is IPhobosTheme theme)
+                            {
+                                PMTheme.Instance.RegisterTheme(theme);
+                                PCLoggerPlugin.Info("PMPlugin", $"Registered theme '{theme.ThemeId}' to PMTheme");
+
+                                // 触发 Theme.Installed 事件
+                                await PMEvent.Instance.TriggerAsync("Theme", "Installed", theme.ThemeId, metadata.PackageName);
+                            }
+                            else
+                            {
+                                // 触发普通插件的 App.Installed 事件
+                                await PMEvent.Instance.TriggerAsync("App", "Installed", metadata.PackageName);
+                            }
                         }
                         catch (Exception pluginEx)
                         {
@@ -478,6 +527,10 @@ namespace Phobos.Manager.Plugin
                             PCLoggerPlugin.Warning("PMPlugin", $"Plugin OnInstall callback failed for {metadata.PackageName}: {pluginEx.Message}");
                         }
                     }
+                }
+                else
+                {
+                    PCLoggerPlugin.Warning("PMPlugin", $"Plugin '{metadata.PackageName}' installed but Load failed: {loadResult.Message}");
                 }
 
                 return new RequestResult { Success = true, Message = "Plugin installed successfully", Data = [metadata.PackageName, metadata.Name] };
@@ -528,9 +581,30 @@ namespace Phobos.Manager.Plugin
                     }
                 }
 
+                // 在卸载前检查是否为主题插件
                 var plugin = GetPlugin(packageName);
+                bool isThemePlugin = plugin is IThemePlugin && plugin is IPhobosTheme;
+                string? themeId = null;
+
                 if (plugin != null)
                 {
+                    // 如果是主题插件，处理主题相关逻辑
+                    if (isThemePlugin && plugin is IPhobosTheme theme)
+                    {
+                        themeId = theme.ThemeId;
+
+                        // 检查是否是当前使用的主题
+                        if (PMTheme.Instance.CurrentThemeId == themeId)
+                        {
+                            PCLoggerPlugin.Info("PMPlugin", $"Uninstalling current theme '{themeId}', falling back to DarkTheme");
+                            // 回退到 DarkTheme (class 版本)
+                            await PMTheme.Instance.LoadThemeAndSaveAsync(PMTheme.DefaultThemeId);
+                        }
+
+                        // 从 PMTheme 的已加载主题列表中移除
+                        PMTheme.Instance.UnregisterTheme(themeId);
+                    }
+
                     try
                     {
                         await plugin.OnUninstall();
@@ -567,6 +641,21 @@ namespace Phobos.Manager.Plugin
                     await _database.ExecuteNonQuery(
                         "DELETE FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
                         new Dictionary<string, object> { { "@packageName", packageName } });
+
+                    // 如果是主题插件，也从 Phobos_Theme 表中删除
+                    if (isThemePlugin && !string.IsNullOrEmpty(themeId))
+                    {
+                        await PMDatabase.Instance.UnregisterTheme(themeId);
+                        PCLoggerPlugin.Info("PMPlugin", $"Removed theme '{themeId}' from Phobos_Theme table");
+
+                        // 触发 Theme.Uninstalled 事件
+                        await PMEvent.Instance.TriggerAsync("Theme", "Uninstalled", themeId, packageName);
+                    }
+                    else
+                    {
+                        // 触发普通插件的 App.Uninstalled 事件
+                        await PMEvent.Instance.TriggerAsync("App", "Uninstalled", packageName);
+                    }
 
                     if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
                     {
@@ -619,13 +708,31 @@ namespace Phobos.Manager.Plugin
                     return new RequestResult { Success = true, Message = "Built-in Plugin" };
                 }
 
-                var dllFiles = Directory.GetFiles(directory, "*.dll");
-                var mainDll = dllFiles.FirstOrDefault(f => !f.Contains("deps", StringComparison.OrdinalIgnoreCase));
+                // 优先使用数据库中存储的 MainAssembly
+                var mainAssembly = pluginInfo[0]["MainAssembly"]?.ToString() ?? string.Empty;
+                string mainDll;
 
-                if (string.IsNullOrEmpty(mainDll))
+                if (!string.IsNullOrEmpty(mainAssembly))
                 {
-                    return new RequestResult { Success = false, Message = "Plugin DLL not found" };
+                    // 使用指定的主程序集
+                    mainDll = Path.Combine(directory, mainAssembly);
+                    PCLoggerPlugin.Debug("PMPlugin", $"Load plugin '{packageName}': using MainAssembly '{mainAssembly}'");
                 }
+                else
+                {
+                    // 回退到原有逻辑：查找第一个不包含 deps 的 DLL
+                    var dllFiles = Directory.GetFiles(directory, "*.dll");
+                    mainDll = dllFiles.FirstOrDefault(f => !f.Contains("deps", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                    PCLoggerPlugin.Debug("PMPlugin", $"Load plugin '{packageName}': MainAssembly not set, fallback to '{Path.GetFileName(mainDll)}'");
+                }
+
+                if (string.IsNullOrEmpty(mainDll) || !File.Exists(mainDll))
+                {
+                    PCLoggerPlugin.Error("PMPlugin", $"Load plugin '{packageName}' failed: DLL not found at '{mainDll}'");
+                    return new RequestResult { Success = false, Message = $"Plugin DLL not found: {mainDll}" };
+                }
+
+                PCLoggerPlugin.Info("PMPlugin", $"Loading plugin '{packageName}' from '{mainDll}'");
 
                 var context = new PluginAssemblyLoadContext(mainDll);
                 var assembly = context.LoadFromAssemblyPath(mainDll);
@@ -634,6 +741,7 @@ namespace Phobos.Manager.Plugin
                 if (pluginType == null)
                 {
                     context.Unload();
+                    PCLoggerPlugin.Error("PMPlugin", $"Load plugin '{packageName}' failed: No valid plugin type found in assembly");
                     return new RequestResult { Success = false, Message = "No valid plugin type found" };
                 }
 
@@ -641,6 +749,7 @@ namespace Phobos.Manager.Plugin
                 if (instance == null)
                 {
                     context.Unload();
+                    PCLoggerPlugin.Error("PMPlugin", $"Load plugin '{packageName}' failed: Failed to create plugin instance");
                     return new RequestResult { Success = false, Message = "Failed to create plugin instance" };
                 }
 
@@ -659,10 +768,12 @@ namespace Phobos.Manager.Plugin
                     LoadTime = DateTime.Now
                 };
 
+                PCLoggerPlugin.Info("PMPlugin", $"Plugin '{packageName}' loaded successfully");
                 return new RequestResult { Success = true, Message = "Plugin loaded successfully" };
             }
             catch (Exception ex)
             {
+                PCLoggerPlugin.Error("PMPlugin", $"Load plugin '{packageName}' failed: {ex.Message}");
                 return new RequestResult { Success = false, Message = ex.Message, Error = ex };
             }
         }
@@ -1114,7 +1225,7 @@ namespace Phobos.Manager.Plugin
                         var plugin = GetPlugin(packageName);
                         if (plugin != null)
                         {
-                            await plugin.Run("Boot", command);
+                            await plugin.Run(command);
                         }
                     }
                     catch (Exception ex)
@@ -1246,7 +1357,7 @@ namespace Phobos.Manager.Plugin
 
         #region Handler Methods
 
-        private Task<List<object>> HandleRequestPhobos(PluginCallerContext caller, object[] args)
+        internal async Task<List<object>> HandleRequestPhobos(PluginCallerContext caller, object[] args)
         {
             var result = new List<object>();
 
@@ -1270,13 +1381,46 @@ namespace Phobos.Manager.Plugin
                         result.Add(caller.PackageName);
                         result.Add(caller.DatabaseKey);
                         break;
+                    case "searchdesktop":
+                        // 调用默认桌面插件的 SearchDesktop 方法
+                        var keyword = args.Length > 1 ? args[1]?.ToString() ?? string.Empty : string.Empty;
+                        var maxResults = args.Length > 2 && args[2] is int max ? max : 20;
+
+                        PCLoggerPlugin.Info("PMPlugin", $"[SearchDesktop] Received request: keyword='{keyword}', maxResults={maxResults}");
+
+                        // 查找绑定到 "launcher" 的默认桌面插件
+                        var launcherInfo = await PMProtocol.Instance.GetProtocolAssociationInfo("launcher");
+                        PCLoggerPlugin.Info("PMPlugin", $"[SearchDesktop] launcherInfo: {(launcherInfo == null ? "null" : $"PackageName={launcherInfo.PackageName}")}");
+
+                        if (launcherInfo != null && !string.IsNullOrEmpty(launcherInfo.PackageName))
+                        {
+                            var pluginFound = _loadedPlugins.TryGetValue(launcherInfo.PackageName, out var desktopContext);
+                            PCLoggerPlugin.Info("PMPlugin", $"[SearchDesktop] Plugin found in _loadedPlugins: {pluginFound}");
+
+                            if (pluginFound && desktopContext?.Instance is IPhobosDesktop desktop)
+                            {
+                                PCLoggerPlugin.Info("PMPlugin", $"[SearchDesktop] Calling SearchDesktop on {launcherInfo.PackageName}");
+                                var suggestions = await desktop.SearchDesktop(keyword, maxResults);
+                                PCLoggerPlugin.Info("PMPlugin", $"[SearchDesktop] Got {suggestions.Count} suggestions");
+                                result.AddRange(suggestions.Cast<object>());
+                            }
+                            else
+                            {
+                                PCLoggerPlugin.Warning("PMPlugin", $"[SearchDesktop] Plugin is not IPhobosDesktop: {desktopContext?.Instance?.GetType().Name ?? "null"}");
+                            }
+                        }
+                        else
+                        {
+                            PCLoggerPlugin.Warning("PMPlugin", "[SearchDesktop] No launcher binding found");
+                        }
+                        break;
                 }
             }
 
-            return Task.FromResult(result);
+            return result;
         }
 
-        private async Task<RequestResult> HandleLink(PluginCallerContext caller, LinkAssociation association)
+        internal async Task<RequestResult> HandleLink(PluginCallerContext caller, LinkAssociation association)
         {
             if (_database == null)
                 return new RequestResult { Success = false, Message = "Database not initialized" };
@@ -1368,14 +1512,14 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        private async Task<RequestResult> HandleRequest(PluginCallerContext caller, string command, Action<RequestResult>? callback, object[] args)
+        internal async Task<RequestResult> HandleRequest(PluginCallerContext caller, string command, Action<RequestResult>? callback, object[] args)
         {
             var result = new RequestResult { Success = true, Message = $"Command '{command}' executed by {caller.PackageName}" };
             callback?.Invoke(result);
             return await Task.FromResult(result);
         }
 
-        private async Task<RequestResult> HandleLinkDefault(PluginCallerContext caller, string protocol)
+        internal async Task<RequestResult> HandleLinkDefault(PluginCallerContext caller, string protocol)
         {
             if (_database == null)
                 return new RequestResult { Success = false, Message = "Database not initialized" };
@@ -1446,7 +1590,7 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        private async Task<ConfigResult> HandleReadConfig(PluginCallerContext caller, string key, string? packageName)
+        internal async Task<ConfigResult> HandleReadConfig(PluginCallerContext caller, string key, string? packageName)
         {
             if (_database == null)
                 return new ConfigResult { Success = false, Key = key, Message = "Database not initialized" };
@@ -1477,7 +1621,7 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        private async Task<ConfigResult> HandleWriteConfig(PluginCallerContext caller, string key, string value, string? packageName)
+        internal async Task<ConfigResult> HandleWriteConfig(PluginCallerContext caller, string key, string value, string? packageName)
         {
             if (_database == null)
                 return new ConfigResult { Success = false, Key = key, Message = "Database not initialized" };
@@ -1526,7 +1670,7 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        private async Task<ConfigResult> HandleReadSysConfig(PluginCallerContext caller, string key)
+        internal async Task<ConfigResult> HandleReadSysConfig(PluginCallerContext caller, string key)
         {
             if (_database == null)
                 return new ConfigResult { Success = false, Key = key, Message = "Database not initialized" };
@@ -1555,7 +1699,7 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        private async Task<ConfigResult> HandleWriteSysConfig(PluginCallerContext caller, string key, string value)
+        internal async Task<ConfigResult> HandleWriteSysConfig(PluginCallerContext caller, string key, string value)
         {
             if (_database == null)
                 return new ConfigResult { Success = false, Key = key, Message = "Database not initialized" };
@@ -1594,7 +1738,7 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        private async Task<BootResult> HandleBootWithPhobos(PluginCallerContext caller, string command, int priority, object[] args)
+        internal async Task<BootResult> HandleBootWithPhobos(PluginCallerContext caller, string command, int priority, object[] args)
         {
             if (_database == null)
                 return new BootResult { Success = false, Message = "Database not initialized" };
@@ -1622,7 +1766,7 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        private async Task<BootResult> HandleRemoveBootWithPhobos(PluginCallerContext caller, string? uuid)
+        internal async Task<BootResult> HandleRemoveBootWithPhobos(PluginCallerContext caller, string? uuid)
         {
             if (_database == null)
                 return new BootResult { Success = false, Message = "Database not initialized" };
@@ -1654,7 +1798,7 @@ namespace Phobos.Manager.Plugin
             }
         }
 
-        private async Task<List<object>> HandleGetBootItems(PluginCallerContext caller)
+        internal async Task<List<object>> HandleGetBootItems(PluginCallerContext caller)
         {
             var result = new List<object>();
 

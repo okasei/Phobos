@@ -777,9 +777,9 @@ namespace Phobos.Class.Arcusrix
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(44, 0, 0, 0),
-                FontSize = 14,
-                Foreground = Brushes.White
+                FontSize = 14
             };
+            TitleText.SetResourceReference(TextBlock.ForegroundProperty, "Foreground1Brush");
 
             // 窗口控制按钮
             var buttonPanel = new StackPanel
@@ -850,23 +850,35 @@ namespace Phobos.Class.Arcusrix
             // 注意：不再需要自定义调整大小边框，WindowChrome.ResizeBorderThickness 已处理
         }
 
+        // 窗口控制按钮使用的符号字体（带回退）
+        private static readonly FontFamily _symbolFont = new FontFamily("Segoe MDL2 Assets, Segoe Fluent Icons, Segoe UI Symbol");
+
         private Label CreateTitleButton(string icon, bool isCloseButton)
         {
+            // 使用 TextBlock 作为 Content，避免全局 TextBlock 样式覆盖字体
+            var iconText = new TextBlock
+            {
+                Text = icon,
+                FontFamily = _symbolFont,
+                FontSize = 10,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
             var button = new Label
             {
-                Content = icon,
+                Content = iconText,
                 Width = 46,
                 Height = 32,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center,
                 Background = Brushes.Transparent,
-                Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                FontSize = 10,
                 Cursor = Cursors.Hand,
                 Padding = new Thickness(0),
                 Margin = new Thickness(0)
             };
+            // 使用主题的 Foreground1Brush
+            iconText.SetResourceReference(TextBlock.ForegroundProperty, "Foreground1Brush");
 
             // 悬停颜色
             var hoverColor = isCloseButton
@@ -879,7 +891,7 @@ namespace Phobos.Class.Arcusrix
                 if (isCloseButton)
                 {
                     button.Background = new SolidColorBrush(hoverColor);
-                    button.Foreground = Brushes.White;
+                    iconText.Foreground = Brushes.White;
                 }
                 else
                 {
@@ -890,7 +902,8 @@ namespace Phobos.Class.Arcusrix
             button.MouseLeave += (s, e) =>
             {
                 button.Background = Brushes.Transparent;
-                button.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                // 恢复使用主题颜色
+                iconText.SetResourceReference(TextBlock.ForegroundProperty, "Foreground1Brush");
             };
 
             // 按下效果

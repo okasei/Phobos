@@ -10,9 +10,9 @@ using Phobos.Shared.Interface;
 namespace Phobos.Class.Arcusrix
 {
     /// <summary>
-    /// Dark 主题
+    /// Dark 主题（不提供样式，仅提供颜色配置）
     /// </summary>
-    public class PCDarkTheme : IPhobosTheme
+    public class PCDarkTheme : IPhobosTheme, IThemePlugin
     {
         private readonly Dictionary<string, string> _localizedNames = new()
         {
@@ -24,12 +24,14 @@ namespace Phobos.Class.Arcusrix
         };
 
         private readonly Dictionary<Type, ControlAnimationConfig> _animationConfigs = new();
-        private ResourceDictionary? _resources;
+        private Phobos.Class.Theme.PCConfigBasedTheme? _inner;
 
-        public string Name => "Dark";
-        public string ThemeId => "dark";
-        public string Version => "1.0.0";
-        public string Author => "Phobos Team";
+        #region IPhobosTheme 实现
+
+        public string Name => _inner?.Name ?? "Dark";
+        public string ThemeId => _inner?.ThemeId ?? "dark";
+        public string Version => _inner?.Version ?? "2.0.0";
+        public string Author => _inner?.Author ?? "Phobos Team";
 
         public string GetLocalizedName(string languageCode)
         {
@@ -40,64 +42,26 @@ namespace Phobos.Class.Arcusrix
 
         public ResourceDictionary GetGlobalStyles()
         {
-            if (_resources != null)
-                return _resources;
-
-            _resources = new ResourceDictionary();
-
-            // 定义颜色
-            _resources["PrimaryBackground"] = new SolidColorBrush(Color.FromRgb(30, 30, 30));
-            _resources["SecondaryBackground"] = new SolidColorBrush(Color.FromRgb(45, 45, 45));
-            _resources["PrimaryForeground"] = new SolidColorBrush(Color.FromRgb(255, 255, 255));
-            _resources["SecondaryForeground"] = new SolidColorBrush(Color.FromRgb(180, 180, 180));
-            _resources["AccentColor"] = new SolidColorBrush(Color.FromRgb(0, 150, 255));
-            _resources["BorderColor"] = new SolidColorBrush(Color.FromRgb(70, 70, 70));
-            _resources["HoverBackground"] = new SolidColorBrush(Color.FromRgb(60, 60, 60));
-            _resources["SelectedBackground"] = new SolidColorBrush(Color.FromRgb(0, 100, 180));
-
-            // 按钮样式
-            var buttonStyle = new Style(typeof(Button));
-            buttonStyle.Setters.Add(new Setter(Control.BackgroundProperty, _resources["SecondaryBackground"]));
-            buttonStyle.Setters.Add(new Setter(Control.ForegroundProperty, _resources["PrimaryForeground"]));
-            buttonStyle.Setters.Add(new Setter(Control.BorderBrushProperty, _resources["BorderColor"]));
-            buttonStyle.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(1)));
-            buttonStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(12, 6, 12, 6)));
-            buttonStyle.Setters.Add(new Setter(FrameworkElement.CursorProperty, Cursors.Hand));
-            _resources[typeof(Button)] = buttonStyle;
-
-            // TextBox 样式
-            var textBoxStyle = new Style(typeof(TextBox));
-            textBoxStyle.Setters.Add(new Setter(Control.BackgroundProperty, _resources["PrimaryBackground"]));
-            textBoxStyle.Setters.Add(new Setter(Control.ForegroundProperty, _resources["PrimaryForeground"]));
-            textBoxStyle.Setters.Add(new Setter(Control.BorderBrushProperty, _resources["BorderColor"]));
-            textBoxStyle.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(1)));
-            textBoxStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(8, 4, 8, 4)));
-            textBoxStyle.Setters.Add(new Setter(TextBox.CaretBrushProperty, _resources["PrimaryForeground"]));
-            _resources[typeof(TextBox)] = textBoxStyle;
-
-            // Label 样式
-            var labelStyle = new Style(typeof(Label));
-            labelStyle.Setters.Add(new Setter(Control.ForegroundProperty, _resources["PrimaryForeground"]));
-            _resources[typeof(Label)] = labelStyle;
-
-            // Grid 样式
-            var gridStyle = new Style(typeof(Grid));
-            gridStyle.Setters.Add(new Setter(Panel.BackgroundProperty, _resources["PrimaryBackground"]));
-            _resources[typeof(Grid)] = gridStyle;
-
-            return _resources;
+            if (_inner == null)
+            {
+                var path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Themes", "dark.phobos-theme.json");
+                var cfg = Phobos.Class.Theme.PCThemeLoader.LoadFromFile(path) ?? new Phobos.Class.Theme.PCThemeConfig();
+                _inner = new Phobos.Class.Theme.PCConfigBasedTheme(cfg);
+            }
+            return _inner.GetGlobalStyles();
         }
 
         public Style? GetControlStyle(Type controlType)
         {
-            var resources = GetGlobalStyles();
-            if (resources.Contains(controlType))
-                return resources[controlType] as Style;
-            return null;
+            return _inner?.GetControlStyle(controlType);
         }
 
         public ControlAnimationConfig GetControlAnimationConfig(Type controlType)
         {
+            if (_inner != null)
+            {
+                return _inner.GetControlAnimationConfig(controlType);
+            }
             if (_animationConfigs.TryGetValue(controlType, out var config))
                 return config;
             return GetDefaultAnimationConfig();
@@ -124,16 +88,43 @@ namespace Phobos.Class.Arcusrix
 
         public void Apply()
         {
-            var resources = GetGlobalStyles();
-            Application.Current.Resources.MergedDictionaries.Add(resources);
+            _inner?.Apply();
         }
 
         public void Unload()
         {
-            if (_resources != null && Application.Current.Resources.MergedDictionaries.Contains(_resources))
-            {
-                Application.Current.Resources.MergedDictionaries.Remove(_resources);
-            }
+            _inner?.Unload();
         }
+
+        #endregion
+
+        #region IThemePlugin 实现
+
+        /// <summary>
+        /// Dark 主题不提供完整样式，依赖 Arcusrix 或插件提供的样式
+        /// </summary>
+        public bool ProvidesFullStyles => false;
+
+        /// <summary>
+        /// 不提供任何样式键
+        /// </summary>
+        public IReadOnlyList<string> ProvidedStyleKeys => Array.Empty<string>();
+
+        /// <summary>
+        /// 不提供样式资源字典
+        /// </summary>
+        public ResourceDictionary? GetStylesDictionary() => null;
+
+        /// <summary>
+        /// 不加载样式
+        /// </summary>
+        public bool LoadStyles() => false;
+
+        /// <summary>
+        /// 无需卸载样式
+        /// </summary>
+        public void UnloadStyles() { }
+
+        #endregion
     }
 }

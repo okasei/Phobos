@@ -118,7 +118,6 @@
 
     <!-- 主容器 -->
     <Border x:Name="MainBorder"
-            Background="{DynamicResource Background1Brush}"
             BorderBrush="{DynamicResource Background4Brush}"
             BorderThickness="1"
             CornerRadius="16"

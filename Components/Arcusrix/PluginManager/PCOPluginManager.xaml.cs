@@ -4,78 +4,38 @@ using Phobos.Manager.Arcusrix;
 using Phobos.Manager.Plugin;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
+using Phobos.Utils.Media;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Phobos.Components.Arcusrix.PluginManager
 {
     /// <summary>
-    /// Plugin Manager i18n strings
+    /// Plugin Manager Localization Helper - Uses JSON-based localization
     /// </summary>
-    public static class PluginManagerLocalization
+    public static class PMLocalization
     {
-        // Keys
-        public const string Title = "title";
-        public const string Subtitle = "subtitle";
-        public const string Search = "search";
-        public const string Install = "install";
-        public const string Uninstall = "uninstall";
-        public const string Launch = "launch";
-        public const string Refresh = "refresh";
-        public const string Installed = "installed";
-        public const string System = "system";
-        public const string PluginCount = "plugin_count";
-        public const string Loading = "loading";
-        public const string Ready = "ready";
-        public const string SelectPlugin = "select_plugin";
-        public const string CannotUninstallSelf = "cannot_uninstall_self";
-        public const string Installing = "installing";
-        public const string Uninstalling = "uninstalling";
-        public const string ConfirmUninstall = "confirm_uninstall";
-        public const string ConfirmUninstallMessage = "confirm_uninstall_message";
-        public const string Launching = "launching";
-        public const string SelectDll = "select_dll";
-        public const string FromLocal = "from_local";
+        private static PluginLocalizationContext? _context;
 
-        private static readonly Dictionary<string, Dictionary<string, string>> _strings = new()
+        public static void Initialize()
         {
-            [Title] = new() { { "en-US", "Plugin Manager" }, { "zh-CN", "插件管理器" }, { "zh-TW", "插件管理器" }, { "ja-JP", "プラグインマネージャー" }, { "ko-KR", "플러그인 관리자" } },
-            [Subtitle] = new() { { "en-US", "Manage your plugins" }, { "zh-CN", "管理您的插件" }, { "zh-TW", "管理您的插件" }, { "ja-JP", "プラグインを管理" }, { "ko-KR", "플러그인 관리" } },
-            [Search] = new() { { "en-US", "Search plugins..." }, { "zh-CN", "搜索插件..." }, { "zh-TW", "搜索插件..." }, { "ja-JP", "プラグインを検索..." }, { "ko-KR", "플러그인 검색..." } },
-            [Install] = new() { { "en-US", "Install" }, { "zh-CN", "安装" }, { "zh-TW", "安裝" }, { "ja-JP", "インストール" }, { "ko-KR", "설치" } },
-            [Uninstall] = new() { { "en-US", "Uninstall" }, { "zh-CN", "卸载" }, { "zh-TW", "卸載" }, { "ja-JP", "アンインストール" }, { "ko-KR", "제거" } },
-            [Launch] = new() { { "en-US", "Launch" }, { "zh-CN", "启动" }, { "zh-TW", "啟動" }, { "ja-JP", "起動" }, { "ko-KR", "실행" } },
-            [Refresh] = new() { { "en-US", "Refresh" }, { "zh-CN", "刷新" }, { "zh-TW", "重新整理" }, { "ja-JP", "更新" }, { "ko-KR", "새로고침" } },
-            [Installed] = new() { { "en-US", "Installed" }, { "zh-CN", "已安装" }, { "zh-TW", "已安裝" }, { "ja-JP", "インストール済み" }, { "ko-KR", "설치됨" } },
-            [System] = new() { { "en-US", "System" }, { "zh-CN", "系统" }, { "zh-TW", "系統" }, { "ja-JP", "システム" }, { "ko-KR", "시스템" } },
-            [PluginCount] = new() { { "en-US", "{0} plugins" }, { "zh-CN", "{0} 个插件" }, { "zh-TW", "{0} 個插件" }, { "ja-JP", "{0} プラグイン" }, { "ko-KR", "{0}개 플러그인" } },
-            [Loading] = new() { { "en-US", "Loading..." }, { "zh-CN", "加载中..." }, { "zh-TW", "載入中..." }, { "ja-JP", "読み込み中..." }, { "ko-KR", "로딩 중..." } },
-            [Ready] = new() { { "en-US", "Ready" }, { "zh-CN", "就绪" }, { "zh-TW", "就緒" }, { "ja-JP", "準備完了" }, { "ko-KR", "준비 완료" } },
-            [SelectPlugin] = new() { { "en-US", "Please select a plugin" }, { "zh-CN", "请选择一个插件" }, { "zh-TW", "請選擇一個插件" }, { "ja-JP", "プラグインを選択してください" }, { "ko-KR", "플러그인을 선택하세요" } },
-            [CannotUninstallSelf] = new() { { "en-US", "Cannot uninstall Plugin Manager" }, { "zh-CN", "无法卸载插件管理器" }, { "zh-TW", "無法卸載插件管理器" }, { "ja-JP", "プラグインマネージャーをアンインストールできません" }, { "ko-KR", "플러그인 관리자를 제거할 수 없습니다" } },
-            [Installing] = new() { { "en-US", "Installing..." }, { "zh-CN", "安装中..." }, { "zh-TW", "安裝中..." }, { "ja-JP", "インストール中..." }, { "ko-KR", "설치 중..." } },
-            [Uninstalling] = new() { { "en-US", "Uninstalling..." }, { "zh-CN", "卸载中..." }, { "zh-TW", "卸載中..." }, { "ja-JP", "アンインストール中..." }, { "ko-KR", "제거 중..." } },
-            [ConfirmUninstall] = new() { { "en-US", "Confirm Uninstall" }, { "zh-CN", "确认卸载" }, { "zh-TW", "確認卸載" }, { "ja-JP", "アンインストールの確認" }, { "ko-KR", "제거 확인" } },
-            [ConfirmUninstallMessage] = new() { { "en-US", "Are you sure you want to uninstall \"{0}\"? This action cannot be undone." }, { "zh-CN", "确定要卸载 \"{0}\" 吗？此操作无法撤销。" }, { "zh-TW", "確定要卸載 \"{0}\" 嗎？此操作無法撤銷。" }, { "ja-JP", "「{0}」をアンインストールしますか？この操作は元に戻せません。" }, { "ko-KR", "\"{0}\"을(를) 제거하시겠습니까? 이 작업은 취소할 수 없습니다." } },
-            [Launching] = new() { { "en-US", "Launching {0}..." }, { "zh-CN", "正在启动 {0}..." }, { "zh-TW", "正在啟動 {0}..." }, { "ja-JP", "{0} を起動中..." }, { "ko-KR", "{0} 실행 중..." } },
-            [SelectDll] = new() { { "en-US", "Select Plugin DLL" }, { "zh-CN", "选择插件 DLL" }, { "zh-TW", "選擇插件 DLL" }, { "ja-JP", "プラグイン DLL を選択" }, { "ko-KR", "플러그인 DLL 선택" } },
-            [FromLocal] = new() { { "en-US", "From Local..." }, { "zh-CN", "从本地安装..." }, { "zh-TW", "從本地安裝..." }, { "ja-JP", "ローカルから..." }, { "ko-KR", "로컬에서..." } },
-        };
+            var basePath = System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Assets", "Localization", "PluginManager");
+
+            _context = LocalizationManager.Instance.RegisterPlugin("com.phobos.plugin.manager", basePath);
+        }
 
         public static string Get(string key)
         {
-            var lang = LocalizationManager.Instance.CurrentLanguage;
-            if (_strings.TryGetValue(key, out var dict))
-            {
-                if (dict.TryGetValue(lang, out var str)) return str;
-                if (dict.TryGetValue("en-US", out var enStr)) return enStr;
-            }
-            return key;
+            if (_context == null) Initialize();
+            return _context?.Get(key) ?? key;
         }
 
         public static string GetFormat(string key, params object[] args)
@@ -85,62 +45,172 @@ namespace Phobos.Components.Arcusrix.PluginManager
     }
 
     /// <summary>
-    /// PCOPluginManager.xaml
+    /// Supported languages and special protocol types
+    /// </summary>
+    public static class SupportedLanguages
+    {
+        public static readonly List<string> Languages = new()
+        {
+            "en-US", "zh-CN", "zh-TW", "ja-JP", "fr-FR", "de-DE", "ru-RU", "es-ES"
+        };
+
+        public static readonly Dictionary<string, string> SpecialProtocols = new()
+        {
+            { "text", "protocols.text" },
+            { "image", "protocols.image" },
+            { "video", "protocols.video" },
+            { "browser", "protocols.browser" },
+            { "launcher", "protocols.launcher" },
+            { "runner", "protocols.runner" },
+            { "auth", "protocols.auth" }
+        };
+    }
+
+    /// <summary>
+    /// PCOPluginManager.xaml - Plugin Manager with left navigation
     /// </summary>
     public partial class PCOPluginManager : UserControl
     {
         private List<PluginMetadata> _allPlugins = new();
-        private string _searchPlaceholder = string.Empty;
         private string _selfPackageName = "com.phobos.plugin.manager";
         private PCPluginManager? _pm;
+        private bool _isMenuExpanded = true;
+        private const double ExpandedWidth = 220;
+        private const double CollapsedWidth = 56;
 
         public PCOPluginManager(PCPluginManager pm)
         {
             InitializeComponent();
-            _pm = pm;   
+            _pm = pm;
+            PMLocalization.Initialize();
             Loaded += PCOPluginManager_Loaded;
         }
 
         private async void PCOPluginManager_Loaded(object sender, RoutedEventArgs e)
         {
             UpdateLocalizedText();
+            SetActiveNav(NavPlugins);
             await RefreshPluginList();
+            await LoadProtocols();
+            LoadLanguageSettings();
         }
 
-        /// <summary>
-        /// Update localized text
-        /// </summary>
+        #region Localization
+
         private void UpdateLocalizedText()
         {
-            TitleText.Text = PluginManagerLocalization.Get(PluginManagerLocalization.Title);
-            SubtitleText.Text = PluginManagerLocalization.Get(PluginManagerLocalization.Subtitle);
-            RefreshButton.Content = PluginManagerLocalization.Get(PluginManagerLocalization.Refresh);
-            InstallButton.Content = PluginManagerLocalization.Get(PluginManagerLocalization.FromLocal);
-            StatusText.Text = PluginManagerLocalization.Get(PluginManagerLocalization.Ready);
+            // Navigation
+            NavTitle.Text = PMLocalization.Get("pm.title");
+            NavPluginsText.Text = PMLocalization.Get("tab.plugins");
+            NavProtocolsText.Text = PMLocalization.Get("tab.protocols");
+            NavLanguageText.Text = PMLocalization.Get("tab.language");
 
-            // Setup search placeholder
-            _searchPlaceholder = PluginManagerLocalization.Get(PluginManagerLocalization.Search);
-            SearchBox.Text = _searchPlaceholder;
-            SearchBox.Foreground = (Brush)FindResource("Foreground4Brush");
+            // Plugins Page
+            PluginsTitleText.Text = PMLocalization.Get("plugins.title");
+            SearchBox.Tag = PMLocalization.Get("plugins.search");
+            RefreshButtonText.Text = PMLocalization.Get("plugins.refresh");
+            InstallButtonText.Text = PMLocalization.Get("plugins.install");
 
-            SearchBox.GotFocus += (s, e) =>
-            {
-                if (SearchBox.Text == _searchPlaceholder)
-                {
-                    SearchBox.Text = "";
-                    SearchBox.Foreground = (Brush)FindResource("Foreground1Brush");
-                }
-            };
+            // Protocols Page
+            ProtocolsTitleText.Text = PMLocalization.Get("protocols.title");
+            ProtocolsSubtitleText.Text = PMLocalization.Get("protocols.subtitle");
+            SpecialProtocolsTitle.Text = PMLocalization.Get("protocols.special");
+            AssociatedItemsTitle.Text = PMLocalization.Get("protocols.associated_items");
 
-            SearchBox.LostFocus += (s, e) =>
-            {
-                if (string.IsNullOrWhiteSpace(SearchBox.Text))
-                {
-                    SearchBox.Text = _searchPlaceholder;
-                    SearchBox.Foreground = (Brush)FindResource("Foreground4Brush");
-                }
-            };
+            // Language Page
+            LanguageTitleText.Text = PMLocalization.Get("language.title");
+            LanguageSubtitleText.Text = PMLocalization.Get("language.subtitle");
+            SystemLanguageTitle.Text = PMLocalization.Get("language.system");
+            SystemLanguageDesc.Text = PMLocalization.Get("language.system_desc");
+            PluginLanguageTitle.Text = PMLocalization.Get("language.plugin");
+            PluginLanguageDesc.Text = PMLocalization.Get("language.plugin_desc");
+            ApplyLanguageButtonText.Text = PMLocalization.Get("language.apply");
+
+            // Menu tooltip
+            UpdateMenuTooltip();
+
+            // Status
+            StatusText.Text = PMLocalization.Get("plugins.ready");
         }
+
+        private void UpdateMenuTooltip()
+        {
+            MenuTooltip.Text = _isMenuExpanded
+                ? PMLocalization.Get("menu.collapse")
+                : PMLocalization.Get("menu.expand");
+        }
+
+        #endregion
+
+        #region Navigation
+
+        private void HamburgerButton_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleMenu();
+        }
+
+        private void ToggleMenu()
+        {
+            _isMenuExpanded = !_isMenuExpanded;
+            double targetWidth = _isMenuExpanded ? ExpandedWidth : CollapsedWidth;
+
+            PUAnimation.AnimateGridLength(NavColumn, NavColumn.Width, new GridLength(targetWidth));
+
+            // Toggle text visibility
+            var textOpacity = _isMenuExpanded ? 1.0 : 0.0;
+            PUAnimation.AnimateOpacityTo(NavTitle, textOpacity);
+            PUAnimation.AnimateOpacityTo(NavPluginsText, textOpacity);
+            PUAnimation.AnimateOpacityTo(NavProtocolsText, textOpacity);
+            PUAnimation.AnimateOpacityTo(NavLanguageText, textOpacity);
+
+            UpdateMenuTooltip();
+        }
+
+        private void NavPlugins_Click(object sender, RoutedEventArgs e)
+        {
+            SetActiveNav(NavPlugins);
+            ShowPage(PluginsPage);
+        }
+
+        private void NavProtocols_Click(object sender, RoutedEventArgs e)
+        {
+            SetActiveNav(NavProtocols);
+            ShowPage(ProtocolsPage);
+        }
+
+        private void NavLanguage_Click(object sender, RoutedEventArgs e)
+        {
+            SetActiveNav(NavLanguage);
+            ShowPage(LanguagePage);
+        }
+
+        private void SetActiveNav(Button activeButton)
+        {
+            NavPlugins.Tag = null;
+            NavProtocols.Tag = null;
+            NavLanguage.Tag = null;
+            activeButton.Tag = "Active";
+        }
+
+        private void ShowPage(UIElement page)
+        {
+            // Fade out all pages
+            var pages = new[] { PluginsPage, ProtocolsPage, LanguagePage };
+            foreach (var p in pages)
+            {
+                if (p != page && p.Visibility == Visibility.Visible)
+                {
+                    PUAnimation.PageOut(p);
+                }
+            }
+
+            // Fade in target page
+            PUAnimation.PageIn(page);
+        }
+
+        #endregion
+
+        #region Plugins Tab
 
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
@@ -154,26 +224,17 @@ namespace Phobos.Components.Arcusrix.PluginManager
 
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (SearchBox.Text != _searchPlaceholder)
-            {
-                FilterPlugins(SearchBox.Text);
-            }
+            FilterPlugins(SearchBox.Text);
         }
 
-        /// <summary>
-        /// Refresh plugin list
-        /// </summary>
         public async Task RefreshPluginList()
         {
-            SetStatus(PluginManagerLocalization.Get(PluginManagerLocalization.Loading));
+            SetStatus(PMLocalization.Get("plugins.loading"));
             _allPlugins = await PMPlugin.Instance.GetInstalledPlugins();
             DisplayPlugins(_allPlugins);
-            SetStatus(PluginManagerLocalization.Get(PluginManagerLocalization.Ready));
+            SetStatus(PMLocalization.Get("plugins.ready"));
         }
 
-        /// <summary>
-        /// Display plugins
-        /// </summary>
         private void DisplayPlugins(List<PluginMetadata> plugins)
         {
             PluginList.Items.Clear();
@@ -182,15 +243,12 @@ namespace Phobos.Components.Arcusrix.PluginManager
                 PluginList.Items.Add(CreatePluginCard(plugin));
             }
 
-            PluginCountText.Text = PluginManagerLocalization.GetFormat(PluginManagerLocalization.PluginCount, plugins.Count);
+            PluginCountText.Text = PMLocalization.GetFormat("plugins.count", plugins.Count);
         }
 
-        /// <summary>
-        /// Filter plugins by search text
-        /// </summary>
         private void FilterPlugins(string searchText)
         {
-            if (string.IsNullOrWhiteSpace(searchText) || searchText == _searchPlaceholder)
+            if (string.IsNullOrWhiteSpace(searchText))
             {
                 DisplayPlugins(_allPlugins);
                 return;
@@ -205,9 +263,6 @@ namespace Phobos.Components.Arcusrix.PluginManager
             DisplayPlugins(filtered);
         }
 
-        /// <summary>
-        /// Create plugin card UI
-        /// </summary>
         private Border CreatePluginCard(PluginMetadata plugin)
         {
             var lang = LocalizationManager.Instance.CurrentLanguage;
@@ -220,9 +275,9 @@ namespace Phobos.Components.Arcusrix.PluginManager
             };
 
             var mainGrid = new Grid();
-            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Icon
-            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Info
-            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Actions
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             // Icon
             var iconBorder = new Border
@@ -236,10 +291,12 @@ namespace Phobos.Components.Arcusrix.PluginManager
 
             var iconText = new TextBlock
             {
-                Text = "\U0001F9E9", // puzzle piece emoji
-                FontSize = 24,
+                Text = "\uEA86",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 20,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = (Brush)FindResource("PrimaryBrush")
             };
             iconBorder.Child = iconText;
             Grid.SetColumn(iconBorder, 0);
@@ -259,16 +316,17 @@ namespace Phobos.Components.Arcusrix.PluginManager
             };
             nameRow.Children.Add(nameText);
 
-            // System badge
             if (plugin.IsSystemPlugin)
             {
-                var systemBadge = CreateBadge(PluginManagerLocalization.Get(PluginManagerLocalization.System), "WarningBrush");
+                var systemBadge = CreateBadge(PMLocalization.Get("plugins.system"), "WarningBrush");
                 nameRow.Children.Add(systemBadge);
             }
 
-            // Installed badge
-            var installedBadge = CreateBadge(PluginManagerLocalization.Get(PluginManagerLocalization.Installed), "SuccessBrush");
-            nameRow.Children.Add(installedBadge);
+            if (plugin.CanLaunch)
+            {
+                var launchableBadge = CreateBadge(PMLocalization.Get("plugins.launchable"), "SuccessBrush");
+                nameRow.Children.Add(launchableBadge);
+            }
 
             infoStack.Children.Add(nameRow);
 
@@ -304,28 +362,90 @@ namespace Phobos.Components.Arcusrix.PluginManager
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            // Launch button (not for self, not for non-launchable plugins)
+            // Settings button (if SettingUri exists)
+            if (!string.IsNullOrEmpty(plugin.SettingUri))
+            {
+                var settingsButton = new Button
+                {
+                    Style = (Style)FindResource("PhobosButtonSecondary"),
+                    Margin = new Thickness(8, 0, 0, 0),
+                    Tag = plugin.PackageName,
+                    ToolTip = PMLocalization.Get("plugins.settings")
+                };
+
+                var settingsContent = new StackPanel { Orientation = Orientation.Horizontal };
+                settingsContent.Children.Add(new TextBlock
+                {
+                    Text = "\uE713",
+                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                    FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+                settingsContent.Children.Add(new TextBlock
+                {
+                    Text = PMLocalization.Get("plugins.settings"),
+                    Margin = new Thickness(6, 0, 0, 0)
+                });
+                settingsButton.Content = settingsContent;
+                settingsButton.Click += SettingsButton_Click;
+                actionStack.Children.Add(settingsButton);
+            }
+
+            // Launch button
             if (!isThisPlugin && plugin.CanLaunch)
             {
                 var launchButton = new Button
                 {
-                    Style = (Style)FindResource("CardButtonStyle"),
-                    Content = PluginManagerLocalization.Get(PluginManagerLocalization.Launch),
+                    Style = (Style)FindResource("PhobosButton"),
+                    Margin = new Thickness(8, 0, 0, 0),
                     Tag = plugin.PackageName
                 };
+
+                var launchContent = new StackPanel { Orientation = Orientation.Horizontal };
+                launchContent.Children.Add(new TextBlock
+                {
+                    Text = "\uE768",
+                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                    FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+                launchContent.Children.Add(new TextBlock
+                {
+                    Text = PMLocalization.Get("plugins.launch"),
+                    Margin = new Thickness(6, 0, 0, 0)
+                });
+                launchButton.Content = launchContent;
                 launchButton.Click += LaunchButton_Click;
                 actionStack.Children.Add(launchButton);
             }
 
-            // Uninstall button (not for system plugins)
+            // Uninstall button
             if (!plugin.IsSystemPlugin)
             {
                 var uninstallButton = new Button
                 {
-                    Style = (Style)FindResource("DangerButtonStyle"),
-                    Content = PluginManagerLocalization.Get(PluginManagerLocalization.Uninstall),
-                    Tag = plugin
+                    Style = (Style)FindResource("PhobosButtonSecondary"),
+                    Margin = new Thickness(8, 0, 0, 0),
+                    Tag = plugin,
+                    ToolTip = PMLocalization.Get("plugins.uninstall")
                 };
+
+                var uninstallContent = new StackPanel { Orientation = Orientation.Horizontal };
+                uninstallContent.Children.Add(new TextBlock
+                {
+                    Text = "\uE74D",
+                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                    FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = (Brush)FindResource("ErrorBrush")
+                });
+                uninstallContent.Children.Add(new TextBlock
+                {
+                    Text = PMLocalization.Get("plugins.uninstall"),
+                    Margin = new Thickness(6, 0, 0, 0),
+                    Foreground = (Brush)FindResource("ErrorBrush")
+                });
+                uninstallButton.Content = uninstallContent;
                 uninstallButton.Click += UninstallButton_Click;
                 actionStack.Children.Add(uninstallButton);
             }
@@ -337,9 +457,6 @@ namespace Phobos.Components.Arcusrix.PluginManager
             return card;
         }
 
-        /// <summary>
-        /// Create badge UI
-        /// </summary>
         private Border CreateBadge(string text, string colorResourceKey)
         {
             var badge = new Border
@@ -361,25 +478,46 @@ namespace Phobos.Components.Arcusrix.PluginManager
             return badge;
         }
 
+        private async void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string packageName)
+            {
+                try
+                {
+                    var plugin = _allPlugins.FirstOrDefault(p => p.PackageName == packageName);
+                    if (plugin != null && !string.IsNullOrEmpty(plugin.SettingUri))
+                    {
+                        // Launch the plugin with settings URI as argument
+                        await PMPlugin.Instance.Launch(packageName, "settings", plugin.SettingUri);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PluginManager", $"Failed to open settings for {packageName}: {ex.Message}");
+                    await PCDialogPlugin.ErrorDialogAsync(ex.Message, PMLocalization.Get("pm.title"));
+                }
+            }
+        }
+
         private async void LaunchButton_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.Tag is string packageName)
             {
                 try
                 {
-                    SetStatus(PluginManagerLocalization.GetFormat(PluginManagerLocalization.Launching, packageName));
+                    SetStatus(PMLocalization.GetFormat("plugins.launching", packageName));
                     var result = await PMPlugin.Instance.Launch(packageName);
                     if (!result.Success)
                     {
-                        await PCDialogPlugin.ErrorDialogAsync(result.Message, PluginManagerLocalization.Get(PluginManagerLocalization.Title));
+                        await PCDialogPlugin.ErrorDialogAsync(result.Message, PMLocalization.Get("pm.title"));
                     }
-                    SetStatus(PluginManagerLocalization.Get(PluginManagerLocalization.Ready));
+                    SetStatus(PMLocalization.Get("plugins.ready"));
                 }
                 catch (Exception ex)
                 {
                     PCLoggerPlugin.Error("PluginManager", $"Failed to launch plugin {packageName}: {ex.Message}");
-                    await PCDialogPlugin.ErrorDialogAsync(ex.Message, PluginManagerLocalization.Get(PluginManagerLocalization.Title));
-                    SetStatus(PluginManagerLocalization.Get(PluginManagerLocalization.Ready));
+                    await PCDialogPlugin.ErrorDialogAsync(ex.Message, PMLocalization.Get("pm.title"));
+                    SetStatus(PMLocalization.Get("plugins.ready"));
                 }
             }
         }
@@ -393,18 +531,17 @@ namespace Phobos.Components.Arcusrix.PluginManager
                     var lang = LocalizationManager.Instance.CurrentLanguage;
                     var pluginName = plugin.GetLocalizedName(lang);
 
-                    // Show confirmation dialog
                     var confirmed = await PCDialogPlugin.ConfirmDialogAsync(
-                        PluginManagerLocalization.GetFormat(PluginManagerLocalization.ConfirmUninstallMessage, pluginName),
-                        PluginManagerLocalization.Get(PluginManagerLocalization.ConfirmUninstall));
+                        PMLocalization.GetFormat("plugins.confirm_uninstall_message", pluginName),
+                        PMLocalization.Get("plugins.confirm_uninstall"));
 
                     if (confirmed)
                     {
-                        SetStatus(PluginManagerLocalization.Get(PluginManagerLocalization.Uninstalling));
+                        SetStatus(PMLocalization.Get("plugins.uninstalling"));
                         var result = await PMPlugin.Instance.Uninstall(plugin.PackageName);
                         if (!result.Success)
                         {
-                            await PCDialogPlugin.ErrorDialogAsync(result.Message, PluginManagerLocalization.Get(PluginManagerLocalization.ConfirmUninstall));
+                            await PCDialogPlugin.ErrorDialogAsync(result.Message, PMLocalization.Get("plugins.confirm_uninstall"));
                         }
                         await RefreshPluginList();
                         if (_pm != null)
@@ -414,42 +551,498 @@ namespace Phobos.Components.Arcusrix.PluginManager
                 catch (Exception ex)
                 {
                     PCLoggerPlugin.Error("PluginManager", $"Failed to uninstall plugin: {ex.Message}");
-                    await PCDialogPlugin.ErrorDialogAsync(ex.Message, PluginManagerLocalization.Get(PluginManagerLocalization.ConfirmUninstall));
-                    SetStatus(PluginManagerLocalization.Get(PluginManagerLocalization.Ready));
+                    await PCDialogPlugin.ErrorDialogAsync(ex.Message, PMLocalization.Get("plugins.confirm_uninstall"));
+                    SetStatus(PMLocalization.Get("plugins.ready"));
                 }
             }
         }
 
-        /// <summary>
-        /// Install plugin from local file
-        /// </summary>
         private async Task InstallPlugin()
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
                 Filter = "DLL files (*.dll)|*.dll|All files (*.*)|*.*",
-                Title = PluginManagerLocalization.Get(PluginManagerLocalization.SelectDll)
+                Title = PMLocalization.Get("plugins.select_dll")
             };
 
             if (dialog.ShowDialog() == true)
             {
-                SetStatus(PluginManagerLocalization.Get(PluginManagerLocalization.Installing));
+                SetStatus(PMLocalization.Get("plugins.installing"));
                 var result = await PMPlugin.Instance.Install(dialog.FileName);
                 SetStatus(result.Message);
 
                 if (result.Success)
                 {
                     await RefreshPluginList();
-
                     if (_pm != null)
                         await _pm.TriggerEvent("App", "Installed", result.Data.Count > 0 ? result.Data[0] ?? "" : "", result.Data.Count > 1 ? result.Data[1] ?? "" : "");
                 }
             }
         }
 
-        /// <summary>
-        /// Set status message
-        /// </summary>
+        #endregion
+
+        #region Protocols Tab
+
+        private async Task LoadProtocols()
+        {
+            await LoadSpecialProtocols();
+            await LoadAssociatedItems();
+        }
+
+        private async Task LoadSpecialProtocols()
+        {
+            SpecialProtocolList.Items.Clear();
+
+            foreach (var protocol in SupportedLanguages.SpecialProtocols)
+            {
+                var card = await CreateSpecialProtocolCard(protocol.Key, protocol.Value);
+                SpecialProtocolList.Items.Add(card);
+            }
+        }
+
+        private async Task<Border> CreateSpecialProtocolCard(string protocolType, string locKey)
+        {
+            var card = new Border
+            {
+                Style = (Style)FindResource("SettingsCardStyle")
+            };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Icon
+            var iconText = new TextBlock
+            {
+                Text = GetProtocolIcon(protocolType),
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 20,
+                Width = 32,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = (Brush)FindResource("PrimaryBrush")
+            };
+            Grid.SetColumn(iconText, 0);
+            grid.Children.Add(iconText);
+
+            // Info
+            var infoStack = new StackPanel
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(12, 0, 0, 0)
+            };
+
+            var titleText = new TextBlock
+            {
+                Text = PMLocalization.Get(locKey),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = (Brush)FindResource("Foreground1Brush")
+            };
+            infoStack.Children.Add(titleText);
+
+            // Get current handler
+            var currentHandler = await GetDefaultHandler(protocolType);
+            var handlerText = new TextBlock
+            {
+                Text = string.IsNullOrEmpty(currentHandler)
+                    ? PMLocalization.Get("protocols.no_handler")
+                    : currentHandler,
+                FontSize = 12,
+                Margin = new Thickness(0, 4, 0, 0),
+                Foreground = (Brush)FindResource("Foreground4Brush")
+            };
+            infoStack.Children.Add(handlerText);
+
+            Grid.SetColumn(infoStack, 1);
+            grid.Children.Add(infoStack);
+
+            // Select button
+            var selectButton = new Button
+            {
+                Style = (Style)FindResource("PhobosButtonSecondary"),
+                Tag = protocolType
+            };
+
+            var selectContent = new StackPanel { Orientation = Orientation.Horizontal };
+            selectContent.Children.Add(new TextBlock
+            {
+                Text = "\uE70F",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            selectContent.Children.Add(new TextBlock
+            {
+                Text = PMLocalization.Get("protocols.select_handler"),
+                Margin = new Thickness(6, 0, 0, 0)
+            });
+            selectButton.Content = selectContent;
+            selectButton.Click += SelectProtocolHandler_Click;
+
+            Grid.SetColumn(selectButton, 2);
+            grid.Children.Add(selectButton);
+
+            card.Child = grid;
+            return card;
+        }
+
+        private string GetProtocolIcon(string protocolType)
+        {
+            return protocolType switch
+            {
+                "text" => "\uE8A5",
+                "image" => "\uEB9F",
+                "video" => "\uE714",
+                "browser" => "\uE774",
+                "launcher" => "\uE7FC",
+                "runner" => "\uE756",
+                "auth" => "\uE72E",
+                _ => "\uE71B"
+            };
+        }
+
+        private async Task<string> GetDefaultHandler(string protocolType)
+        {
+            try
+            {
+                // Use PMProtocol to get the default handler info
+                var info = await PMProtocol.Instance.GetProtocolAssociationInfo(protocolType);
+                if (info != null)
+                {
+                    return $"{info.PackageName} - {info.Description}";
+                }
+                return "";
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private async void SelectProtocolHandler_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string protocolType)
+            {
+                try
+                {
+                    // Use the built-in handler selection dialog from PMProtocol
+                    var (selectedHandler, setAsDefault) = await PMProtocol.Instance.ShowDefaultHandlerDialog(
+                        protocolType,
+                        title: PMLocalization.Get("protocols.select_handler"),
+                        subtitle: PMLocalization.Get(SupportedLanguages.SpecialProtocols.GetValueOrDefault(protocolType, "protocols.title")));
+
+                    if (selectedHandler != null)
+                    {
+                        SetStatus(PMLocalization.Get("protocols.set_default_success"));
+                        await LoadSpecialProtocols();
+                        await LoadAssociatedItems();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PluginManager", $"Failed to select handler: {ex.Message}");
+                    await PCDialogPlugin.ErrorDialogAsync(ex.Message, PMLocalization.Get("pm.title"));
+                }
+            }
+        }
+
+        private async Task LoadAssociatedItems()
+        {
+            AssociatedItemList.Items.Clear();
+
+            try
+            {
+                // Load all protocol associations from database
+                var items = await LoadAssociatedItemsFromDatabase();
+                foreach (var item in items)
+                {
+                    var card = CreateAssociatedItemCard(item);
+                    AssociatedItemList.Items.Add(card);
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("PluginManager", $"Failed to load associated items: {ex.Message}");
+            }
+        }
+
+        private async Task<List<AssociatedItem>> LoadAssociatedItemsFromDatabase()
+        {
+            var result = new List<AssociatedItem>();
+            try
+            {
+                // Load all special protocol bindings
+                foreach (var protocol in SupportedLanguages.SpecialProtocols.Keys)
+                {
+                    var info = await PMProtocol.Instance.GetProtocolAssociationInfo(protocol);
+                    if (info != null)
+                    {
+                        result.Add(new AssociatedItem
+                        {
+                            Protocol = protocol,
+                            Handler = info.PackageName,
+                            Command = info.Command
+                        });
+                    }
+                }
+            }
+            catch { }
+            return result;
+        }
+
+        private Border CreateAssociatedItemCard(AssociatedItem item)
+        {
+            var card = new Border
+            {
+                Style = (Style)FindResource("SettingsCardStyle")
+            };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // Protocol
+            var protocolText = new TextBlock
+            {
+                Text = item.Protocol,
+                FontSize = 13,
+                FontWeight = FontWeights.SemiBold,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = (Brush)FindResource("PrimaryBrush")
+            };
+            Grid.SetColumn(protocolText, 0);
+            grid.Children.Add(protocolText);
+
+            // Handler
+            var handlerText = new TextBlock
+            {
+                Text = item.Handler,
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = (Brush)FindResource("Foreground2Brush")
+            };
+            Grid.SetColumn(handlerText, 1);
+            grid.Children.Add(handlerText);
+
+            // Command
+            var commandText = new TextBlock
+            {
+                Text = item.Command,
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                Foreground = (Brush)FindResource("Foreground4Brush"),
+                ToolTip = item.Command
+            };
+            Grid.SetColumn(commandText, 2);
+            grid.Children.Add(commandText);
+
+            card.Child = grid;
+            return card;
+        }
+
+        #endregion
+
+        #region Language Tab
+
+        private void LoadLanguageSettings()
+        {
+            LoadSystemLanguage();
+            LoadPluginLanguages();
+        }
+
+        private void LoadSystemLanguage()
+        {
+            SystemLanguageCombo.Items.Clear();
+
+            foreach (var lang in SupportedLanguages.Languages)
+            {
+                var item = new ComboBoxItem
+                {
+                    Content = PMLocalization.Get($"lang.{lang}"),
+                    Tag = lang
+                };
+                SystemLanguageCombo.Items.Add(item);
+
+                if (lang == LocalizationManager.Instance.CurrentLanguage)
+                {
+                    SystemLanguageCombo.SelectedItem = item;
+                }
+            }
+        }
+
+        private void LoadPluginLanguages()
+        {
+            PluginLanguageList.Items.Clear();
+
+            foreach (var plugin in _allPlugins)
+            {
+                var card = CreatePluginLanguageCard(plugin);
+                PluginLanguageList.Items.Add(card);
+            }
+        }
+
+        private Border CreatePluginLanguageCard(PluginMetadata plugin)
+        {
+            var lang = LocalizationManager.Instance.CurrentLanguage;
+
+            var card = new Border
+            {
+                Style = (Style)FindResource("SettingsCardStyle")
+            };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Plugin info
+            var infoStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+
+            var nameText = new TextBlock
+            {
+                Text = plugin.GetLocalizedName(lang),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = (Brush)FindResource("Foreground1Brush")
+            };
+            infoStack.Children.Add(nameText);
+
+            var packageText = new TextBlock
+            {
+                Text = plugin.PackageName,
+                FontSize = 12,
+                Margin = new Thickness(0, 2, 0, 0),
+                Foreground = (Brush)FindResource("Foreground4Brush")
+            };
+            infoStack.Children.Add(packageText);
+
+            Grid.SetColumn(infoStack, 0);
+            grid.Children.Add(infoStack);
+
+            // Language selector
+            var langCombo = new ComboBox
+            {
+                Style = (Style)FindResource("PhobosComboBox"),
+                Width = 180,
+                Tag = plugin.PackageName
+            };
+
+            // Add "Follow System" option
+            var followSystemItem = new ComboBoxItem
+            {
+                Content = PMLocalization.Get("language.follow_system"),
+                Tag = "system"
+            };
+            langCombo.Items.Add(followSystemItem);
+
+            var currentPluginLang = GetPluginLanguageSetting(plugin.PackageName);
+
+            foreach (var langCode in SupportedLanguages.Languages)
+            {
+                var item = new ComboBoxItem
+                {
+                    Content = PMLocalization.Get($"lang.{langCode}"),
+                    Tag = langCode
+                };
+                langCombo.Items.Add(item);
+
+                if (langCode == currentPluginLang)
+                {
+                    langCombo.SelectedItem = item;
+                }
+            }
+
+            if (currentPluginLang == "system" || string.IsNullOrEmpty(currentPluginLang))
+            {
+                langCombo.SelectedItem = followSystemItem;
+            }
+
+            langCombo.SelectionChanged += PluginLanguageCombo_SelectionChanged;
+
+            Grid.SetColumn(langCombo, 1);
+            grid.Children.Add(langCombo);
+
+            card.Child = grid;
+            return card;
+        }
+
+        private string GetPluginLanguageSetting(string packageName)
+        {
+            try
+            {
+                var context = LocalizationManager.Instance.GetPluginContext(packageName);
+                return context.LanguageSetting;
+            }
+            catch
+            {
+                return "system";
+            }
+        }
+
+        private void SystemLanguageCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Handle in ApplyLanguageButton_Click
+        }
+
+        private void PluginLanguageCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is ComboBox combo && combo.Tag is string packageName && combo.SelectedItem is ComboBoxItem item)
+            {
+                var selectedLang = item.Tag?.ToString() ?? "system";
+                try
+                {
+                    LocalizationManager.Instance.SetPluginLanguage(packageName, selectedLang);
+                    SetStatus(PMLocalization.Get("language.saved"));
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PluginManager", $"Failed to save plugin language: {ex.Message}");
+                }
+            }
+        }
+
+        private async void ApplyLanguageButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SystemLanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string langCode)
+            {
+                try
+                {
+                    // Set the current language
+                    LocalizationManager.Instance.CurrentLanguage = langCode;
+
+                    // Save to system config via PCPluginManager (which is a built-in plugin)
+                    if (_pm != null)
+                    {
+                        await _pm.WriteConfig("system.language", langCode);
+                    }
+
+                    // Refresh UI
+                    PMLocalization.Initialize();
+                    UpdateLocalizedText();
+                    await RefreshPluginList();
+                    LoadPluginLanguages();
+
+                    SetStatus(PMLocalization.Get("language.saved"));
+
+                    await PCDialogPlugin.InfoDialogAsync(
+                        PMLocalization.Get("language.restart_required"),
+                        PMLocalization.Get("language.title"));
+                }
+                catch (Exception ex)
+                {
+                    PCLoggerPlugin.Error("PluginManager", $"Failed to apply language: {ex.Message}");
+                    await PCDialogPlugin.ErrorDialogAsync(ex.Message, PMLocalization.Get("language.title"));
+                }
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
         private void SetStatus(string message)
         {
             Application.Current?.Dispatcher.Invoke(() =>
@@ -457,5 +1050,17 @@ namespace Phobos.Components.Arcusrix.PluginManager
                 StatusText.Text = message;
             });
         }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Associated item from database
+    /// </summary>
+    public class AssociatedItem
+    {
+        public string Protocol { get; set; } = "";
+        public string Handler { get; set; } = "";
+        public string Command { get; set; } = "";
     }
 }

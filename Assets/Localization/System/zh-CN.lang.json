@@ -1,0 +1,31 @@
+{
+  "name": "Phobos 系统",
+  "langCode": "zh-CN",
+  "version": "1.0.0",
+  "items": {
+    "app.name": "Phobos",
+    "app.error.database": "数据库连接失败",
+    "app.error.plugin": "插件加载失败",
+
+    "error.title": "错误 - Phobos",
+    "error.fatal.title": "致命错误",
+    "error.startup.failed": "Phobos 启动失败",
+    "error.paths.failed": "初始化应用程序路径失败",
+    "error.database.failed": "数据库连接失败",
+    "error.database.init.failed": "初始化数据库失败",
+    "error.theme.failed": "加载主题失败",
+    "error.plugin.manager.failed": "初始化插件管理器失败",
+    "error.plugin.register.failed": "注册内置插件失败",
+    "error.plugin.launch.failed": "启动默认插件失败",
+    "error.boot.failed": "执行启动项失败",
+    "error.details": "错误详情：",
+
+    "button.ok": "确定",
+    "button.cancel": "取消",
+    "button.yes": "是",
+    "button.no": "否",
+    "button.exit": "退出",
+    "button.retry": "重试",
+    "button.close": "关闭"
+  }
+}

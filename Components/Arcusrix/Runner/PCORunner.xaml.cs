@@ -2,6 +2,7 @@
 using Phobos.Components.Arcusrix.Menu;
 using Phobos.Manager.Arcusrix;
 using Phobos.Shared.Class;
+using Phobos.Shared.Interface;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,7 +15,6 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using IWshRuntimeLibrary;
 
 namespace Phobos.Components.Arcusrix.Runner
 {
@@ -103,7 +103,7 @@ namespace Phobos.Components.Arcusrix.Runner
         private readonly PCRunnerPlugin _runner;
         private CancellationTokenSource? _searchCts;
         private int _selectedSuggestionIndex = -1;
-        private List<ShortcutInfo> _currentSuggestions = new();
+        private List<PhobosSuggestionItem> _currentSuggestions = new();
         private bool _isClosing = false;
 
         public PCORunner(PCRunnerPlugin runner)
@@ -280,8 +280,8 @@ namespace Phobos.Components.Arcusrix.Runner
                 // 如果有选中的建议项，使用它
                 if (_selectedSuggestionIndex >= 0 && _selectedSuggestionIndex < _currentSuggestions.Count)
                 {
-                    var shortcut = _currentSuggestions[_selectedSuggestionIndex];
-                    await ExecuteShortcut(shortcut);
+                    var suggestion = _currentSuggestions[_selectedSuggestionIndex];
+                    await ExecuteSuggestion(suggestion);
                 }
                 else
                 {
@@ -301,7 +301,16 @@ namespace Phobos.Components.Arcusrix.Runner
             {
                 System.Diagnostics.Debug.WriteLine($"[Runner] Searching for: {searchText}");
 
-                var suggestions = await _runner.FindAllMatchingShortcuts(searchText);
+                // 使用 SearchAvailableItems 搜索（优先桌面项，然后系统快捷方式）
+                var result = await _runner.SearchAvailableItems(new SearchAvailableItemsRequest
+                {
+                    Keyword = searchText,
+                    MaxResults = 20,
+                    IncludeDesktopItems = true,
+                    IncludeSystemShortcuts = true
+                });
+
+                var suggestions = result.Items;
                 _currentSuggestions = suggestions;
                 _selectedSuggestionIndex = suggestions.Count > 0 ? 0 : -1;
 
@@ -416,7 +425,7 @@ namespace Phobos.Components.Arcusrix.Runner
             storyboard.Begin();
         }
 
-        private Border CreateSuggestionItem(ShortcutInfo shortcut)
+        private Border CreateSuggestionItem(PhobosSuggestionItem suggestion)
         {
             var border = new Border
             {
@@ -425,7 +434,7 @@ namespace Phobos.Components.Arcusrix.Runner
                 Padding = new Thickness(12, 10, 12, 10),
                 Margin = new Thickness(0, 2, 0, 2),
                 Cursor = Cursors.Hand,
-                Tag = shortcut
+                Tag = suggestion
             };
 
             var grid = new Grid();
@@ -442,15 +451,28 @@ namespace Phobos.Components.Arcusrix.Runner
                 Margin = new Thickness(0, 0, 16, 0)
             };
 
-            // 尝试加载缓存的图标
+            // 尝试加载图标
             UIElement iconContent;
-            if (!string.IsNullOrEmpty(shortcut.CachedIconPath) && System.IO.File.Exists(shortcut.CachedIconPath))
+            if (suggestion.Icon != null)
+            {
+                // 使用已缓存的 ImageSource
+                iconContent = new Image
+                {
+                    Source = suggestion.Icon,
+                    Width = 32,
+                    Height = 32,
+                    Stretch = Stretch.Uniform,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+            }
+            else if (!string.IsNullOrEmpty(suggestion.IconPath) && System.IO.File.Exists(suggestion.IconPath))
             {
                 try
                 {
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(shortcut.CachedIconPath, UriKind.Absolute);
+                    bitmap.UriSource = new Uri(suggestion.IconPath, UriKind.Absolute);
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
                     bitmap.DecodePixelWidth = 48;
                     bitmap.DecodePixelHeight = 48;
@@ -470,25 +492,13 @@ namespace Phobos.Components.Arcusrix.Runner
                 catch
                 {
                     // 加载失败，使用默认图标
-                    iconContent = new TextBlock
-                    {
-                        Text = shortcut.ShortcutType == ShortcutType.Url ? "🌐" : "📄",
-                        FontSize = 22,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
+                    iconContent = CreateDefaultIcon(suggestion.Type);
                 }
             }
             else
             {
-                // 没有缓存图标，使用默认图标
-                iconContent = new TextBlock
-                {
-                    Text = shortcut.ShortcutType == ShortcutType.Url ? "🌐" : "📄",
-                    FontSize = 22,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
+                // 没有图标，使用默认图标
+                iconContent = CreateDefaultIcon(suggestion.Type);
             }
 
             iconBorder.Child = iconContent;
@@ -500,22 +510,22 @@ namespace Phobos.Components.Arcusrix.Runner
 
             var nameText = new TextBlock
             {
-                Text = shortcut.Name,
+                Text = suggestion.Name,
                 FontSize = 16,
                 FontWeight = FontWeights.Medium,
                 Foreground = (Brush)FindResource("Foreground1Brush")
             };
             textStack.Children.Add(nameText);
 
-            var pathText = new TextBlock
+            var descText = new TextBlock
             {
-                Text = shortcut.TargetPath,
+                Text = suggestion.Description,
                 FontSize = 13,
                 Foreground = (Brush)FindResource("Foreground4Brush"),
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 Margin = new Thickness(0, 4, 0, 0)
             };
-            textStack.Children.Add(pathText);
+            textStack.Children.Add(descText);
 
             Grid.SetColumn(textStack, 1);
             grid.Children.Add(textStack);
@@ -532,16 +542,42 @@ namespace Phobos.Components.Arcusrix.Runner
 
             border.MouseLeftButtonUp += async (s, e) =>
             {
-                await ExecuteShortcut(shortcut);
+                await ExecuteSuggestion(suggestion);
             };
 
             border.MouseRightButtonUp += (s, e) =>
             {
-                ShowShortcutContextMenu(shortcut, border);
+                ShowSuggestionContextMenu(suggestion, border);
                 e.Handled = true;
             };
 
             return border;
+        }
+
+        /// <summary>
+        /// 根据建议类型创建默认图标
+        /// </summary>
+        private UIElement CreateDefaultIcon(SuggestionType type)
+        {
+            var emoji = type switch
+            {
+                SuggestionType.Plugin => "🔌",
+                SuggestionType.Shortcut => "🔗",
+                SuggestionType.System => "📄",
+                SuggestionType.Command => "⌘",
+                SuggestionType.File => "📄",
+                SuggestionType.Web => "🌐",
+                SuggestionType.Calculation => "🧮",
+                _ => "📋"
+            };
+
+            return new TextBlock
+            {
+                Text = emoji,
+                FontSize = 22,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
         }
 
         private void UpdateSuggestionSelection()
@@ -560,43 +596,28 @@ namespace Phobos.Components.Arcusrix.Runner
 
         #region 右键菜单
 
-        private void ShowShortcutContextMenu(ShortcutInfo shortcut, UIElement target)
+        private void ShowSuggestionContextMenu(PhobosSuggestionItem suggestion, UIElement target)
         {
             var items = new List<PhobosMenuItem>
             {
                 PMMenu.Instance.CreateItem("run", RunnerLocalization.Get(RunnerLocalization.Run), "▶", async () =>
                 {
-                    await ExecuteShortcut(shortcut);
-                }),
-                PMMenu.Instance.CreateSeparator(),
-                PMMenu.Instance.CreateItem("open_location", RunnerLocalization.Get(RunnerLocalization.OpenLocation), "📁", () =>
-                {
-                    OpenFileLocation(shortcut.FullPath);
-                }),
-                PMMenu.Instance.CreateItem("copy_path", RunnerLocalization.Get(RunnerLocalization.CopyPath), "📋", () =>
-                {
-                    Clipboard.SetText(shortcut.TargetPath);
+                    await ExecuteSuggestion(suggestion);
                 })
             };
 
+            // 如果有路径信息，添加打开位置和复制路径选项
+            if (!string.IsNullOrEmpty(suggestion.Command))
+            {
+                items.Add(PMMenu.Instance.CreateSeparator());
+                items.Add(PMMenu.Instance.CreateItem("copy_path", RunnerLocalization.Get(RunnerLocalization.CopyPath), "📋", () =>
+                {
+                    Clipboard.SetText(suggestion.Command);
+                }));
+            }
+
             var position = target.TranslatePoint(new Point(0, ((FrameworkElement)target).ActualHeight), RootGrid);
             PMMenu.Instance.ShowAt(RootGrid, items, position, null);
-        }
-
-        private void OpenFileLocation(string path)
-        {
-            try
-            {
-                var directory = System.IO.Path.GetDirectoryName(path);
-                if (!string.IsNullOrEmpty(directory))
-                {
-                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{path}\"");
-                }
-            }
-            catch (Exception ex)
-            {
-                PCLoggerPlugin.Error("Runner", $"Failed to open location: {ex.Message}");
-            }
         }
 
         #endregion
@@ -620,26 +641,27 @@ namespace Phobos.Components.Arcusrix.Runner
             }
         }
 
-        private async Task ExecuteShortcut(ShortcutInfo shortcut)
+        private async Task ExecuteSuggestion(PhobosSuggestionItem suggestion)
         {
             CloseWithAnimation();
 
             try
             {
-                // 直接用 explorer 启动快捷方式文件本身
-                var psi = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "explorer.exe",
-                    Arguments = $"\"{shortcut.FullPath}\"",
-                    UseShellExecute = true
-                };
-                System.Diagnostics.Process.Start(psi);
+                // 使用 Runner 的 ExecuteSuggestion 方法执行
+                var result = await _runner.ExecuteSuggestion(suggestion);
 
-                PCLoggerPlugin.Info("Runner", $"Launched shortcut: {shortcut.Name}");
+                if (result.Success)
+                {
+                    PCLoggerPlugin.Info("Runner", $"Launched suggestion: {suggestion.Name}");
+                }
+                else
+                {
+                    PCLoggerPlugin.Warning("Runner", $"Failed to launch suggestion: {result.Message}");
+                }
             }
             catch (Exception ex)
             {
-                PCLoggerPlugin.Error("Runner", $"Failed to execute shortcut: {ex.Message}");
+                PCLoggerPlugin.Error("Runner", $"Failed to execute suggestion: {ex.Message}");
             }
         }
 

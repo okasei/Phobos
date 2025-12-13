@@ -1,0 +1,31 @@
+{
+  "name": "Phobos システム",
+  "langCode": "ja-JP",
+  "version": "1.0.0",
+  "items": {
+    "app.name": "Phobos",
+    "app.error.database": "データベース接続に失敗しました",
+    "app.error.plugin": "プラグインの読み込みに失敗しました",
+
+    "error.title": "エラー - Phobos",
+    "error.fatal.title": "致命的エラー",
+    "error.startup.failed": "Phobos の起動に失敗しました",
+    "error.paths.failed": "アプリケーションパスの初期化に失敗しました",
+    "error.database.failed": "データベース接続に失敗しました",
+    "error.database.init.failed": "データベースの初期化に失敗しました",
+    "error.theme.failed": "テーマの読み込みに失敗しました",
+    "error.plugin.manager.failed": "プラグインマネージャーの初期化に失敗しました",
+    "error.plugin.register.failed": "組み込みプラグインの登録に失敗しました",
+    "error.plugin.launch.failed": "デフォルトプラグインの起動に失敗しました",
+    "error.boot.failed": "起動項目の実行に失敗しました",
+    "error.details": "エラー詳細：",
+
+    "button.ok": "OK",
+    "button.cancel": "キャンセル",
+    "button.yes": "はい",
+    "button.no": "いいえ",
+    "button.exit": "終了",
+    "button.retry": "再試行",
+    "button.close": "閉じる"
+  }
+}

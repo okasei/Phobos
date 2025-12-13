@@ -183,8 +183,74 @@ namespace Phobos.Class.Theme
             // ============ 控件样式 ============
             foreach (var kvp in _controlStyles)
             {
-                var key = kvp.Key.Name + "Style";
+                var key = kvp.Key.Name + "Style"; // e.g., "ButtonStyle"
                 _resourceDictionary[key] = kvp.Value;
+                // add typed key as well, so resources[typeof(Button)] is available
+                _resourceDictionary[kvp.Key] = kvp.Value;
+            }
+
+            // Also add some common named resources used across XAML that may expect named keys
+            if (_controlStyles.TryGetValue(typeof(Button), out var buttonStyle))
+            {
+                _resourceDictionary["PrimaryButtonStyle"] = buttonStyle;
+                _resourceDictionary["PhobosButton"] = buttonStyle;
+                _resourceDictionary["DialogButtonStyle"] = buttonStyle; // safe default
+            }
+
+            // Secondary button style (named only)
+            var secondaryBtnStyle = CreateSecondaryButtonStyle();
+            if (secondaryBtnStyle != null)
+            {
+                _resourceDictionary["SecondaryButtonStyle"] = secondaryBtnStyle;
+                _resourceDictionary["PhobosButtonSecondary"] = secondaryBtnStyle;
+            }
+
+            // Toggle / CheckBox style fallback
+            var toggleStyle = CreateToggleSwitchStyle();
+            if (toggleStyle != null)
+            {
+                _resourceDictionary["PhobosToggleSwitch"] = toggleStyle;
+                _resourceDictionary[typeof(CheckBox)] = toggleStyle;
+            }
+
+            // Additional named button variants (danger/success/ghost/icon/sizes)
+            if (_resourceDictionary.Contains("PhobosButton"))
+            {
+                var baseBtn = _resourceDictionary["PhobosButton"] as Style;
+                if (baseBtn != null)
+                {
+                    // Danger
+                    var danger = new Style(typeof(Button), baseBtn);
+                    danger.Setters.Add(new Setter(Control.BackgroundProperty, GetBrush(_config.Colors.Danger)));
+                    danger.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush(_config.Colors.Background1)));
+                    _resourceDictionary["PhobosButtonDanger"] = danger;
+
+                    // Success
+                    var success = new Style(typeof(Button), baseBtn);
+                    success.Setters.Add(new Setter(Control.BackgroundProperty, GetBrush(_config.Colors.Success)));
+                    success.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush(_config.Colors.Background1)));
+                    _resourceDictionary["PhobosButtonSuccess"] = success;
+
+                    // Ghost (transparent)
+                    var ghost = new Style(typeof(Button), baseBtn);
+                    ghost.Setters.Add(new Setter(Control.BackgroundProperty, Brushes.Transparent));
+                    ghost.Setters.Add(new Setter(Control.BorderBrushProperty, GetBrush(_config.Colors.Border)));
+                    _resourceDictionary["PhobosButtonGhost"] = ghost;
+
+                    // Icon (keep base but smaller padding)
+                    var icon = new Style(typeof(Button), baseBtn);
+                    icon.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(6)));
+                    _resourceDictionary["PhobosButtonIcon"] = icon;
+
+                    // Small / Large
+                    var small = new Style(typeof(Button), baseBtn);
+                    small.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, _config.Dimensions.ButtonHeightSmall));
+                    _resourceDictionary["PhobosButtonSmall"] = small;
+
+                    var large = new Style(typeof(Button), baseBtn);
+                    large.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, _config.Dimensions.ButtonHeightLarge));
+                    _resourceDictionary["PhobosButtonLarge"] = large;
+                }
             }
 
             return _resourceDictionary;
@@ -249,13 +315,31 @@ namespace Phobos.Class.Theme
 
             if (Application.Current != null)
             {
-                // 移除旧的主题资源
+                // Determine whether the new theme provides styles (full theme) or just colors
+                bool newHasStyles = resources.Values.OfType<Style>().Any() || resources.Values.OfType<ControlTemplate>().Any();
+
+                // Remove only appropriate old theme resource dictionaries.
+                // If new theme is a full theme (contains styles), then remove all previously marked theme dictionaries.
+                // If new theme is colors-only, remove only old theme dictionaries that are also colors-only (keep style dictionaries as base fallback).
                 var toRemove = new List<ResourceDictionary>();
                 foreach (var dict in Application.Current.Resources.MergedDictionaries)
                 {
-                    if (dict.Contains("PhobosThemeMarker"))
+                    if (!dict.Contains("PhobosThemeMarker"))
+                        continue;
+
+                    bool dictHasStyles = dict.Values.OfType<Style>().Any() || dict.Values.OfType<ControlTemplate>().Any();
+                    if (newHasStyles)
                     {
+                        // If the incoming theme contains styles, we will remove all previous theme dictionaries
                         toRemove.Add(dict);
+                    }
+                    else
+                    {
+                        // New theme has only colors: preserve any dict which contains styles (act as base), remove only those that are colors-only
+                        if (!dictHasStyles)
+                        {
+                            toRemove.Add(dict);
+                        }
                     }
                 }
                 foreach (var dict in toRemove)
@@ -413,7 +497,7 @@ namespace Phobos.Class.Theme
             style.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush(btn.Foreground)));
             style.Setters.Add(new Setter(Control.BorderBrushProperty, GetBrush(btn.BorderColor)));
             style.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(_config.Dimensions.BorderWidth)));
-            style.Setters.Add(new Setter(Control.FontSizeProperty, ResolveDouble(btn.FontSize, _config.Fonts.SizeMd)));
+            style.Setters.Add(new Setter(Control.FontSizeProperty, _config.Fonts.SizeMd));
             style.Setters.Add(new Setter(Control.FontWeightProperty, FontWeightFromInt(ResolveInt(btn.FontWeight, _config.Fonts.WeightMedium))));
             style.Setters.Add(new Setter(Control.PaddingProperty, PCThemeLoader.ParseThickness(_config.Dimensions.ButtonPadding)));
             style.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, _config.Dimensions.ButtonHeight));
@@ -423,6 +507,21 @@ namespace Phobos.Class.Theme
             var template = CreateButtonTemplate(btn);
             style.Setters.Add(new Setter(Control.TemplateProperty, template));
 
+            return style;
+        }
+
+        private Style CreateSecondaryButtonStyle()
+        {
+            var style = new Style(typeof(Button));
+            var btn = _config.Controls.ButtonSecondary;
+
+            style.Setters.Add(new Setter(Control.BackgroundProperty, GetBrush(btn.Background)));
+            style.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush(btn.Foreground)));
+            style.Setters.Add(new Setter(Control.BorderBrushProperty, GetBrush(btn.BorderColor)));
+            style.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(_config.Dimensions.BorderWidth)));
+            style.Setters.Add(new Setter(Control.FontSizeProperty, _config.Fonts.SizeMd));
+            style.Setters.Add(new Setter(Control.PaddingProperty, PCThemeLoader.ParseThickness(_config.Dimensions.ButtonPadding)));
+            style.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, _config.Dimensions.ButtonHeight));
             return style;
         }
 
@@ -544,7 +643,18 @@ namespace Phobos.Class.Theme
         private Style CreateGridStyle()
         {
             var style = new Style(typeof(Grid));
-            style.Setters.Add(new Setter(Panel.BackgroundProperty, GetBrush(_config.Colors.Background1)));
+            //style.Setters.Add(new Setter(Panel.BackgroundProperty, GetBrush(_config.Colors.Background1)));
+            return style;
+        }
+
+        private Style CreateToggleSwitchStyle()
+        {
+            var style = new Style(typeof(CheckBox));
+            // Provide simple visual change, using a Border background and content placement for simplicity
+            style.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush(_config.Colors.Foreground1)));
+            style.Setters.Add(new Setter(Control.BackgroundProperty, GetBrush(_config.Colors.Background2)));
+            style.Setters.Add(new Setter(FrameworkElement.HeightProperty, 28.0));
+            style.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(6, 0, 6, 0)));
             return style;
         }
 

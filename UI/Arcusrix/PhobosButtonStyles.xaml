@@ -337,6 +337,13 @@
         <Setter Property="Padding" Value="12,4"/>
     </Style>
 
+    <!-- ============ 小型危险按钮 (Danger Small Button) ============ -->
+    <Style x:Key="PhobosButtonDangerSmall" TargetType="Button" BasedOn="{StaticResource PhobosButtonDanger}">
+        <Setter Property="MinHeight" Value="{DynamicResource ControlHeightSm}"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSm}"/>
+        <Setter Property="Padding" Value="12,4"/>
+    </Style>
+
     <!-- ============ 大型按钮 (Large Button) ============ -->
     <Style x:Key="PhobosButtonLarge" TargetType="Button" BasedOn="{StaticResource PhobosButton}">
         <Setter Property="MinHeight" Value="{DynamicResource ControlHeightLg}"/>

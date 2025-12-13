@@ -99,6 +99,99 @@ namespace Phobos.Class.Theme
 
         #endregion
 
+            /// <summary>
+            /// Create a minimal ThemeControls instance referencing color variables, so a colors-only theme still contains
+            /// controls definitions for compatibility across the app (XAML expects named style keys).
+            /// This produces simple defaults that refer to colors and dimensions from the config.
+            /// </summary>
+            public static ThemeControls GenerateControlsFromColors(PCThemeConfig config)
+            {
+                var controls = new ThemeControls();
+
+                controls.Button = new ButtonStyle
+                {
+                    Background = "${colors.primary}",
+                    BackgroundHover = "${colors.primaryHover}",
+                    BackgroundPressed = "${colors.primaryPressed}",
+                    BackgroundDisabled = "${colors.primaryDisabled}",
+                    Foreground = "${colors.background1}",
+                    ForegroundDisabled = "${colors.foreground4}",
+                    BorderColor = "transparent",
+                    BorderRadius = "${dimensions.borderRadius}",
+                    FontSize = "${fonts.sizeMd}",
+                    FontWeight = "${fonts.weightMedium}"
+                };
+
+                controls.ButtonSecondary = new ButtonSecondaryStyle
+                {
+                    Background = "transparent",
+                    BackgroundHover = "${colors.background4}",
+                    BackgroundPressed = "${colors.background3}",
+                    Foreground = "${colors.foreground1}",
+                    BorderColor = "${colors.border}"
+                };
+
+                controls.TextBox = new TextBoxStyle
+                {
+                    Background = "${colors.background2}",
+                    BackgroundFocused = "${colors.background1}",
+                    Foreground = "${colors.foreground1}",
+                    ForegroundPlaceholder = "${colors.foreground4}",
+                    BorderColor = "${colors.border}",
+                    BorderColorFocused = "${colors.borderFocus}",
+                    BorderRadius = "${dimensions.borderRadius}",
+                    FontSize = "${fonts.sizeMd}"
+                };
+
+                controls.Label = new LabelStyle
+                {
+                    Foreground = "${colors.foreground1}",
+                    FontSize = "${fonts.sizeMd}" 
+                };
+
+                controls.ListBox = new ListBoxStyle
+                {
+                    Background = "${colors.background2}",
+                    Foreground = "${colors.foreground1}",
+                    ItemBackground = "transparent",
+                    ItemBackgroundHover = "${colors.background4}",
+                    ItemBackgroundSelected = "${colors.primary}",
+                    ItemForegroundSelected = "${colors.background1}",
+                    BorderColor = "${colors.border}"
+                };
+
+                controls.ScrollBar = new ScrollBarStyle
+                {
+                    Background = "transparent",
+                    ThumbBackground = "${colors.scrollbar}",
+                    ThumbBackgroundHover = "${colors.scrollbarHover}",
+                    Width = 10,
+                    ThumbRadius = 5
+                };
+
+                controls.Window = new WindowStyle
+                {
+                    Background = "${colors.background1}",
+                    TitleBarBackground = "${colors.background2}",
+                    TitleBarForeground = "${colors.foreground1}",
+                    BorderColor = "${colors.border}",
+                    ShadowColor = "${colors.shadow}",
+                    ShadowBlurRadius = 20
+                };
+
+                controls.TitleBarButton = new TitleBarButtonStyle
+                {
+                    Background = "transparent",
+                    BackgroundHover = "${colors.background4}",
+                    Foreground = "${colors.foreground3}",
+                    ForegroundHover = "${colors.foreground1}",
+                    CloseBackgroundHover = "#F85149",
+                    CloseForegroundHover = "#FFFFFF"
+                };
+
+                return controls;
+            }
+
         #region Variable Resolution
 
         /// <summary>

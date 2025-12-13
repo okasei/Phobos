@@ -95,6 +95,7 @@ namespace Phobos.Class.Database
                     Language TEXT NOT NULL DEFAULT 'en-US',
                     InstallTime TEXT NOT NULL DEFAULT (datetime('now')),
                     Directory TEXT NOT NULL DEFAULT '',
+                    MainAssembly TEXT NOT NULL DEFAULT '',
                     Icon TEXT NOT NULL DEFAULT '',
                     IsSystemPlugin INTEGER NOT NULL DEFAULT 0,
                     SettingUri TEXT NOT NULL DEFAULT '',
@@ -146,6 +147,19 @@ namespace Phobos.Class.Database
                     LastValue TEXT NOT NULL DEFAULT ''
                 );
 
+                CREATE TABLE IF NOT EXISTS Phobos_Theme (
+                    ThemeId TEXT PRIMARY KEY NOT NULL,
+                    Name TEXT NOT NULL DEFAULT '',
+                    Author TEXT NOT NULL DEFAULT '',
+                    Description TEXT NOT NULL DEFAULT '',
+                    Version TEXT NOT NULL DEFAULT '1.0.0',
+                    FilePath TEXT NOT NULL DEFAULT '',
+                    IsBuiltIn INTEGER NOT NULL DEFAULT 0,
+                    IsEnabled INTEGER NOT NULL DEFAULT 1,
+                    InstallTime TEXT NOT NULL DEFAULT (datetime('now')),
+                    UpdateTime TEXT NOT NULL DEFAULT (datetime('now'))
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_appdata_package ON Phobos_Appdata(PackageName);
                 CREATE INDEX IF NOT EXISTS idx_associated_package ON Phobos_AssociatedItem(PackageName);
                 CREATE INDEX IF NOT EXISTS idx_protocol_protocol ON Phobos_Protocol(Protocol);
@@ -153,6 +167,8 @@ namespace Phobos.Class.Database
                 CREATE INDEX IF NOT EXISTS idx_boot_priority ON Phobos_Boot(Priority);
                 CREATE INDEX IF NOT EXISTS idx_plugin_system ON Phobos_Plugin(IsSystemPlugin);
                 CREATE INDEX IF NOT EXISTS idx_plugin_enabled ON Phobos_Plugin(IsEnabled);
+                CREATE INDEX IF NOT EXISTS idx_theme_builtin ON Phobos_Theme(IsBuiltIn);
+                CREATE INDEX IF NOT EXISTS idx_theme_enabled ON Phobos_Theme(IsEnabled);
             ";
 
             await ExecuteNonQuery(createTablesSql);

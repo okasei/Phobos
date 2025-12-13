@@ -33,7 +33,17 @@ namespace Phobos.Class.Plugin.BuiltIn
         /// <summary>
         /// URL 快捷方式 (.url)
         /// </summary>
-        Url
+        Url,
+
+        /// <summary>
+        /// 普通文件
+        /// </summary>
+        File,
+
+        /// <summary>
+        /// 文件夹
+        /// </summary>
+        Folder
     }
 
     /// <summary>
@@ -1352,7 +1362,7 @@ namespace Phobos.Class.Plugin.BuiltIn
                         }
                     }
 
-                    // 扫描桌面
+                    // 扫描桌面（快捷方式 + 普通文件和文件夹）
                     var desktopPaths = new[]
                     {
                         Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
@@ -1366,7 +1376,10 @@ namespace Phobos.Class.Plugin.BuiltIn
                         PCLoggerPlugin.Info("Runner", $"Checking desktop path: {desktopPath}, exists: {Directory.Exists(desktopPath)}");
                         if (Directory.Exists(desktopPath))
                         {
+                            // 扫描快捷方式
                             ScanDirectory(desktopPath, shortcuts, recursive: false);
+                            // 扫描普通文件和文件夹（不递归）
+                            ScanDesktopFilesAndFolders(desktopPath, shortcuts);
                         }
                     }
 
@@ -1493,6 +1506,194 @@ namespace Phobos.Class.Plugin.BuiltIn
             {
                 PCLoggerPlugin.Error("Runner", $"Failed to scan directory {path}: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 扫描桌面上的普通文件和文件夹（不包含 .lnk 和 .url）
+        /// </summary>
+        /// <param name="desktopPath">要扫描的目录路径</param>
+        /// <param name="shortcuts">存储结果的列表</param>
+        /// <param name="maxDepth">最大递归深度，0表示只扫描当前目录，1表示扫描一级子目录，以此类推</param>
+        /// <param name="currentDepth">当前递归深度（内部使用）</param>
+        private void ScanDesktopFilesAndFolders(string desktopPath, List<ShortcutInfo> shortcuts, int maxDepth = 8, int currentDepth = 0)
+        {
+            try
+            {
+                // 扫描文件夹
+                try
+                {
+                    foreach (var dir in Directory.GetDirectories(desktopPath))
+                    {
+                        try
+                        {
+                            var dirInfo = new DirectoryInfo(dir);
+                            // 跳过隐藏文件夹和系统文件夹
+                            if ((dirInfo.Attributes & FileAttributes.Hidden) != 0 ||
+                                (dirInfo.Attributes & FileAttributes.System) != 0)
+                            {
+                                continue;
+                            }
+
+                            var info = new ShortcutInfo
+                            {
+                                Name = dirInfo.Name,
+                                FullPath = dir,
+                                TargetPath = dir,
+                                ShortcutType = ShortcutType.Folder
+                            };
+
+                            // 尝试获取文件夹图标
+                            info.CachedIconPath = CacheFolderIcon(dir);
+
+                            shortcuts.Add(info);
+
+                            // 如果还没达到最大深度，递归扫描子目录
+                            if (currentDepth < maxDepth)
+                            {
+                                ScanDesktopFilesAndFolders(dir, shortcuts, maxDepth, currentDepth + 1);
+                            }
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            // 忽略无权访问的文件夹
+                        }
+                    }
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // 忽略
+                }
+
+                // 扫描普通文件（排除 .lnk 和 .url）
+                try
+                {
+                    foreach (var file in Directory.GetFiles(desktopPath))
+                    {
+                        try
+                        {
+                            var ext = Path.GetExtension(file).ToLowerInvariant();
+                            // 跳过快捷方式文件（已在 ScanDirectory 中处理）
+                            if (ext == ".lnk" || ext == ".url")
+                                continue;
+
+                            var fileInfo = new FileInfo(file);
+                            // 跳过隐藏文件和系统文件
+                            if ((fileInfo.Attributes & FileAttributes.Hidden) != 0 ||
+                                (fileInfo.Attributes & FileAttributes.System) != 0)
+                            {
+                                continue;
+                            }
+
+                            var info = new ShortcutInfo
+                            {
+                                Name = Path.GetFileNameWithoutExtension(file),
+                                FullPath = file,
+                                TargetPath = file,
+                                ShortcutType = ShortcutType.File
+                            };
+
+                            // 尝试从文件获取图标
+                            info.CachedIconPath = CacheFileIcon(file);
+
+                            shortcuts.Add(info);
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            // 忽略无权访问的文件
+                        }
+                    }
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // 忽略
+                }
+
+                PCLoggerPlugin.Info("Runner", $"Scanned desktop files/folders in {desktopPath}");
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Runner", $"Failed to scan desktop files/folders {desktopPath}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 缓存文件夹图标
+        /// </summary>
+        private string? CacheFolderIcon(string folderPath)
+        {
+            try
+            {
+                EnsureIconCacheDirectory();
+                var cacheFileName = GetIconCacheFileName(folderPath);
+                var cachePath = Path.Combine(IconCacheDirectory, cacheFileName);
+
+                if (System.IO.File.Exists(cachePath))
+                    return cachePath;
+
+                // 从 shell32.dll 获取文件夹图标（索引 3 是关闭的文件夹图标）
+                var hIcon = ExtractIconHandleFromFile(
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "shell32.dll"),
+                    3);
+
+                if (hIcon != IntPtr.Zero)
+                {
+                    try
+                    {
+                        SaveIconHandleAsPng(hIcon, cachePath);
+                        return cachePath;
+                    }
+                    finally
+                    {
+                        DestroyIcon(hIcon);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Runner", $"Failed to cache folder icon: {ex.Message}");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 缓存文件图标
+        /// </summary>
+        private string? CacheFileIcon(string filePath)
+        {
+            try
+            {
+                EnsureIconCacheDirectory();
+                var cacheFileName = GetIconCacheFileName(filePath);
+                var cachePath = Path.Combine(IconCacheDirectory, cacheFileName);
+
+                if (System.IO.File.Exists(cachePath))
+                {
+                    var cacheInfo = new FileInfo(cachePath);
+                    var fileInfo = new FileInfo(filePath);
+                    if (cacheInfo.LastWriteTime >= fileInfo.LastWriteTime)
+                        return cachePath;
+                }
+
+                // 尝试从文件自身提取图标
+                var hIcon = ExtractIconHandleFromFile(filePath);
+                if (hIcon != IntPtr.Zero)
+                {
+                    try
+                    {
+                        SaveIconHandleAsPng(hIcon, cachePath);
+                        return cachePath;
+                    }
+                    finally
+                    {
+                        DestroyIcon(hIcon);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Runner", $"Failed to cache file icon for {filePath}: {ex.Message}");
+            }
+            return null;
         }
 
         /// <summary>
@@ -1945,19 +2146,26 @@ namespace Phobos.Class.Plugin.BuiltIn
 
             try
             {
+                PCLoggerPlugin.Info("Runner", $"[SearchAvailableItems] Starting search: keyword='{request.Keyword}', IncludeDesktopItems={request.IncludeDesktopItems}");
+
                 // 1. 首先搜索桌面项（通过 RequestPhobos 调用默认桌面）
                 if (request.IncludeDesktopItems)
                 {
+                    PCLoggerPlugin.Info("Runner", "[SearchAvailableItems] Calling RequestPhobos for SearchDesktop...");
                     var desktopResult = await RequestPhobos("SearchDesktop", request.Keyword, request.MaxResults);
+                    PCLoggerPlugin.Info("Runner", $"[SearchAvailableItems] RequestPhobos returned: {(desktopResult == null ? "null" : $"{desktopResult.Count} items")}");
+
                     if (desktopResult != null)
                     {
                         foreach (var item in desktopResult)
                         {
+                            PCLoggerPlugin.Info("Runner", $"[SearchAvailableItems] Item type: {item?.GetType().Name ?? "null"}");
                             if (item is PhobosSuggestionItem suggestion)
                             {
                                 result.Items.Add(suggestion);
                             }
                         }
+                        PCLoggerPlugin.Info("Runner", $"[SearchAvailableItems] Added {result.Items.Count} desktop items");
                     }
                 }
 
@@ -1973,7 +2181,7 @@ namespace Phobos.Class.Plugin.BuiltIn
                             Name = shortcut.Name,
                             Description = shortcut.TargetPath,
                             IconPath = shortcut.CachedIconPath ?? shortcut.IconPath,
-                            Type = shortcut.ShortcutType == ShortcutType.Url ? SuggestionType.Web : SuggestionType.System,
+                            Type = MapShortcutTypeToSuggestionType(shortcut.ShortcutType),
                             Command = shortcut.FullPath,
                             SourcePackageName = Metadata.PackageName
                         });
@@ -2013,13 +2221,27 @@ namespace Phobos.Class.Plugin.BuiltIn
                     Name = shortcut.Name,
                     Description = shortcut.TargetPath,
                     IconPath = shortcut.CachedIconPath ?? shortcut.IconPath,
-                    Type = shortcut.ShortcutType == ShortcutType.Url ? SuggestionType.Web : SuggestionType.System,
+                    Type = MapShortcutTypeToSuggestionType(shortcut.ShortcutType),
                     Command = shortcut.FullPath,
                     SourcePackageName = Metadata.PackageName
                 });
             }
 
             return suggestions;
+        }
+
+        /// <summary>
+        /// 将 ShortcutType 映射到 SuggestionType
+        /// </summary>
+        private static SuggestionType MapShortcutTypeToSuggestionType(ShortcutType shortcutType)
+        {
+            return shortcutType switch
+            {
+                ShortcutType.Url => SuggestionType.Web,
+                ShortcutType.File => SuggestionType.File,
+                ShortcutType.Folder => SuggestionType.File, // 文件夹也用 File 类型
+                _ => SuggestionType.System
+            };
         }
 
         /// <summary>

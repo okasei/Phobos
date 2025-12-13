@@ -1,4 +1,6 @@
 using Phobos.Components.Arcusrix.Desktop;
+using Phobos.Components.Arcusrix.Desktop.Components;
+using Phobos.Service.Arcusrix;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 using Phobos.Shared.Models;
@@ -19,6 +21,7 @@ namespace Phobos.Class.Plugin.BuiltIn
     {
         private static PCDesktopPlugin? _instance;
         private PCOPhobosDesktop? _desktopWindow;
+        private PSSystemMonitor? _systemMonitor;
 
         /// <summary>
         /// 单例实例
@@ -82,6 +85,8 @@ namespace Phobos.Class.Plugin.BuiltIn
         public PCDesktopPlugin()
         {
             _instance = this;
+            // 注册桌面本地化资源
+            DesktopLocalization.RegisterAll();
         }
 
         public override async Task<RequestResult> OnInstall(params object[] args)
@@ -146,6 +151,9 @@ namespace Phobos.Class.Plugin.BuiltIn
                     _desktopWindow.ShowFromTray();
                 });
 
+                // 启动系统监控服务
+                await StartSystemMonitorAsync();
+
                 return new RequestResult { Success = true, Message = "Desktop launched" };
             }
             catch (Exception ex)
@@ -157,6 +165,9 @@ namespace Phobos.Class.Plugin.BuiltIn
 
         public override async Task<RequestResult> OnClosing(params object[] args)
         {
+            // 停止系统监控服务
+            await StopSystemMonitorAsync();
+
             // 取消订阅会在基类的 OnClosing 中自动处理
             if (_desktopWindow != null)
             {
@@ -602,6 +613,136 @@ namespace Phobos.Class.Plugin.BuiltIn
                 _desktopWindow?.RefreshPlugins();
                 _desktopWindow?.RenderDesktop();
             });
+        }
+
+        #endregion
+
+        #region System Monitor
+
+        /// <summary>
+        /// 启动系统监控服务
+        /// </summary>
+        private async Task StartSystemMonitorAsync()
+        {
+            try
+            {
+                if (_systemMonitor != null) return;
+
+                _systemMonitor = new PSSystemMonitor();
+                _systemMonitor.SystemNotificationReceived += OnSystemNotificationReceived;
+                await _systemMonitor.StartAsync();
+
+                PCLoggerPlugin.Info("Desktop", "System monitor started");
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Desktop", $"Failed to start system monitor: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 停止系统监控服务
+        /// </summary>
+        private async Task StopSystemMonitorAsync()
+        {
+            try
+            {
+                if (_systemMonitor == null) return;
+
+                _systemMonitor.SystemNotificationReceived -= OnSystemNotificationReceived;
+                await _systemMonitor.StopAsync();
+                _systemMonitor.Dispose();
+                _systemMonitor = null;
+
+                PCLoggerPlugin.Info("Desktop", "System monitor stopped");
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Desktop", $"Failed to stop system monitor: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理系统通知事件
+        /// </summary>
+        private async void OnSystemNotificationReceived(object? sender, SystemNotificationEventArgs e)
+        {
+            try
+            {
+                var notification = new PhobosNotification
+                {
+                    Title = e.Title,
+                    Content = e.Content,
+                    ContentType = NotificationContentType.PlainText,
+                    PackageName = Metadata.PackageName,
+                    Duration = GetNotificationDuration(e.Type),
+                    IconPath = e.IconPath,
+                    Actions = e.Actions,
+                    Priority = GetNotificationPriority(e.Type)
+                };
+
+                // 根据通知类型设置图片路径
+                notification.ImagePath = GetNotificationImagePath(e.Type);
+
+                await SendNotification(notification);
+
+                PCLoggerPlugin.Info("Desktop", $"System notification sent: {e.Type} - {e.Title}");
+            }
+            catch (Exception ex)
+            {
+                PCLoggerPlugin.Error("Desktop", $"Failed to send system notification: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取通知持续时间
+        /// </summary>
+        private static int GetNotificationDuration(SystemNotificationType type)
+        {
+            return type switch
+            {
+                SystemNotificationType.BatteryStatus => 8000,  // 电量通知显示较长时间
+                SystemNotificationType.NetworkStatus => 5000,
+                SystemNotificationType.DeviceConnected => 5000,
+                SystemNotificationType.DeviceDisconnected => 4000,
+                SystemNotificationType.ChargingStatus => 4000,
+                SystemNotificationType.PowerSaverMode => 5000,
+                _ => 5000
+            };
+        }
+
+        /// <summary>
+        /// 获取通知优先级
+        /// </summary>
+        private static int GetNotificationPriority(SystemNotificationType type)
+        {
+            return type switch
+            {
+                SystemNotificationType.BatteryStatus => 80,    // 电量警告高优先级
+                SystemNotificationType.NetworkStatus => 70,    // 网络状态较高优先级
+                SystemNotificationType.ChargingStatus => 50,
+                SystemNotificationType.PowerSaverMode => 50,
+                SystemNotificationType.DeviceConnected => 40,
+                SystemNotificationType.DeviceDisconnected => 40,
+                _ => 30
+            };
+        }
+
+        /// <summary>
+        /// 获取通知提示图片路径
+        /// </summary>
+        private static string? GetNotificationImagePath(SystemNotificationType type)
+        {
+            return type switch
+            {
+                SystemNotificationType.BatteryStatus => "pack://application:,,,/Assets/Icons/notification-battery.png",
+                SystemNotificationType.NetworkStatus => "pack://application:,,,/Assets/Icons/notification-network.png",
+                SystemNotificationType.ChargingStatus => "pack://application:,,,/Assets/Icons/notification-power.png",
+                SystemNotificationType.PowerSaverMode => "pack://application:,,,/Assets/Icons/notification-power.png",
+                SystemNotificationType.DeviceConnected => "pack://application:,,,/Assets/Icons/notification-device.png",
+                SystemNotificationType.DeviceDisconnected => "pack://application:,,,/Assets/Icons/notification-device.png",
+                _ => null
+            };
         }
 
         #endregion

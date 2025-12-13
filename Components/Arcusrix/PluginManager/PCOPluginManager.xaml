@@ -4,136 +4,47 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="680" d:DesignWidth="1000"
-             Background="{DynamicResource Background1Brush}">
+             d:DesignHeight="680" d:DesignWidth="1000">
 
     <UserControl.Resources>
-        <!-- Primary Button Style -->
-        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
-            <Setter Property="Padding" Value="20,10,20,10"/>
-            <Setter Property="Cursor" Value="Hand"/>
+        <!-- Navigation Item Style -->
+        <Style x:Key="NavItemStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource Foreground3Brush}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="border" Property="Opacity" Value="0.5"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Secondary Button Style -->
-        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Foreground2Brush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="16,10,16,10"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border"
                                 Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                CornerRadius="8"
+                                Margin="6,2">
+                            <Grid>
+                                <!-- Active Indicator -->
+                                <Border x:Name="indicator"
+                                        Width="3" Height="20"
+                                        CornerRadius="2"
+                                        Background="{DynamicResource PrimaryBrush}"
+                                        HorizontalAlignment="Left"
+                                        Margin="-3,0,0,0"
+                                        Opacity="0"/>
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center"
+                                                  Margin="12,0"/>
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource Background3Brush}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Card Button Style (for plugin cards) -->
-        <Style x:Key="CardButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
-            <Setter Property="Padding" Value="12,6,12,6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Margin" Value="8,0,0,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Danger Button Style -->
-        <Style x:Key="DangerButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,6,12,6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Margin" Value="8,0,0,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter x:Name="content" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{DynamicResource DangerBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
                             </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
+                            <Trigger Property="Tag" Value="Active">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Background3Brush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                                <Setter TargetName="indicator" Property="Opacity" Value="1"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -141,25 +52,29 @@
             </Setter>
         </Style>
 
-        <!-- Search TextBox Style -->
-        <Style x:Key="SearchTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,10,12,10"/>
-            <Setter Property="FontSize" Value="14"/>
+        <!-- Hamburger Button Style -->
+        <Style x:Key="HamburgerButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource Foreground2Brush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="Center"/>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Background3Brush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Foreground1Brush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -173,7 +88,6 @@
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="16"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
-            <Setter Property="Cursor" Value="Hand"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource Background3Brush}"/>
@@ -181,103 +95,359 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Settings Card Style -->
+        <Style x:Key="SettingsCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <!-- Navigation Panel -->
+            <ColumnDefinition x:Name="NavColumn" Width="220"/>
+            <!-- Content Area -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Header Area -->
-        <Grid Grid.Row="0" Margin="16,16,16,8">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <!-- Left Navigation Panel -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource Background1Brush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- Title Row -->
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                <!-- Header with Hamburger Menu -->
+                <Grid Grid.Row="0" Margin="8,12,8,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- Title + Subtitle -->
-                <StackPanel Grid.Column="0">
-                    <TextBlock x:Name="TitleText"
+                    <Button x:Name="HamburgerButton"
+                            Style="{StaticResource HamburgerButtonStyle}"
+                            Click="HamburgerButton_Click"
+                            ToolTip="{Binding ElementName=MenuTooltip, Path=Text}">
+                        <TextBlock x:Name="HamburgerIcon"
+                                   Text="&#xE700;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="16"/>
+                    </Button>
+                    <TextBlock x:Name="MenuTooltip" Visibility="Collapsed"/>
+
+                    <TextBlock x:Name="NavTitle"
+                               Grid.Column="1"
                                Text="Plugin Manager"
-                               FontSize="24"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="12,0,0,0"
+                               Foreground="{DynamicResource Foreground1Brush}"/>
+                </Grid>
+
+                <!-- Navigation Items -->
+                <StackPanel x:Name="NavPanel" Grid.Row="1" Margin="0,8,0,0">
+                    <!-- Plugins Tab -->
+                    <Button x:Name="NavPlugins"
+                            Style="{StaticResource NavItemStyle}"
+                            Tag="Active"
+                            Click="NavPlugins_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xEA86;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"
+                                       Width="24"/>
+                            <TextBlock x:Name="NavPluginsText"
+                                       Text="Plugins"
+                                       FontSize="14"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Protocols Tab -->
+                    <Button x:Name="NavProtocols"
+                            Style="{StaticResource NavItemStyle}"
+                            Click="NavProtocols_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE71B;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"
+                                       Width="24"/>
+                            <TextBlock x:Name="NavProtocolsText"
+                                       Text="Protocols"
+                                       FontSize="14"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Language Tab -->
+                    <Button x:Name="NavLanguage"
+                            Style="{StaticResource NavItemStyle}"
+                            Click="NavLanguage_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xF2B7;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"
+                                       Width="24"/>
+                            <TextBlock x:Name="NavLanguageText"
+                                       Text="Language"
+                                       FontSize="14"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Status Bar at Bottom -->
+                <Border Grid.Row="2" Padding="12,8" Margin="6">
+                    <TextBlock x:Name="StatusText"
+                               Text="Ready"
+                               FontSize="11"
+                               Foreground="{DynamicResource Foreground4Brush}"
+                               TextTrimming="CharacterEllipsis"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Content Area -->
+        <Grid Grid.Column="1" Background="{DynamicResource Background1Brush}">
+            <!-- Plugins Page -->
+            <Grid x:Name="PluginsPage">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Grid Grid.Row="0" Margin="24,20,24,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Title Row -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock x:Name="PluginsTitleText"
+                                       Text="Installed Plugins"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource Foreground1Brush}"/>
+                            <TextBlock x:Name="PluginCountText"
+                                       Text="0 plugins"
+                                       FontSize="13"
+                                       Margin="0,4,0,0"
+                                       Foreground="{DynamicResource Foreground4Brush}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+                            <Button x:Name="RefreshButton"
+                                    Style="{DynamicResource PhobosButtonSecondary}"
+                                    Click="RefreshButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE72C;"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="RefreshButtonText"
+                                               Text="Refresh"
+                                               Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="InstallButton"
+                                    Style="{DynamicResource PhobosButton}"
+                                    Margin="8,0,0,0"
+                                    Click="InstallButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE710;"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="InstallButtonText"
+                                               Text="Install from Local..."
+                                               Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Search Box -->
+                    <Grid Grid.Row="1" Margin="0,16,0,0">
+                        <TextBox x:Name="SearchBox"
+                                 Style="{DynamicResource PhobosSearchBox}"
+                                 Tag="Search plugins..."
+                                 MaxWidth="400"
+                                 HorizontalAlignment="Left"
+                                 TextChanged="SearchBox_TextChanged"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Plugin List -->
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="24,0">
+                    <ItemsControl x:Name="PluginList" Margin="0,0,0,24">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Protocols Page -->
+            <Grid x:Name="ProtocolsPage" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="24,20,24,16">
+                    <TextBlock x:Name="ProtocolsTitleText"
+                               Text="Protocol Handlers"
+                               FontSize="22"
                                FontWeight="Bold"
                                Foreground="{DynamicResource Foreground1Brush}"/>
-                    <TextBlock x:Name="SubtitleText"
-                               Text="Manage your plugins"
+                    <TextBlock x:Name="ProtocolsSubtitleText"
+                               Text="Manage default applications for special protocols"
                                FontSize="13"
                                Margin="0,4,0,0"
-                               Foreground="{DynamicResource Foreground3Brush}"/>
+                               Foreground="{DynamicResource Foreground4Brush}"/>
                 </StackPanel>
 
-                <!-- Buttons -->
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Center">
-                    <Button x:Name="RefreshButton"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            Content="Refresh"
-                            Click="RefreshButton_Click"/>
-                    <Button x:Name="InstallButton"
-                            Style="{StaticResource PrimaryButtonStyle}"
-                            Content="From Local..."
-                            Margin="8,0,0,0"
-                            Click="InstallButton_Click"/>
-                </StackPanel>
+                <!-- Protocols Content -->
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="24,0">
+                    <StackPanel Margin="0,0,0,24">
+                        <!-- Special Protocols Section -->
+                        <TextBlock x:Name="SpecialProtocolsTitle"
+                                   Text="Special Protocols"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Foreground1Brush}"
+                                   Margin="0,0,0,12"/>
+
+                        <ItemsControl x:Name="SpecialProtocolList"/>
+
+                        <!-- Protocol Associations Section -->
+                        <TextBlock x:Name="AssociatedItemsTitle"
+                                   Text="Protocol Associations"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Foreground1Brush}"
+                                   Margin="0,24,0,12"/>
+
+                        <ItemsControl x:Name="AssociatedItemList"/>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
 
-            <!-- Search Row -->
-            <Grid Grid.Row="1" Margin="0,12,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <!-- Language Page -->
+            <Grid x:Name="LanguagePage" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                <TextBox x:Name="SearchBox"
-                         Style="{StaticResource SearchTextBoxStyle}"
-                         MaxWidth="400"
-                         MinWidth="200"
-                         HorizontalAlignment="Left"
-                         TextChanged="SearchBox_TextChanged"/>
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="24,20,24,16">
+                    <TextBlock x:Name="LanguageTitleText"
+                               Text="Language Settings"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource Foreground1Brush}"/>
+                    <TextBlock x:Name="LanguageSubtitleText"
+                               Text="Configure system and plugin languages"
+                               FontSize="13"
+                               Margin="0,4,0,0"
+                               Foreground="{DynamicResource Foreground4Brush}"/>
+                </StackPanel>
 
-                <TextBlock x:Name="PluginCountText"
-                           Grid.Column="1"
-                           FontSize="13"
-                           VerticalAlignment="Center"
-                           Margin="16,0,0,0"
-                           Foreground="{DynamicResource Foreground3Brush}"/>
+                <!-- Language Content -->
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="24,0">
+                    <StackPanel Margin="0,0,0,24">
+                        <!-- System Language Section -->
+                        <TextBlock x:Name="SystemLanguageTitle"
+                                   Text="System Language"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Foreground1Brush}"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock x:Name="SystemLanguageDesc"
+                                   Text="Set the default language for Phobos"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource Foreground4Brush}"
+                                   Margin="0,0,0,12"/>
+
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ComboBox x:Name="SystemLanguageCombo"
+                                          Style="{DynamicResource PhobosComboBox}"
+                                          Width="200"
+                                          HorizontalAlignment="Left"
+                                          SelectionChanged="SystemLanguageCombo_SelectionChanged"/>
+
+                                <Button x:Name="ApplyLanguageButton"
+                                        Grid.Column="1"
+                                        Style="{DynamicResource PhobosButton}"
+                                        Click="ApplyLanguageButton_Click">
+                                    <TextBlock x:Name="ApplyLanguageButtonText" Text="Apply"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- Plugin Languages Section -->
+                        <TextBlock x:Name="PluginLanguageTitle"
+                                   Text="Plugin Languages"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Foreground1Brush}"
+                                   Margin="0,24,0,8"/>
+                        <TextBlock x:Name="PluginLanguageDesc"
+                                   Text="Configure individual plugin language settings"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource Foreground4Brush}"
+                                   Margin="0,0,0,12"/>
+
+                        <ItemsControl x:Name="PluginLanguageList"/>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Grid>
-
-        <!-- Plugin List -->
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl x:Name="PluginList" Margin="16,8,16,16">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
-        </ScrollViewer>
-
-        <!-- Status Bar -->
-        <Border Grid.Row="2"
-                Background="{DynamicResource Background2Brush}"
-                Padding="16,10,16,10">
-            <TextBlock x:Name="StatusText"
-                       Text="Ready"
-                       FontSize="12"
-                       Foreground="{DynamicResource Foreground3Brush}"/>
-        </Border>
     </Grid>
 </UserControl>
