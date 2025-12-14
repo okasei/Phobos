@@ -1,0 +1,57 @@
+{
+  "name": "插件安装器",
+  "langCode": "zh-CN",
+  "version": "1.0.0",
+  "items": {
+    "Installer.Title": "插件安装器",
+
+    "Button.Browse": "浏览文件",
+    "Button.Back": "返回",
+    "Button.PreviousStep": "上一步",
+    "Button.Install": "开始安装",
+    "Button.InstallAll": "全部安装",
+    "Button.Installed": "已安装",
+    "Button.Retry": "重试安装",
+
+    "FileSelect.DropHint": "拖放插件文件到这里",
+    "FileSelect.Or": "或",
+    "FileSelect.SupportedFiles": "支持 .dll 文件",
+    "FileSelect.Ready": "就绪",
+    "FileSelect.FileNotExist": "文件不存在",
+    "FileSelect.InvalidPlugin": "无效的插件文件：未找到有效的插件类型",
+    "FileSelect.NoPluginTypes": "无效的插件文件：无法创建插件实例",
+    "FileSelect.CannotCreateInstance": "无法创建插件实例",
+    "FileSelect.PluginNotFound": "无法找到插件: {0}",
+    "FileSelect.LoadFailed": "加载失败: {0}",
+    "FileSelect.DropSingleDll": "请拖放单个 .dll 文件",
+
+    "MultiPlugin.Title": "发现多个插件",
+    "MultiPlugin.Subtitle": "此 DLL 包含 {0} 个插件，请选择要安装的插件",
+
+    "Detail.Introduction": "介绍",
+    "Detail.NoDescription": "暂无描述",
+    "Detail.Dependencies": "依赖项",
+    "Detail.MissingRequired": "缺少必需依赖",
+    "Detail.MissingRequiredHint": "以下必需依赖未安装，无法继续安装此插件：",
+    "Detail.MissingOptional": "缺少可选依赖",
+    "Detail.MissingOptionalHint": "以下可选依赖未安装，部分功能可能不可用：",
+    "Detail.SatisfiedDependencies": "已满足的依赖",
+    "Detail.CannotInstall": "无法安装",
+    "Detail.HasMissingRequired": "存在未满足的必需依赖，无法安装",
+    "Detail.HasMissingOptional": "存在未安装的可选依赖，部分功能可能受限",
+
+    "Status.Installing": "正在安装插件...",
+    "Status.InstallingMultiple": "正在安装 {0} 个插件...",
+    "Status.ReadingPlugin": "正在读取插件信息...",
+    "Status.Processing": "正在处理...",
+    "Status.InstallSuccess": "安装成功",
+    "Status.InstallFailed": "安装失败: {0}",
+    "Status.InstallError": "安装出错: {0}",
+
+    "Dialog.OptionalDepsTitle": "可选依赖确认",
+    "Dialog.OptionalDepsMessage": "以下可选依赖未安装，部分功能可能不可用：\n\n{0}\n\n是否继续安装？",
+
+    "FileDialog.Filter": "插件文件 (*.dll)|*.dll|所有文件 (*.*)|*.*",
+    "FileDialog.Title": "选择插件文件"
+  }
+}

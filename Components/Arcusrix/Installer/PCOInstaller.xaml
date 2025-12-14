@@ -8,6 +8,13 @@
              d:DesignHeight="450" d:DesignWidth="550">
 
     <UserControl.Resources>
+        <!-- 缓动函数 -->
+        <CubicEase x:Key="EaseOut" EasingMode="EaseOut"/>
+        <CubicEase x:Key="EaseInOut" EasingMode="EaseInOut"/>
+
+        <!-- 动画时长 -->
+        <sys:TimeSpan x:Key="AnimationDuration">0:0:0.25</sys:TimeSpan>
+
         <!-- 尺寸资源 -->
         <sys:Double x:Key="PluginIconSize">72</sys:Double>
         <sys:Double x:Key="FontSizeTitle">18</sys:Double>
@@ -91,7 +98,7 @@
                                 CornerRadius="4"
                                 Padding="{TemplateBinding Padding}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="←" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                 <ContentPresenter VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
@@ -118,6 +125,9 @@
         <Grid>
             <!-- 模式1: 文件选择视图 -->
             <Grid x:Name="FileSelectView" Visibility="Visible">
+                <Grid.RenderTransform>
+                    <TranslateTransform x:Name="FileSelectViewTransform"/>
+                </Grid.RenderTransform>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -125,10 +135,11 @@
                 </Grid.RowDefinitions>
 
                 <!-- 标题 -->
-                <TextBlock Grid.Row="0" 
-                           Text="插件安装器" 
-                           FontSize="{StaticResource FontSizeTitle}" 
-                           FontWeight="Bold" 
+                <TextBlock x:Name="TitleText"
+                           Grid.Row="0"
+                           Text="插件安装器"
+                           FontSize="{StaticResource FontSizeTitle}"
+                           FontWeight="Bold"
                            Foreground="{DynamicResource Foreground1Brush}"
                            Margin="20,20,20,0"/>
 
@@ -145,22 +156,25 @@
                             DragLeave="DropZone_DragLeave">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <TextBlock Text="📦" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
-                            <TextBlock Text="拖放插件文件到这里" 
-                                       FontSize="16" 
+                            <TextBlock x:Name="DropHintText"
+                                       Text="拖放插件文件到这里"
+                                       FontSize="16"
                                        Foreground="{DynamicResource Foreground2Brush}"
                                        HorizontalAlignment="Center"/>
-                            <TextBlock Text="或" 
-                                       FontSize="14" 
+                            <TextBlock x:Name="OrText"
+                                       Text="或"
+                                       FontSize="14"
                                        Foreground="{DynamicResource Foreground3Brush}"
                                        HorizontalAlignment="Center"
                                        Margin="0,12"/>
-                            <Button x:Name="BrowseButton" 
-                                    Content="浏览文件" 
+                            <Button x:Name="BrowseButton"
+                                    Content="浏览文件"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     Click="BrowseButton_Click"
                                     HorizontalAlignment="Center"/>
-                            <TextBlock Text="支持 .dll 文件" 
-                                       FontSize="12" 
+                            <TextBlock x:Name="SupportedFilesText"
+                                       Text="支持 .dll 文件"
+                                       FontSize="12"
                                        Foreground="{DynamicResource Foreground4Brush}"
                                        HorizontalAlignment="Center"
                                        Margin="0,16,0,0"/>
@@ -179,8 +193,153 @@
                 </Border>
             </Grid>
 
-            <!-- 模式2: 插件详情视图 -->
-            <Grid x:Name="PluginDetailView" Visibility="Collapsed">
+            <!-- 模式2: 多插件选择视图 -->
+            <Grid x:Name="MultiPluginSelectView" Visibility="Collapsed" Opacity="0">
+                <Grid.RenderTransform>
+                    <TranslateTransform x:Name="MultiPluginSelectViewTransform"/>
+                </Grid.RenderTransform>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- 返回按钮 -->
+                <Button x:Name="MultiPluginBackButton"
+                        Grid.Row="0"
+                        Content="返回"
+                        Style="{StaticResource BackButtonStyle}"
+                        Click="MultiPluginBackButton_Click"
+                        HorizontalAlignment="Left"
+                        Margin="20,16,20,0"/>
+
+                <!-- 标题区域 -->
+                <StackPanel Grid.Row="1" Margin="20,16,20,0">
+                    <TextBlock x:Name="MultiPluginTitleText"
+                               Text="发现多个插件"
+                               FontSize="{StaticResource FontSizeTitle}"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource Foreground1Brush}"/>
+                    <TextBlock x:Name="MultiPluginSubtitle"
+                               Text="此 DLL 包含多个插件，请选择要安装的插件"
+                               FontSize="14"
+                               Foreground="{DynamicResource Foreground2Brush}"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+
+                <!-- 插件列表 -->
+                <ScrollViewer Grid.Row="2"
+                              VerticalScrollBarVisibility="Auto"
+                              Margin="20,16,20,0">
+                    <ItemsControl x:Name="MultiPluginList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource Background2Brush}"
+                                        CornerRadius="8"
+                                        Padding="16"
+                                        Margin="0,0,0,12"
+                                        Cursor="Hand"
+                                        MouseLeftButtonUp="PluginItem_Click">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- 图标占位 -->
+                                        <Border Grid.Column="0"
+                                                Width="48" Height="48"
+                                                CornerRadius="8"
+                                                Background="{DynamicResource Background3Brush}">
+                                            <TextBlock Text="📦" FontSize="24"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- 插件信息 -->
+                                        <StackPanel Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Margin="12,0,0,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="15"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource Foreground1Brush}"/>
+                                                <TextBlock Text="{Binding Version, StringFormat=' v{0}'}"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource Foreground4Brush}"
+                                                           VerticalAlignment="Bottom"
+                                                           Margin="6,0,0,1"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding PackageName}"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource Foreground3Brush}"
+                                                       Margin="0,2,0,0"/>
+                                            <TextBlock Text="{Binding Manufacturer}"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource Foreground4Brush}"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- 箭头 -->
+                                        <TextBlock Grid.Column="2"
+                                                   Text="&#xE76C;"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource Foreground3Brush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- 底部按钮区域 -->
+                <Border Grid.Row="3"
+                        Background="{DynamicResource Background2Brush}"
+                        Padding="20,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 状态文本 -->
+                        <TextBlock x:Name="MultiPluginStatus"
+                                   Grid.Column="0"
+                                   Text=""
+                                   FontSize="13"
+                                   Foreground="{DynamicResource Foreground3Brush}"
+                                   VerticalAlignment="Center"/>
+
+                        <!-- 上一步按钮 -->
+                        <Button x:Name="MultiPluginBackButton2"
+                                Grid.Column="1"
+                                Content="上一步"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Click="MultiPluginBackButton_Click"
+                                Margin="0,0,12,0"/>
+
+                        <!-- 全部安装按钮 -->
+                        <Button x:Name="InstallAllButton"
+                                Grid.Column="2"
+                                Content="全部安装"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Click="InstallAllButton_Click"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- 模式3: 插件详情视图 -->
+            <Grid x:Name="PluginDetailView" Visibility="Collapsed" Opacity="0">
+                <Grid.RenderTransform>
+                    <TranslateTransform x:Name="PluginDetailViewTransform"/>
+                </Grid.RenderTransform>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -253,7 +412,8 @@
                               Margin="20,16,20,0">
                     <StackPanel>
                         <!-- 插件描述 -->
-                        <TextBlock Text="介绍"
+                        <TextBlock x:Name="IntroductionLabel"
+                                   Text="介绍"
                                    FontSize="14"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource Foreground1Brush}"
@@ -271,7 +431,8 @@
 
                         <!-- 依赖信息 -->
                         <StackPanel x:Name="DependencySection" Visibility="Collapsed" Margin="0,20,0,0">
-                            <TextBlock Text="依赖项"
+                            <TextBlock x:Name="DependenciesLabel"
+                                       Text="依赖项"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource Foreground1Brush}"
@@ -288,12 +449,14 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBlock Text="⚠" FontSize="16" Foreground="#E53935" Margin="0,0,8,0"/>
-                                            <TextBlock Text="缺少必需依赖"
+                                            <TextBlock x:Name="MissingRequiredLabel"
+                                                       Text="缺少必需依赖"
                                                        FontSize="14"
                                                        FontWeight="SemiBold"
                                                        Foreground="#E53935"/>
                                         </StackPanel>
-                                        <TextBlock Text="以下必需依赖未安装，无法继续安装此插件："
+                                        <TextBlock x:Name="MissingRequiredHintText"
+                                                   Text="以下必需依赖未安装，无法继续安装此插件："
                                                    FontSize="13"
                                                    Foreground="{DynamicResource Foreground2Brush}"
                                                    Margin="0,0,0,8"/>
@@ -333,12 +496,14 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBlock Text="ℹ" FontSize="16" Foreground="#FFA726" Margin="0,0,8,0"/>
-                                            <TextBlock Text="缺少可选依赖"
+                                            <TextBlock x:Name="MissingOptionalLabel"
+                                                       Text="缺少可选依赖"
                                                        FontSize="14"
                                                        FontWeight="SemiBold"
                                                        Foreground="#FFA726"/>
                                         </StackPanel>
-                                        <TextBlock Text="以下可选依赖未安装，部分功能可能不可用："
+                                        <TextBlock x:Name="MissingOptionalHintText"
+                                                   Text="以下可选依赖未安装，部分功能可能不可用："
                                                    FontSize="13"
                                                    Foreground="{DynamicResource Foreground2Brush}"
                                                    Margin="0,0,0,8"/>
@@ -369,7 +534,8 @@
 
                             <!-- 已满足的依赖 -->
                             <StackPanel x:Name="SatisfiedDependencyPanel" Visibility="Collapsed">
-                                <TextBlock Text="已满足的依赖"
+                                <TextBlock x:Name="SatisfiedDependenciesLabel"
+                                           Text="已满足的依赖"
                                            FontSize="13"
                                            Foreground="{DynamicResource Foreground3Brush}"
                                            Margin="0,0,0,8"/>
@@ -412,12 +578,12 @@
                                    Foreground="{DynamicResource Foreground3Brush}"
                                    VerticalAlignment="Center"/>
 
-                        <!-- 退出按钮 -->
-                        <Button x:Name="ExitButton"
+                        <!-- 上一步按钮 -->
+                        <Button x:Name="DetailBackButton"
                                 Grid.Column="1"
-                                Content="退出"
+                                Content="上一步"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                Click="ExitButton_Click"
+                                Click="DetailBackButton_Click"
                                 Margin="0,0,12,0"/>
 
                         <!-- 安装按钮 -->

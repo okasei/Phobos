@@ -499,9 +499,7 @@ namespace Phobos.Components.Arcusrix.Desktop
             {
                 if (File.Exists(_layoutPath))
                 {
-                    PCLoggerPlugin.Info("PCOPhobosDesktop", $"[LoadLayout] Found layout file: {_layoutPath}");
                     var json = await File.ReadAllTextAsync(_layoutPath);
-                    PCLoggerPlugin.Info("PCOPhobosDesktop", $"[LoadLayout] JSON content: {json}");
 
                     var layout = JsonConvert.DeserializeObject<DesktopLayout>(json);
                     if (layout != null)
@@ -518,27 +516,6 @@ namespace Phobos.Components.Arcusrix.Desktop
                         {
                             _backgroundStretch = stretch;
                         }
-
-                        // 详细日志
-                        int pluginCount = 0, folderCount = 0;
-                        foreach (var item in _layout.Items)
-                        {
-                            if (item is PluginDesktopItem pi)
-                            {
-                                pluginCount++;
-                                PCLoggerPlugin.Info("PCOPhobosDesktop", $"[LoadLayout] Plugin: {pi.PackageName} at ({pi.GridX}, {pi.GridY})");
-                            }
-                            else if (item is FolderDesktopItem fi)
-                            {
-                                folderCount++;
-                                PCLoggerPlugin.Info("PCOPhobosDesktop", $"[LoadLayout] Folder: {fi.Name} (Id={fi.Id}) at ({fi.GridX}, {fi.GridY}) with {fi.PluginPackageNames.Count} plugins");
-                            }
-                            else if (item is not ShortcutDesktopItem si)
-                            {
-                                PCLoggerPlugin.Warning("PCOPhobosDesktop", $"[LoadLayout] Unknown item type: {item.GetType().Name}, Type enum = {item.Type}");
-                            }
-                        }
-                        PCLoggerPlugin.Info("PCOPhobosDesktop", $"[LoadLayout] Layout loaded: {_layout.Items.Count} items ({pluginCount} plugins, {folderCount} folders)");
                     }
                     else
                     {
@@ -681,7 +658,6 @@ namespace Phobos.Components.Arcusrix.Desktop
             int x = 0, y = 0;
             foreach (var plugin in _allPlugins.Values)
             {
-                PCLoggerPlugin.Info("PCOPhobosDesktop", $"[CreateDefaultLayout] Adding plugin: {plugin.PackageName} at ({x}, {y})");
 
                 _layout.Items.Add(new PluginDesktopItem
                 {
@@ -698,7 +674,6 @@ namespace Phobos.Components.Arcusrix.Desktop
                 }
             }
 
-            PCLoggerPlugin.Info("PCOPhobosDesktop", $"[CreateDefaultLayout] Created layout with {_layout.Items.Count} items");
 
             // 临时允许保存，然后保存默认布局
             _isLayoutLoaded = true;
@@ -1670,6 +1645,7 @@ namespace Phobos.Components.Arcusrix.Desktop
                 System.Diagnostics.Debug.WriteLine($"[RunShortcut] Running {shortcut.TargetPackageName} with {args.Length} arguments");
 
                 await PMPlugin.Instance.Launch(shortcut.TargetPackageName, args);
+                HideToTray();
             }
             catch (Exception ex)
             {

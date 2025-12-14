@@ -7,6 +7,7 @@ using Phobos.Manager.Database;
 using Phobos.Shared.Class;
 using Phobos.Shared.Interface;
 using Phobos.Utils.General;
+using Phobos.Utils.IO;
 using Phobos.Utils.Version;
 using System;
 using System.Collections.Generic;
@@ -328,14 +329,90 @@ namespace Phobos.Manager.Plugin
 
                 var tempContext = new PluginAssemblyLoadContext(pluginPath);
                 var assembly = tempContext.LoadFromAssemblyPath(pluginPath);
-                var pluginType = assembly.GetTypes().FirstOrDefault(t => typeof(IPhobosPlugin).IsAssignableFrom(t) && !t.IsAbstract);
 
-                if (pluginType == null)
+                // 获取所有实现 IPhobosPlugin 的类型
+                var pluginTypes = assembly.GetTypes().Where(t => typeof(IPhobosPlugin).IsAssignableFrom(t) && !t.IsAbstract).ToList();
+
+                if (pluginTypes.Count == 0)
                 {
                     tempContext.Unload();
                     return new RequestResult { Success = false, Message = "No valid plugin type found in assembly" };
                 }
 
+                // 获取所有的需要复制的文件
+                //var pluginFiles = pluginTypes.Select(x => (Activator.CreateInstance(x) as IPhobosPlugin)?.Metadata.FileList).ToList();
+
+                // 如果有多个插件，递归安装每一个
+                if (pluginTypes.Count > 1)
+                {
+                    var pluginFiles = new List<string>();
+                    var pluginList = new List<IPhobosPlugin?>();
+                    foreach (var type in pluginTypes)
+                    {
+                        pluginList.Add(Activator.CreateInstance(type) as IPhobosPlugin);
+                    }
+                    foreach (var t in pluginList)
+                    {
+                        if (t == null)
+                            continue;
+                        foreach (var fi in t.Metadata.FileList)
+                        {
+
+                            pluginFiles.Add(fi.RelativePath);
+                        }
+                    }
+
+                    var installedPlugins = new List<string>();
+                    var failedPlugins = new List<string>();
+
+                    for (var i = 0; i < pluginList.Count; i++)
+                    {
+                        if (pluginList[i] == null)
+                            continue;
+                        var result = await InstallSinglePlugin(pluginList[i], pluginPath, options);
+                        var name = pluginList[i]?.Metadata.PackageName ?? string.Empty;
+                        if (result.Success)
+                        {
+                            installedPlugins.Add(name);
+                        }
+                        else
+                        {
+                            failedPlugins.Add($"{name}: {result.Message}");
+                        }
+                        pluginList[i] = null;
+                    }
+
+                    tempContext.Unload();
+                    if (failedPlugins.Count == 0)
+                    {
+                        return new RequestResult
+                        {
+                            Success = true,
+                            Message = $"Successfully installed {installedPlugins.Count} plugins",
+                            Data = installedPlugins.Cast<object>().ToList()
+                        };
+                    }
+                    else if (installedPlugins.Count > 0)
+                    {
+                        return new RequestResult
+                        {
+                            Success = true,
+                            Message = $"Installed {installedPlugins.Count} plugins, {failedPlugins.Count} failed: {string.Join("; ", failedPlugins)}",
+                            Data = installedPlugins.Cast<object>().ToList()
+                        };
+                    }
+                    else
+                    {
+                        return new RequestResult
+                        {
+                            Success = false,
+                            Message = $"All plugins failed to install: {string.Join("; ", failedPlugins)}"
+                        };
+                    }
+                }
+
+                // 单插件情况，继续原有逻辑
+                var pluginType = pluginTypes.First();
                 var pluginInstance = Activator.CreateInstance(pluginType) as IPhobosPlugin;
                 if (pluginInstance == null)
                 {
@@ -423,15 +500,11 @@ namespace Phobos.Manager.Plugin
                         return depResult;
                     }
                 }
-
                 tempContext.Unload();
 
-                var pluginDir = Path.Combine(_pluginsDirectory, metadata.PackageName);
-                if (Directory.Exists(pluginDir))
-                {
-                    Directory.Delete(pluginDir, true);
-                }
-                Utils.IO.PUFileSystem.Instance.CreateFullFolders(pluginDir);
+                var pluginDir = Path.Combine(_pluginsDirectory, metadata.InstallDirectoryName);
+
+                PUFileSystem.Instance.CreateFullFolders(pluginDir);
 
                 var destPath = Path.Combine(pluginDir, Path.GetFileName(pluginPath));
                 File.Copy(pluginPath, destPath, true);
@@ -440,7 +513,7 @@ namespace Phobos.Manager.Plugin
                 if (!string.IsNullOrEmpty(sourceDir))
                 {
                     // 递归复制所有文件（保持目录结构）
-                    CopyDirectoryRecursive(sourceDir, pluginDir, new[] { ".dll", ".json", ".xml", ".png", ".ico", ".svg", ".jpg", ".jpeg", ".lang.json" });
+                    CopyPluginFiles(sourceDir, pluginDir, metadata.FileList);
                 }
 
                 // 获取主程序集文件名（用于日志）
@@ -518,7 +591,7 @@ namespace Phobos.Manager.Plugin
                             author: metadata.Manufacturer,
                             description: metadata.GetLocalizedDescription("en-US"),
                             version: metadata.Version,
-                            filePath: destPath,
+                            filePath: Path.Combine(pluginDir, Path.GetFileName(pluginPath)),
                             isBuiltIn: false
                         );
                     }
@@ -569,7 +642,223 @@ namespace Phobos.Manager.Plugin
             }
             catch (Exception ex)
             {
-                return new RequestResult { Success = false, Message = ex.Message, Error = ex };
+                return new RequestResult { Success = false, Message = $"I - {ex.Message}", Error = ex };
+            }
+        }
+
+        /// <summary>
+        /// 安装单个插件（用于多插件 DLL 的情况）
+        /// </summary>
+        /// <param name="pluginPath">DLL 文件路径</param>
+        /// <param name="options">安装选项</param>
+        private async Task<RequestResult> InstallSinglePlugin(IPhobosPlugin? pluginInstance, string pluginPath, PluginInstallOptions options)
+        {
+            try
+            {
+                if (pluginInstance == null)
+                    return new RequestResult
+                    {
+                        Success = false,
+                        Message = "Null plugin cannot be installed"
+                    };
+                var metadata = pluginInstance.Metadata;
+
+                // 检查是否为主题插件 (实现了 IThemePlugin 和 IPhobosTheme)
+                var isThemePlugin = pluginInstance is IThemePlugin && pluginInstance is IPhobosTheme;
+
+                var existing = await _database?.ExecuteQuery(
+                    "SELECT * FROM Phobos_Plugin WHERE PackageName = @packageName COLLATE NOCASE",
+                    new Dictionary<string, object> { { "@packageName", metadata.PackageName } });
+
+                // 同时检查 Phobos_Theme 表
+                var existingTheme = isThemePlugin ? await PMDatabase.Instance.GetThemeRecord(metadata.PackageName) : null;
+
+                if (existing?.Count > 0 || existingTheme != null)
+                {
+                    // 验证 Secret Key 是否一致
+                    var existingSecret = existing?.Count > 0 ? existing[0]["Secret"]?.ToString() ?? string.Empty : string.Empty;
+                    if (!string.IsNullOrEmpty(existingSecret) && existingSecret != metadata.Secret)
+                    {
+                        PCLoggerPlugin.Warning("PMPlugin", $"Secret key mismatch for plugin {metadata.PackageName}");
+                        return new RequestResult
+                        {
+                            Success = false,
+                            Message = PMPluginMessages.Get("error.secret_mismatch")
+                        };
+                    }
+
+                    // 版本比较检查
+                    if (existing?.Count > 0)
+                    {
+                        var existingVersion = existing[0]["Version"]?.ToString() ?? "0.0.0";
+                        var compareResult = PUVersion.Compare(metadata.Version, existingVersion);
+
+                        if (compareResult == VersionCompareResult.Incompatible)
+                        {
+                            return new RequestResult
+                            {
+                                Success = false,
+                                Message = PUVersion.GetComparisonDescription(metadata.Version, existingVersion, PCSysConfig.Instance.langCode)
+                            };
+                        }
+
+                        if (compareResult == VersionCompareResult.Less && !options.ForceReinstall)
+                        {
+                            return new RequestResult
+                            {
+                                Success = false,
+                                Message = PUVersion.GetComparisonDescription(metadata.Version, existingVersion, PCSysConfig.Instance.langCode)
+                            };
+                        }
+
+                        if (compareResult == VersionCompareResult.Equal && !options.ForceReinstall)
+                        {
+                            return new RequestResult { Success = false, Message = PMPluginMessages.Get("error.already_installed") };
+                        }
+                    }
+                    else if (!options.ForceReinstall)
+                    {
+                        return new RequestResult { Success = false, Message = PMPluginMessages.Get("error.already_installed") };
+                    }
+                }
+
+                if (!options.IgnoreDependencies)
+                {
+                    var depResult = await CheckDependencies(metadata);
+                    if (!depResult.Success)
+                    {
+                        return depResult;
+                    }
+                }
+
+
+                var pluginDir = Path.Combine(_pluginsDirectory, metadata.InstallDirectoryName);
+
+                PUFileSystem.Instance.CreateFullFolders(pluginDir);
+                var mainAssemblyForLog = metadata.GetMainAssemblyFileName() ?? string.Empty;
+
+                if (_database != null)
+                {
+                    var uninstallInfoJson = metadata.UninstallInfo != null
+                        ? Newtonsoft.Json.JsonConvert.SerializeObject(metadata.UninstallInfo)
+                        : string.Empty;
+
+                    var mainAssembly = mainAssemblyForLog;
+
+                    if (existing?.Count > 0)
+                    {
+                        await _database.ExecuteNonQuery(
+                            @"UPDATE Phobos_Plugin SET
+                                Name = @name, Manufacturer = @manufacturer, Description = @description,
+                                Version = @version, Secret = @secret, Directory = @directory, MainAssembly = @mainAssembly,
+                                Icon = @icon, IsSystemPlugin = @isSystemPlugin, SettingUri = @settingUri,
+                                UninstallInfo = @uninstallInfo, Entry = @entry, LaunchFlag = @launchFlag, UpdateTime = datetime('now')
+                              WHERE PackageName = @packageName COLLATE NOCASE",
+                            new Dictionary<string, object>
+                            {
+                                { "@packageName", metadata.PackageName },
+                                { "@name", TextEscaper.Escape(metadata.Name) },
+                                { "@manufacturer", TextEscaper.Escape(metadata.Manufacturer) },
+                                { "@description", TextEscaper.Escape(metadata.GetLocalizedDescription("en-US")) },
+                                { "@version", metadata.Version },
+                                { "@secret", metadata.Secret },
+                                { "@directory", pluginDir },
+                                { "@mainAssembly", mainAssembly },
+                                { "@icon", metadata.Icon ?? string.Empty },
+                                { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
+                                { "@settingUri", metadata.SettingUri ?? string.Empty },
+                                { "@uninstallInfo", uninstallInfoJson },
+                                { "@entry", metadata.Entry ?? string.Empty },
+                                { "@launchFlag", metadata.LaunchFlag == true ? 1 : 0 }
+                            });
+                    }
+                    else
+                    {
+                        await _database.ExecuteNonQuery(
+                            @"INSERT INTO Phobos_Plugin (PackageName, Name, Manufacturer, Description, Version, Secret, Directory, MainAssembly,
+                                Icon, IsSystemPlugin, SettingUri, UninstallInfo, IsEnabled, UpdateTime, Entry, LaunchFlag)
+                              VALUES (@packageName, @name, @manufacturer, @description, @version, @secret, @directory, @mainAssembly,
+                                @icon, @isSystemPlugin, @settingUri, @uninstallInfo, 1, datetime('now'), @entry, @launchFlag)",
+                            new Dictionary<string, object>
+                            {
+                                { "@packageName", metadata.PackageName },
+                                { "@name", TextEscaper.Escape(metadata.Name) },
+                                { "@manufacturer", TextEscaper.Escape(metadata.Manufacturer) },
+                                { "@description", TextEscaper.Escape(metadata.GetLocalizedDescription("en-US")) },
+                                { "@version", metadata.Version },
+                                { "@secret", metadata.Secret },
+                                { "@directory", pluginDir },
+                                { "@mainAssembly", mainAssembly },
+                                { "@icon", metadata.Icon ?? string.Empty },
+                                { "@isSystemPlugin", metadata.IsSystemPlugin ? 1 : 0 },
+                                { "@settingUri", metadata.SettingUri ?? string.Empty },
+                                { "@uninstallInfo", uninstallInfoJson },
+                                { "@entry", metadata.Entry ?? string.Empty },
+                                { "@launchFlag", metadata.LaunchFlag == true ? 1 : 0 }
+                            });
+                    }
+
+                    // 如果是主题插件，同时注册到 Phobos_Theme 表
+                    if (isThemePlugin)
+                    {
+                        PCLoggerPlugin.Info("PMPlugin", $"Detected IThemePlugin: registering '{metadata.PackageName}' to Phobos_Theme table");
+                        await PMDatabase.Instance.RegisterTheme(
+                            themeId: metadata.PackageName,
+                            name: metadata.Name,
+                            author: metadata.Manufacturer,
+                            description: metadata.GetLocalizedDescription("en-US"),
+                            version: metadata.Version,
+                            filePath: Path.Combine(pluginDir, Path.GetFileName(pluginPath)),
+                            isBuiltIn: false
+                        );
+                    }
+                }
+
+                PCLoggerPlugin.Info("PMPlugin", $"Installing plugin '{metadata.PackageName}', MainAssembly='{mainAssemblyForLog}', IsThemePlugin={isThemePlugin}");
+
+                var loadResult = await Load(metadata.PackageName);
+                if (loadResult.Success)
+                {
+                    var plugin = GetPlugin(metadata.PackageName);
+                    if (plugin != null)
+                    {
+                        try
+                        {
+                            PCLoggerPlugin.Debug("PMPlugin", $"Calling OnInstall for plugin '{metadata.PackageName}'");
+                            await plugin.OnInstall();
+                            PCLoggerPlugin.Info("PMPlugin", $"Plugin '{metadata.PackageName}' OnInstall completed");
+
+                            await plugin.OnClosing();
+                            await Unload(metadata.PackageName);
+                            // 如果是主题插件，注册到 PMTheme 并触发 Theme.Installed 事件
+                            if (plugin is IThemePlugin && plugin is IPhobosTheme theme)
+                            {
+                                PMTheme.Instance.RegisterTheme(theme);
+                                PCLoggerPlugin.Info("PMPlugin", $"Registered theme '{theme.ThemeId}' to PMTheme");
+
+                                await PMEvent.Instance.TriggerAsync("Theme", "Installed", theme.ThemeId, metadata.PackageName);
+                            }
+                            else
+                            {
+                                await PMEvent.Instance.TriggerAsync("App", "Installed", metadata.PackageName);
+                            }
+                        }
+                        catch (Exception pluginEx)
+                        {
+                            PCLoggerPlugin.Warning("PMPlugin", $"Plugin OnInstall callback failed for {metadata.PackageName}: {pluginEx.Message}");
+                        }
+                    }
+                }
+                else
+                {
+                    PCLoggerPlugin.Warning("PMPlugin", $"Plugin '{metadata.PackageName}' installed but Load failed: {loadResult.Message}");
+                }
+
+                return new RequestResult { Success = true, Message = "Plugin installed successfully", Data = [metadata.PackageName, metadata.Name] };
+            }
+            catch (Exception ex)
+            {
+                return new RequestResult { Success = false, Message = "S - " + ex.Message, Error = ex };
             }
         }
 
@@ -2373,7 +2662,7 @@ namespace Phobos.Manager.Plugin
         /// <returns>插件数据文件夹路径</returns>
         internal async Task<string> HandleGetPluginFolder(PluginCallerContext caller)
         {
-            return await GetPluginFolder(caller.PackageName);
+            return await GetPluginFolder(caller.InstallDirectoryName);
         }
 
         /// <summary>
@@ -2441,41 +2730,24 @@ namespace Phobos.Manager.Plugin
         /// </summary>
         /// <param name="sourceDir">源目录</param>
         /// <param name="destDir">目标目录</param>
-        /// <param name="extensions">允许复制的文件扩展名（如 .dll, .json）</param>
-        private void CopyDirectoryRecursive(string sourceDir, string destDir, string[] extensions)
+        /// <param name="FileList">要安装的文件列表</param>
+        private void CopyPluginFiles(string sourceDir, string destDir, List<PluginFileInfo>? FileList)
         {
             try
             {
-                // 复制顶层文件
-                foreach (var file in Directory.GetFiles(sourceDir))
+                foreach (var f in FileList ?? [])
                 {
-                    var ext = Path.GetExtension(file).ToLowerInvariant();
-                    if (extensions.Any(e => ext.EndsWith(e, StringComparison.OrdinalIgnoreCase)))
+                    var tf = Path.Combine(sourceDir, f.RelativePath);
+                    var df = Path.Combine(destDir, f.RelativePath);
+                    if (PUFileSystem.Instance.FileExists(tf))
                     {
-                        var destFile = Path.Combine(destDir, Path.GetFileName(file));
-                        if (!File.Exists(destFile))
+                        var dfc = Path.GetDirectoryName(df);
+                        if (!string.IsNullOrEmpty(dfc))
                         {
-                            File.Copy(file, destFile);
+                            PUFileSystem.Instance.CreateFullFolders(dfc);
+                            PUFileSystem.Instance.CopyFile(tf, df, true);
                         }
                     }
-                }
-
-                // 递归处理子目录
-                foreach (var subDir in Directory.GetDirectories(sourceDir))
-                {
-                    var dirName = Path.GetFileName(subDir);
-
-                    // 跳过特殊目录
-                    if (dirName.StartsWith(".") || dirName.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
-                        dirName.Equals("bin", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var destSubDir = Path.Combine(destDir, dirName);
-                    Utils.IO.PUFileSystem.Instance.CreateFullFolders(destSubDir);
-
-                    CopyDirectoryRecursive(subDir, destSubDir, extensions);
                 }
             }
             catch (Exception ex)

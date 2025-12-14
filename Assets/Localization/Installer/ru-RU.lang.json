@@ -1,0 +1,57 @@
+{
+  "name": "Установщик плагинов",
+  "langCode": "ru-RU",
+  "version": "1.0.0",
+  "items": {
+    "Installer.Title": "Установщик плагинов",
+
+    "Button.Browse": "Обзор файлов",
+    "Button.Back": "Назад",
+    "Button.PreviousStep": "Предыдущий",
+    "Button.Install": "Установить",
+    "Button.InstallAll": "Установить все",
+    "Button.Installed": "Установлено",
+    "Button.Retry": "Повторить",
+
+    "FileSelect.DropHint": "Перетащите файл плагина сюда",
+    "FileSelect.Or": "или",
+    "FileSelect.SupportedFiles": "Поддерживаются файлы .dll",
+    "FileSelect.Ready": "Готово",
+    "FileSelect.FileNotExist": "Файл не существует",
+    "FileSelect.InvalidPlugin": "Недопустимый файл плагина: Допустимые типы плагинов не найдены",
+    "FileSelect.NoPluginTypes": "Недопустимый файл плагина: Не удалось создать экземпляр плагина",
+    "FileSelect.CannotCreateInstance": "Не удалось создать экземпляр плагина",
+    "FileSelect.PluginNotFound": "Плагин не найден: {0}",
+    "FileSelect.LoadFailed": "Ошибка загрузки: {0}",
+    "FileSelect.DropSingleDll": "Пожалуйста, перетащите один файл .dll",
+
+    "MultiPlugin.Title": "Найдено несколько плагинов",
+    "MultiPlugin.Subtitle": "Эта DLL содержит {0} плагинов, пожалуйста, выберите один для установки",
+
+    "Detail.Introduction": "Введение",
+    "Detail.NoDescription": "Описание отсутствует",
+    "Detail.Dependencies": "Зависимости",
+    "Detail.MissingRequired": "Отсутствуют обязательные зависимости",
+    "Detail.MissingRequiredHint": "Следующие обязательные зависимости не установлены, установка невозможна:",
+    "Detail.MissingOptional": "Отсутствуют необязательные зависимости",
+    "Detail.MissingOptionalHint": "Следующие необязательные зависимости не установлены, некоторые функции могут быть недоступны:",
+    "Detail.SatisfiedDependencies": "Удовлетворённые зависимости",
+    "Detail.CannotInstall": "Установка невозможна",
+    "Detail.HasMissingRequired": "Отсутствуют обязательные зависимости, установка невозможна",
+    "Detail.HasMissingOptional": "Отсутствуют необязательные зависимости, некоторые функции могут быть ограничены",
+
+    "Status.Installing": "Установка плагина...",
+    "Status.InstallingMultiple": "Установка {0} плагинов...",
+    "Status.ReadingPlugin": "Чтение информации о плагине...",
+    "Status.Processing": "Обработка...",
+    "Status.InstallSuccess": "Установка успешна",
+    "Status.InstallFailed": "Ошибка установки: {0}",
+    "Status.InstallError": "Ошибка установки: {0}",
+
+    "Dialog.OptionalDepsTitle": "Необязательные зависимости",
+    "Dialog.OptionalDepsMessage": "Следующие необязательные зависимости не установлены, некоторые функции могут быть недоступны:\n\n{0}\n\nПродолжить?",
+
+    "FileDialog.Filter": "Файлы плагинов (*.dll)|*.dll|Все файлы (*.*)|*.*",
+    "FileDialog.Title": "Выберите файл плагина"
+  }
+}

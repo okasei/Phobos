@@ -1,0 +1,57 @@
+{
+  "name": "プラグインインストーラー",
+  "langCode": "ja-JP",
+  "version": "1.0.0",
+  "items": {
+    "Installer.Title": "プラグインインストーラー",
+
+    "Button.Browse": "ファイルを参照",
+    "Button.Back": "戻る",
+    "Button.PreviousStep": "前へ",
+    "Button.Install": "インストール",
+    "Button.InstallAll": "すべてインストール",
+    "Button.Installed": "インストール済み",
+    "Button.Retry": "再試行",
+
+    "FileSelect.DropHint": "プラグインファイルをここにドロップ",
+    "FileSelect.Or": "または",
+    "FileSelect.SupportedFiles": ".dll ファイルに対応",
+    "FileSelect.Ready": "準備完了",
+    "FileSelect.FileNotExist": "ファイルが存在しません",
+    "FileSelect.InvalidPlugin": "無効なプラグインファイル：有効なプラグインタイプが見つかりません",
+    "FileSelect.NoPluginTypes": "無効なプラグインファイル：プラグインインスタンスを作成できません",
+    "FileSelect.CannotCreateInstance": "プラグインインスタンスを作成できません",
+    "FileSelect.PluginNotFound": "プラグインが見つかりません: {0}",
+    "FileSelect.LoadFailed": "読み込みに失敗しました: {0}",
+    "FileSelect.DropSingleDll": "単一の .dll ファイルをドロップしてください",
+
+    "MultiPlugin.Title": "複数のプラグインが見つかりました",
+    "MultiPlugin.Subtitle": "この DLL には {0} 個のプラグインが含まれています。インストールするプラグインを選択してください",
+
+    "Detail.Introduction": "紹介",
+    "Detail.NoDescription": "説明がありません",
+    "Detail.Dependencies": "依存関係",
+    "Detail.MissingRequired": "必須の依存関係がありません",
+    "Detail.MissingRequiredHint": "以下の必須依存関係がインストールされていないため、インストールを続行できません：",
+    "Detail.MissingOptional": "オプションの依存関係がありません",
+    "Detail.MissingOptionalHint": "以下のオプション依存関係がインストールされていないため、一部の機能が利用できない場合があります：",
+    "Detail.SatisfiedDependencies": "満たされた依存関係",
+    "Detail.CannotInstall": "インストールできません",
+    "Detail.HasMissingRequired": "必須の依存関係が満たされていないため、インストールできません",
+    "Detail.HasMissingOptional": "オプションの依存関係がインストールされていないため、一部の機能が制限される場合があります",
+
+    "Status.Installing": "プラグインをインストール中...",
+    "Status.InstallingMultiple": "{0} 個のプラグインをインストール中...",
+    "Status.ReadingPlugin": "プラグイン情報を読み込み中...",
+    "Status.Processing": "処理中...",
+    "Status.InstallSuccess": "インストール成功",
+    "Status.InstallFailed": "インストール失敗: {0}",
+    "Status.InstallError": "インストールエラー: {0}",
+
+    "Dialog.OptionalDepsTitle": "オプション依存関係の確認",
+    "Dialog.OptionalDepsMessage": "以下のオプション依存関係がインストールされていないため、一部の機能が利用できない場合があります：\n\n{0}\n\n続行しますか？",
+
+    "FileDialog.Filter": "プラグインファイル (*.dll)|*.dll|すべてのファイル (*.*)|*.*",
+    "FileDialog.Title": "プラグインファイルを選択"
+  }
+}

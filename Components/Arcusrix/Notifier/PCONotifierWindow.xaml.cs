@@ -1098,7 +1098,10 @@ namespace Phobos.Components.Arcusrix.Notifier
 
         private void OnContentClick(object sender, MouseButtonEventArgs e)
         {
-            _notification?.ContentAction?.Invoke();
+            if (_notification?.ContentAction == null)
+                CloseNotification();
+            else
+                _notification?.ContentAction?.Invoke();
         }
 
         private void CloseNotification(bool isTimeout = false)

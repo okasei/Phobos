@@ -43,7 +43,7 @@ namespace Phobos
         /// </summary>
         private static string GetErrorMessage(string key)
         {
-            return LocalizationManager.Instance.Get(key);
+            return LocalizationManager.Instance.GetPluginText("cmo.arcusrix.phobos", key);
         }
 
         private static async Task ShowErrorDialogAsync(string titleKey, string messageKey, string? details = null)
@@ -101,6 +101,11 @@ namespace Phobos
         {
             try
             {
+                System.Windows.Media.Animation.Timeline.DesiredFrameRateProperty.OverrideMetadata(
+                    typeof(System.Windows.Media.Animation.Timeline),
+                    new FrameworkPropertyMetadata { DefaultValue = 180 }
+                );
+        
                 AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                 LocalizationManager.Instance.CurrentLanguage = CultureInfo.CurrentCulture.IetfLanguageTag;
 
@@ -290,7 +295,7 @@ namespace Phobos
 
             if (Directory.Exists(systemLocDir))
             {
-                LocalizationManager.Instance.LoadGlobalPacks(systemLocDir);
+                LocalizationManager.Instance.RegisterPlugin("com.arcusrix.phobos", systemLocDir);
             }
         }
 

@@ -1,0 +1,57 @@
+{
+  "name": "Plugin-Installationsprogramm",
+  "langCode": "de-DE",
+  "version": "1.0.0",
+  "items": {
+    "Installer.Title": "Plugin-Installationsprogramm",
+
+    "Button.Browse": "Dateien durchsuchen",
+    "Button.Back": "Zurück",
+    "Button.PreviousStep": "Vorheriger Schritt",
+    "Button.Install": "Installieren",
+    "Button.InstallAll": "Alle installieren",
+    "Button.Installed": "Installiert",
+    "Button.Retry": "Erneut versuchen",
+
+    "FileSelect.DropHint": "Plugin-Datei hierher ziehen",
+    "FileSelect.Or": "oder",
+    "FileSelect.SupportedFiles": "Unterstützt .dll-Dateien",
+    "FileSelect.Ready": "Bereit",
+    "FileSelect.FileNotExist": "Datei existiert nicht",
+    "FileSelect.InvalidPlugin": "Ungültige Plugin-Datei: Keine gültigen Plugin-Typen gefunden",
+    "FileSelect.NoPluginTypes": "Ungültige Plugin-Datei: Plugin-Instanz konnte nicht erstellt werden",
+    "FileSelect.CannotCreateInstance": "Plugin-Instanz konnte nicht erstellt werden",
+    "FileSelect.PluginNotFound": "Plugin nicht gefunden: {0}",
+    "FileSelect.LoadFailed": "Laden fehlgeschlagen: {0}",
+    "FileSelect.DropSingleDll": "Bitte eine einzelne .dll-Datei ablegen",
+
+    "MultiPlugin.Title": "Mehrere Plugins gefunden",
+    "MultiPlugin.Subtitle": "Diese DLL enthält {0} Plugins, bitte wählen Sie eines zur Installation aus",
+
+    "Detail.Introduction": "Einführung",
+    "Detail.NoDescription": "Keine Beschreibung verfügbar",
+    "Detail.Dependencies": "Abhängigkeiten",
+    "Detail.MissingRequired": "Fehlende erforderliche Abhängigkeiten",
+    "Detail.MissingRequiredHint": "Die folgenden erforderlichen Abhängigkeiten sind nicht installiert, Installation kann nicht fortgesetzt werden:",
+    "Detail.MissingOptional": "Fehlende optionale Abhängigkeiten",
+    "Detail.MissingOptionalHint": "Die folgenden optionalen Abhängigkeiten sind nicht installiert, einige Funktionen sind möglicherweise nicht verfügbar:",
+    "Detail.SatisfiedDependencies": "Erfüllte Abhängigkeiten",
+    "Detail.CannotInstall": "Installation nicht möglich",
+    "Detail.HasMissingRequired": "Erforderliche Abhängigkeiten fehlen, Installation nicht möglich",
+    "Detail.HasMissingOptional": "Optionale Abhängigkeiten fehlen, einige Funktionen sind möglicherweise eingeschränkt",
+
+    "Status.Installing": "Plugin wird installiert...",
+    "Status.InstallingMultiple": "{0} Plugins werden installiert...",
+    "Status.ReadingPlugin": "Plugin-Informationen werden gelesen...",
+    "Status.Processing": "Verarbeitung...",
+    "Status.InstallSuccess": "Installation erfolgreich",
+    "Status.InstallFailed": "Installation fehlgeschlagen: {0}",
+    "Status.InstallError": "Installationsfehler: {0}",
+
+    "Dialog.OptionalDepsTitle": "Optionale Abhängigkeiten",
+    "Dialog.OptionalDepsMessage": "Die folgenden optionalen Abhängigkeiten sind nicht installiert, einige Funktionen sind möglicherweise nicht verfügbar:\n\n{0}\n\nMöchten Sie fortfahren?",
+
+    "FileDialog.Filter": "Plugin-Dateien (*.dll)|*.dll|Alle Dateien (*.*)|*.*",
+    "FileDialog.Title": "Plugin-Datei auswählen"
+  }
+}

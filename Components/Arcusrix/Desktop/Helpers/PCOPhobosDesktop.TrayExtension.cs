@@ -226,8 +226,10 @@ namespace Phobos.Components.Arcusrix.Desktop
             // 左键单击显示/隐藏
             _taskbarIcon.TrayLeftMouseDown += (s, e) =>
             {
-                if (IsVisible && WindowState != WindowState.Minimized)
-                    HideToTray();
+                if (IsVisible && WindowState != WindowState.Minimized){
+                    //HideToTray();
+                    //没必要, 这时候已经失焦了
+                }
                 else
                     ShowFromTray();
             };

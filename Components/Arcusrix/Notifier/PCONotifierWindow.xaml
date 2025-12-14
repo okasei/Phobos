@@ -199,7 +199,7 @@
                         CornerRadius="{DynamicResource CornerRadiusMdAll}"
                         ClipToBounds="True">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled">
+                                  HorizontalScrollBarVisibility="Disabled" MouseLeftButtonDown="OnContentClick">
                         <!-- 内容容器 - 可以是 TextBlock 或自定义 UserControl -->
                         <ContentPresenter x:Name="ContentPresenter"/>
                     </ScrollViewer>

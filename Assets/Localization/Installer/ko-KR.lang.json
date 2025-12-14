@@ -1,0 +1,57 @@
+{
+  "name": "플러그인 설치 프로그램",
+  "langCode": "ko-KR",
+  "version": "1.0.0",
+  "items": {
+    "Installer.Title": "플러그인 설치 프로그램",
+
+    "Button.Browse": "파일 찾아보기",
+    "Button.Back": "뒤로",
+    "Button.PreviousStep": "이전",
+    "Button.Install": "설치",
+    "Button.InstallAll": "모두 설치",
+    "Button.Installed": "설치됨",
+    "Button.Retry": "다시 시도",
+
+    "FileSelect.DropHint": "플러그인 파일을 여기에 끌어다 놓으세요",
+    "FileSelect.Or": "또는",
+    "FileSelect.SupportedFiles": ".dll 파일 지원",
+    "FileSelect.Ready": "준비됨",
+    "FileSelect.FileNotExist": "파일이 존재하지 않습니다",
+    "FileSelect.InvalidPlugin": "잘못된 플러그인 파일: 유효한 플러그인 유형을 찾을 수 없습니다",
+    "FileSelect.NoPluginTypes": "잘못된 플러그인 파일: 플러그인 인스턴스를 생성할 수 없습니다",
+    "FileSelect.CannotCreateInstance": "플러그인 인스턴스를 생성할 수 없습니다",
+    "FileSelect.PluginNotFound": "플러그인을 찾을 수 없습니다: {0}",
+    "FileSelect.LoadFailed": "로드 실패: {0}",
+    "FileSelect.DropSingleDll": "단일 .dll 파일을 끌어다 놓으세요",
+
+    "MultiPlugin.Title": "여러 플러그인 발견",
+    "MultiPlugin.Subtitle": "이 DLL에는 {0}개의 플러그인이 포함되어 있습니다. 설치할 플러그인을 선택하세요",
+
+    "Detail.Introduction": "소개",
+    "Detail.NoDescription": "설명 없음",
+    "Detail.Dependencies": "의존성",
+    "Detail.MissingRequired": "필수 의존성 누락",
+    "Detail.MissingRequiredHint": "다음 필수 의존성이 설치되어 있지 않아 설치를 진행할 수 없습니다:",
+    "Detail.MissingOptional": "선택적 의존성 누락",
+    "Detail.MissingOptionalHint": "다음 선택적 의존성이 설치되어 있지 않아 일부 기능을 사용할 수 없습니다:",
+    "Detail.SatisfiedDependencies": "충족된 의존성",
+    "Detail.CannotInstall": "설치 불가",
+    "Detail.HasMissingRequired": "필수 의존성이 충족되지 않아 설치할 수 없습니다",
+    "Detail.HasMissingOptional": "선택적 의존성이 설치되지 않아 일부 기능이 제한될 수 있습니다",
+
+    "Status.Installing": "플러그인 설치 중...",
+    "Status.InstallingMultiple": "{0}개의 플러그인 설치 중...",
+    "Status.ReadingPlugin": "플러그인 정보 읽는 중...",
+    "Status.Processing": "처리 중...",
+    "Status.InstallSuccess": "설치 성공",
+    "Status.InstallFailed": "설치 실패: {0}",
+    "Status.InstallError": "설치 오류: {0}",
+
+    "Dialog.OptionalDepsTitle": "선택적 의존성 확인",
+    "Dialog.OptionalDepsMessage": "다음 선택적 의존성이 설치되어 있지 않아 일부 기능을 사용할 수 없습니다:\n\n{0}\n\n계속하시겠습니까?",
+
+    "FileDialog.Filter": "플러그인 파일 (*.dll)|*.dll|모든 파일 (*.*)|*.*",
+    "FileDialog.Title": "플러그인 파일 선택"
+  }
+}

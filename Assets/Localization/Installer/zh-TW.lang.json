@@ -1,0 +1,57 @@
+{
+  "name": "插件安裝器",
+  "langCode": "zh-TW",
+  "version": "1.0.0",
+  "items": {
+    "Installer.Title": "插件安裝器",
+
+    "Button.Browse": "瀏覽檔案",
+    "Button.Back": "返回",
+    "Button.PreviousStep": "上一步",
+    "Button.Install": "開始安裝",
+    "Button.InstallAll": "全部安裝",
+    "Button.Installed": "已安裝",
+    "Button.Retry": "重試安裝",
+
+    "FileSelect.DropHint": "拖放插件檔案到這裡",
+    "FileSelect.Or": "或",
+    "FileSelect.SupportedFiles": "支援 .dll 檔案",
+    "FileSelect.Ready": "就緒",
+    "FileSelect.FileNotExist": "檔案不存在",
+    "FileSelect.InvalidPlugin": "無效的插件檔案：未找到有效的插件類型",
+    "FileSelect.NoPluginTypes": "無效的插件檔案：無法建立插件實例",
+    "FileSelect.CannotCreateInstance": "無法建立插件實例",
+    "FileSelect.PluginNotFound": "無法找到插件: {0}",
+    "FileSelect.LoadFailed": "載入失敗: {0}",
+    "FileSelect.DropSingleDll": "請拖放單個 .dll 檔案",
+
+    "MultiPlugin.Title": "發現多個插件",
+    "MultiPlugin.Subtitle": "此 DLL 包含 {0} 個插件，請選擇要安裝的插件",
+
+    "Detail.Introduction": "介紹",
+    "Detail.NoDescription": "暫無描述",
+    "Detail.Dependencies": "依賴項",
+    "Detail.MissingRequired": "缺少必需依賴",
+    "Detail.MissingRequiredHint": "以下必需依賴未安裝，無法繼續安裝此插件：",
+    "Detail.MissingOptional": "缺少可選依賴",
+    "Detail.MissingOptionalHint": "以下可選依賴未安裝，部分功能可能無法使用：",
+    "Detail.SatisfiedDependencies": "已滿足的依賴",
+    "Detail.CannotInstall": "無法安裝",
+    "Detail.HasMissingRequired": "存在未滿足的必需依賴，無法安裝",
+    "Detail.HasMissingOptional": "存在未安裝的可選依賴，部分功能可能受限",
+
+    "Status.Installing": "正在安裝插件...",
+    "Status.InstallingMultiple": "正在安裝 {0} 個插件...",
+    "Status.ReadingPlugin": "正在讀取插件資訊...",
+    "Status.Processing": "正在處理...",
+    "Status.InstallSuccess": "安裝成功",
+    "Status.InstallFailed": "安裝失敗: {0}",
+    "Status.InstallError": "安裝出錯: {0}",
+
+    "Dialog.OptionalDepsTitle": "可選依賴確認",
+    "Dialog.OptionalDepsMessage": "以下可選依賴未安裝，部分功能可能無法使用：\n\n{0}\n\n是否繼續安裝？",
+
+    "FileDialog.Filter": "插件檔案 (*.dll)|*.dll|所有檔案 (*.*)|*.*",
+    "FileDialog.Title": "選擇插件檔案"
+  }
+}

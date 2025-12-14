@@ -1,0 +1,57 @@
+{
+  "name": "Instalador de Plugins",
+  "langCode": "es-ES",
+  "version": "1.0.0",
+  "items": {
+    "Installer.Title": "Instalador de Plugins",
+
+    "Button.Browse": "Explorar archivos",
+    "Button.Back": "Atrás",
+    "Button.PreviousStep": "Anterior",
+    "Button.Install": "Instalar",
+    "Button.InstallAll": "Instalar todo",
+    "Button.Installed": "Instalado",
+    "Button.Retry": "Reintentar",
+
+    "FileSelect.DropHint": "Arrastre el archivo del plugin aquí",
+    "FileSelect.Or": "o",
+    "FileSelect.SupportedFiles": "Admite archivos .dll",
+    "FileSelect.Ready": "Listo",
+    "FileSelect.FileNotExist": "El archivo no existe",
+    "FileSelect.InvalidPlugin": "Archivo de plugin no válido: No se encontraron tipos de plugin válidos",
+    "FileSelect.NoPluginTypes": "Archivo de plugin no válido: No se puede crear la instancia del plugin",
+    "FileSelect.CannotCreateInstance": "No se puede crear la instancia del plugin",
+    "FileSelect.PluginNotFound": "Plugin no encontrado: {0}",
+    "FileSelect.LoadFailed": "Error al cargar: {0}",
+    "FileSelect.DropSingleDll": "Por favor, suelte un solo archivo .dll",
+
+    "MultiPlugin.Title": "Múltiples plugins encontrados",
+    "MultiPlugin.Subtitle": "Esta DLL contiene {0} plugins, por favor seleccione uno para instalar",
+
+    "Detail.Introduction": "Introducción",
+    "Detail.NoDescription": "No hay descripción disponible",
+    "Detail.Dependencies": "Dependencias",
+    "Detail.MissingRequired": "Dependencias requeridas faltantes",
+    "Detail.MissingRequiredHint": "Las siguientes dependencias requeridas no están instaladas, la instalación no puede continuar:",
+    "Detail.MissingOptional": "Dependencias opcionales faltantes",
+    "Detail.MissingOptionalHint": "Las siguientes dependencias opcionales no están instaladas, algunas funciones pueden no estar disponibles:",
+    "Detail.SatisfiedDependencies": "Dependencias satisfechas",
+    "Detail.CannotInstall": "No se puede instalar",
+    "Detail.HasMissingRequired": "Faltan dependencias requeridas, no se puede instalar",
+    "Detail.HasMissingOptional": "Faltan dependencias opcionales, algunas funciones pueden estar limitadas",
+
+    "Status.Installing": "Instalando plugin...",
+    "Status.InstallingMultiple": "Instalando {0} plugins...",
+    "Status.ReadingPlugin": "Leyendo información del plugin...",
+    "Status.Processing": "Procesando...",
+    "Status.InstallSuccess": "Instalación exitosa",
+    "Status.InstallFailed": "Instalación fallida: {0}",
+    "Status.InstallError": "Error de instalación: {0}",
+
+    "Dialog.OptionalDepsTitle": "Dependencias opcionales",
+    "Dialog.OptionalDepsMessage": "Las siguientes dependencias opcionales no están instaladas, algunas funciones pueden no estar disponibles:\n\n{0}\n\n¿Desea continuar?",
+
+    "FileDialog.Filter": "Archivos de Plugin (*.dll)|*.dll|Todos los archivos (*.*)|*.*",
+    "FileDialog.Title": "Seleccionar archivo de plugin"
+  }
+}

@@ -8,6 +8,13 @@
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
     <UseWindowsForms>False</UseWindowsForms>
+
+    <!-- 程序集信息 -->
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <NeutralLanguage>zh-CN</NeutralLanguage>
+    <Copyright>Copyright © Lavelois</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,18 +27,25 @@
     <PackageReference Include="Hardcodet.Wpf.TaskbarNotification" Version="1.0.5" />
     <PackageReference Include="Interop.IWshRuntimeLibrary" Version="1.0.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="nulastudio.NetBeauty" Version="2.1.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.Management" Version="10.0.1" />
   </ItemGroup>
+
+  <!-- NetBeauty2 配置 -->
+  <PropertyGroup>
+    <BeautySharedRuntimeMode>False</BeautySharedRuntimeMode>
+    <BeautyLibsDir>Core</BeautyLibsDir>
+    <BeautyExcludes></BeautyExcludes>
+    <BeautyHiddens>*.deps.json;*.runtimeconfig.json</BeautyHiddens>
+  </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="Assets\Themes\" />
     <Folder Include="Assets\Plugin\" />
     <Folder Include="Assets\Localization\" />
-    <Folder Include="Class\Plugin\BuiltIn\Services\" />
     <Folder Include="Documents\Menu\" />
     <Folder Include="Documents\UI\" />
-    <Folder Include="Shared\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,9 +55,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Phobos.Shared">
-      <HintPath>Shared\Phobos.Shared.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\Phobos.Shared\Phobos.Shared.csproj" />
   </ItemGroup>
 
 </Project>
