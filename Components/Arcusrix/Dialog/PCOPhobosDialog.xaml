@@ -15,6 +15,7 @@
         ShowInTaskbar="True"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
+        Icon="/Assets/Icons/phobos_icon_odda.ico"
         KeyDown="Window_KeyDown"
         Loaded="Window_Loaded">
 

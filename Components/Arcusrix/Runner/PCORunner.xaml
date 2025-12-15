@@ -12,6 +12,7 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
+        Icon="/Assets/Icons/phobos_icon_odda.ico"
         ShowInTaskbar="False"
         Topmost="True"
         ResizeMode="NoResize"
@@ -68,6 +69,7 @@
                 <Grid Grid.Column="1">
                     <!-- 占位符文本 -->
                     <TextBlock x:Name="PlaceholderText"
+                               Margin="15,0,0,0"
                                Text="输入要运行的命令、文件或程序..."
                                FontSize="20"
                                FontFamily="{DynamicResource FontPrimary}"

@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
-using Phobos.Class.Arcusrix;
+﻿using Phobos.Class.Arcusrix;
 using Phobos.Interface.Arcusrix;
 using Phobos.Shared.Interface;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace Phobos.Manager.Arcusrix
 {
@@ -70,6 +72,8 @@ namespace Phobos.Manager.Arcusrix
 
             var window = new PCPluginWindow(plugin, title);
 
+            window.SetIcon(BitmapFrame.Create(new Uri("pack://application:,,,/Assets/Icons/phobos_icon_odda.ico", UriKind.Absolute))); 
+
             window.Closed += (s, e) =>
             {
                 _openWindows.Remove(window);
@@ -96,6 +100,8 @@ namespace Phobos.Manager.Arcusrix
         private Window CreateMultiWindow(IPhobosPlugin plugin, string packageName, string? title)
         {
             var window = new PCPluginWindow(plugin, title);
+
+            window.SetIcon(BitmapFrame.Create(new Uri("pack://application:,,,/Assets/Icons/phobos_icon_odda.ico", UriKind.Absolute)));
 
             // 确保列表存在
             if (!_multiPluginWindows.ContainsKey(packageName))

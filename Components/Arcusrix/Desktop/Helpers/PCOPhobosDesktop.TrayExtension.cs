@@ -131,20 +131,16 @@ namespace Phobos.Components.Arcusrix.Desktop
             // 设置图标
             try
             {
-                var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "desktop-icon.ico");
-                if (File.Exists(iconPath))
+                Uri iconUri = new("pack://application:,,,/Assets/Icons/phobos_icon_odda.ico", UriKind.Absolute);
+
+                // 设置窗口图标 (ImageSource)
+                Icon = BitmapFrame.Create(iconUri);
+
+                // 设置托盘图标 (System.Drawing.Icon) - 从资源流加载
+                var streamInfo = Application.GetResourceStream(iconUri);
+                if (streamInfo != null)
                 {
-                    _taskbarIcon.Icon = new System.Drawing.Icon(iconPath);
-                }
-                else
-                {
-                    // 尝试使用 PNG 图标
-                    var pngPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "desktop-icon.png");
-                    if (File.Exists(pngPath))
-                    {
-                        var bitmap = new BitmapImage(new Uri(pngPath, UriKind.Absolute));
-                        _taskbarIcon.IconSource = bitmap;
-                    }
+                    _taskbarIcon.Icon = new System.Drawing.Icon(streamInfo.Stream);
                 }
             }
             catch (Exception ex)

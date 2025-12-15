@@ -2268,6 +2268,12 @@ namespace Phobos.Class.Plugin.BuiltIn
                         break;
 
                     case SuggestionType.Shortcut:
+                        {
+                            if (!string.IsNullOrEmpty(suggestion.PackageName)){
+                                return await PMPlugin.Instance.Run(suggestion.PackageName, suggestion.Arguments ?? []);
+                            }
+                            break;
+                        }
                     case SuggestionType.System:
                         if (!string.IsNullOrEmpty(suggestion.Command))
                         {

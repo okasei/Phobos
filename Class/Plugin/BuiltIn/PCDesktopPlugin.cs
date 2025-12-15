@@ -362,6 +362,7 @@ namespace Phobos.Class.Plugin.BuiltIn
                     string description = string.Empty;
                     string? iconPath = null;
                     string? packageName = null;
+                    string? arguments = null;
 
                     if (item is PluginDesktopItem pluginItem)
                     {
@@ -384,6 +385,7 @@ namespace Phobos.Class.Plugin.BuiltIn
                         description = $"快捷方式 -> {shortcutItem.TargetPackageName}";
                         iconPath = shortcutItem.CustomIconPath;
                         packageName = shortcutItem.TargetPackageName;
+                        arguments = shortcutItem.Arguments;
                     }
 
                     // 匹配检测
@@ -415,7 +417,8 @@ namespace Phobos.Class.Plugin.BuiltIn
                                 _ => SuggestionType.Other
                             },
                             Score = score,
-                            SourcePackageName = Metadata.PackageName
+                            SourcePackageName = Metadata.PackageName,
+                            Arguments = [arguments]
                         });
                     }
 
